@@ -16,6 +16,9 @@ jobs:
 
       - name: Install dependencies
         run: sudo apt install libasound2-dev libudev-dev pkg-config
+      
+      - name: Rust cache 
+        uses: Swatinem/rust-cache@v2
 
       # Unit testing
       - name: Test
@@ -36,9 +39,11 @@ jobs:
         run: |
           cargo --version --verbose
           rustc --version
-      - name: fmt
+      - name: Rust cache 
+        uses: Swatinem/rust-cache@v2
+      - name: cargo fmt
         run: |
           cargo fmt -- --check
-      - name: clippy
+      - name: cargo clippy
         run: |
           cargo clippy -- -D warnings  
