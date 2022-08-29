@@ -7,7 +7,7 @@ on:
 
 env:
   RELEASE_NAME: endless_sea
-  PUBLIC_URL: /bevy-shell-template/
+  PUBLIC_URL: /endless_sea/
 
 jobs:
   setup:
