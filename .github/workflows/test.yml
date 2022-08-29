@@ -46,4 +46,4 @@ jobs:
           cargo fmt -- --check
       - name: cargo clippy
         run: |
-          cargo clippy -- -D warnings  
+          cargo clippy --all-targets --all-features -- -D warnings  
