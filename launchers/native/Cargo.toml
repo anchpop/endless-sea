@@ -1,0 +1,11 @@
+[package]
+name = "native-launcher"
+version = "0.1.0"
+edition = "2021"
+workspace = "../.."
+
+[dependencies]
+endless-sea = { package = "endless-sea", path = "../.." }
+bevy = "0.8"
+image = "0.24.3"
+winit = "0.26.1"
