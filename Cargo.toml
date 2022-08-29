@@ -1,0 +1,26 @@
+[package]
+name = "endless-sea"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+members = [
+    "launchers/wasm",
+    "launchers/native",
+]
+
+[[bin]]
+name="native-launcher"
+path="launchers/native/src/main.rs"
+
+# Optimizations for WASM
+[profile.release]
+panic = 'abort'
+codegen-units = 1
+opt-level = 'z'
+lto = true
+
+[dependencies]
+bevy = { version = "0.8.1", features = ["dynamic"] }
+image = "0.24.3"
+winit = "0.26.1"
