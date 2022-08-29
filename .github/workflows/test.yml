@@ -1,4 +1,4 @@
-name: test
+name: Tests
 
 on:
   push:
@@ -20,3 +20,25 @@ jobs:
       # Unit testing
       - name: Test
         run: cargo test --workspace
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        run: sudo apt install libasound2-dev libudev-dev pkg-config
+      - name: Update local toolchain
+        run: |
+          rustup update
+          rustup component add clippy 
+          rustup component add rustfmt
+      - name: Toolchain info
+        run: |
+          cargo --version --verbose
+          rustc --version
+      - name: fmt
+        run: |
+          cargo fmt -- --check
+      - name: clippy
+        run: |
+          cargo clippy -- -D warnings  
