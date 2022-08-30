@@ -34,7 +34,7 @@ fn setup_graphics(mut commands: Commands) {
                 ..default()
             }
             .into(),
-            transform: Transform::from_xyz(-3.0, 9.0, 0.0)
+            transform: Transform::from_xyz(-6.0, 9.0, 0.0)
                 .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
