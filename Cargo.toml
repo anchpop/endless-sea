@@ -21,6 +21,7 @@ opt-level = 'z'
 lto = true
 
 [dependencies]
-bevy = "0.8.1"
+bevy = { version = "0.8.1" }
+bevy_rapier3d = { version = "*", features = [ "simd-stable", "debug-render" ] }
 image = "0.24.3"
 winit = "0.26.1"
