@@ -130,18 +130,22 @@ fn movement(
 ) {
     if let Some((_, _, mut external_force)) = player_character.iter_mut().next()
     {
+        let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
+        let down = keys.pressed(KeyCode::S) || keys.pressed(KeyCode::Down);
+        let left = keys.pressed(KeyCode::A) || keys.pressed(KeyCode::Left);
+        let right = keys.pressed(KeyCode::D) || keys.pressed(KeyCode::Right);
         let direction = Vec3::new(
-            if keys.pressed(KeyCode::W) {
+            if up {
                 1.
-            } else if keys.pressed(KeyCode::S) {
+            } else if down {
                 -1.
             } else {
                 0.
             },
             0.0,
-            if keys.pressed(KeyCode::A) {
+            if left {
                 -1.
-            } else if keys.pressed(KeyCode::D) {
+            } else if right {
                 1.
             } else {
                 0.
