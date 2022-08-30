@@ -14,12 +14,18 @@ pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
 pub fn app() -> App {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(RapierDebugRenderPlugin::default())
-        .add_startup_system(setup_graphics)
-        .add_startup_system(setup_physics)
-        .add_system(movement);
+    app.insert_resource(WindowDescriptor {
+        title: LAUNCHER_TITLE.to_string(),
+        canvas: Some("#bevy".to_string()),
+        fit_canvas_to_parent: true,
+        ..Default::default()
+    })
+    .add_plugins(DefaultPlugins)
+    .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+    .add_plugin(RapierDebugRenderPlugin::default())
+    .add_startup_system(setup_graphics)
+    .add_startup_system(setup_physics)
+    .add_system(movement);
 
     if cfg!(debug_assertions) {
         app.add_plugin(WorldInspectorPlugin::new());
