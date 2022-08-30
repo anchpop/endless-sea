@@ -17,10 +17,17 @@ pub fn app() -> App {
     app.add_plugins(DefaultPlugins)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(RapierDebugRenderPlugin::default())
-        .add_plugin(WorldInspectorPlugin::new())
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics)
         .add_system(movement);
+
+    if cfg!(debug_assertions) {
+        app.add_plugin(WorldInspectorPlugin::new());
+        println!("Inspector enabled");
+    } else {
+        println!("Inspector disabled");
+    };
+
     app
 }
 
