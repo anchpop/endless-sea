@@ -29,9 +29,9 @@ pub fn app() -> App {
     if cfg!(debug_assertions) {
         app.add_plugin(WorldInspectorPlugin::new())
             .add_plugin(RapierDebugRenderPlugin::default());
-        println!("Debug mode enabled");
+        bevy::log::info!("Debug mode enabled");
     } else {
-        println!("Debug mode disabled");
+        bevy::log::info!("Debug mode disabled");
     };
 
     app
