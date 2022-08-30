@@ -30,10 +30,7 @@ fn setup_graphics(mut commands: Commands) {
     });
 }
 
-fn setup_physics(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-) {
+fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
     /* Create the ground. */
     commands
         .spawn()
