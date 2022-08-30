@@ -10,6 +10,8 @@ struct PlayerCharacter;
 #[reflect(Component)]
 struct Character;
 
+pub const LAUNCHER_TITLE: &str = "Endless Sea";
+
 pub fn app() -> App {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins)
