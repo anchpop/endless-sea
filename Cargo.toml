@@ -23,6 +23,8 @@ lto = true
 [dependencies]
 bevy = { version = "0.8.1" }
 bevy-inspector-egui = "*"
-bevy_rapier3d = { version = "*", features = [ "simd-stable", "debug-render" ] }
+bevy_rapier3d = { version = "*", features = [ "simd-stable" ] }
+# to turn on debug rendering:
+# bevy_rapier3d = { version = "*", features = [ "simd-stable", "debug-render" ] }
 image = "0.24.3"
 winit = "0.26.1"
