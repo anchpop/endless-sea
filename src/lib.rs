@@ -19,30 +19,29 @@ fn setup_graphics(mut commands: Commands) {
         ..Default::default()
     });
 
-    const HALF_SIZE: f32 = 1.0;
-    commands.spawn_bundle(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
-                ..default()
-            },
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            intensity: 1500.0,
             shadows_enabled: true,
             ..default()
         },
+        transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..default()
     });
 }
 
-fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_physics(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+) {
     /* Create the ground. */
     commands
         .spawn()
         .insert(Collider::cuboid(100.0, 0.1, 100.0))
+        .insert_bundle(SceneBundle {
+            scene: asset_server.load("floor/floor.gltf#Scene0"),
+            ..default()
+        })
         .insert_bundle(TransformBundle::from(Transform::from_xyz(
             0.0, -2.0, 0.0,
         )));
