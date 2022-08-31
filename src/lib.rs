@@ -18,6 +18,8 @@ pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
 pub fn app() -> App {
     let mut app = App::new();
+
+    static POST_SIMULATION: &str = "debug";
     app.insert_resource(WindowDescriptor {
         title: LAUNCHER_TITLE.to_string(),
         canvas: Some("#bevy".to_string()),
@@ -30,7 +32,12 @@ pub fn app() -> App {
     .add_startup_system(setup_physics)
     .add_system(force_movement)
     .add_system(impluse_movement)
-    .add_system(camera_movement);
+    .add_stage_after(
+        PhysicsStages::Writeback,
+        POST_SIMULATION,
+        SystemStage::parallel(),
+    )
+    .add_system_to_stage(POST_SIMULATION, camera_movement);
 
     if cfg!(debug_assertions) {
         app.add_plugin(WorldInspectorPlugin::new())
