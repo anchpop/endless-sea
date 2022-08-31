@@ -140,7 +140,6 @@ fn setup_physics(
 }
 
 fn camera_movement(
-    time: Res<Time>,
     player_character: Query<(With<PlayerCharacter>, &Transform)>,
     mut main_camera: Query<(
         With<MainCamera>,
@@ -152,11 +151,8 @@ fn camera_movement(
         if let Some((_, _, mut camera_transform)) =
             main_camera.iter_mut().next()
         {
-            let destination =
+            camera_transform.translation =
                 player_transform.translation + Vec3::new(0.0, 9.0, -6.0);
-            camera_transform.translation = camera_transform
-                .translation
-                .lerp(destination, 10.0 * time.delta_seconds());
         }
     }
 }
