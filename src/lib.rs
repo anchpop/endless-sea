@@ -28,7 +28,8 @@ pub fn app() -> App {
     .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
     .add_startup_system(setup_graphics)
     .add_startup_system(setup_physics)
-    .add_system(movement)
+    .add_system(force_movement)
+    .add_system(impluse_movement)
     .add_system(camera_movement);
 
     if cfg!(debug_assertions) {
@@ -106,6 +107,10 @@ fn setup_physics(
             force: Vec3::new(0., 0., 0.),
             torque: Vec3::new(0., 0., 0.),
         })
+        .insert(ExternalImpulse {
+            impulse: Vec3::new(0., 0., 0.),
+            torque_impulse: Vec3::new(0., 0., 0.),
+        })
         .insert(Name::new("Ball"));
 
     /* Create an obstacle. */
@@ -140,7 +145,7 @@ fn camera_movement(
     }
 }
 
-fn movement(
+fn force_movement(
     keys: Res<Input<KeyCode>>,
     mut player_character: Query<(
         With<PlayerCharacter>,
@@ -175,5 +180,23 @@ fn movement(
         .unwrap_or(Vec3::ZERO);
 
         external_force.force = direction * 10.0;
+    }
+}
+
+fn impluse_movement(
+    keys: Res<Input<KeyCode>>,
+    mut player_character: Query<(
+        With<PlayerCharacter>,
+        With<Character>,
+        &mut ExternalImpulse,
+    )>,
+) {
+    if let Some((_, _, mut external_impulse)) =
+        player_character.iter_mut().next()
+    {
+        let jump = keys.just_released(KeyCode::Space);
+
+        external_impulse.impulse =
+            Vec3::new(0., if jump { 3. } else { 0. }, 0.);
     }
 }
