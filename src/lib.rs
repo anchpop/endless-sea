@@ -86,9 +86,7 @@ fn setup_physics(
             scene: asset_server.load("floor/floor.gltf#Scene0"),
             ..default()
         })
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            0.0, -2.0, 0.0,
-        )))
+        .insert_bundle(SpatialBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
         .insert(Name::new("Floor"));
 
     /* Create the bouncing ball. */
@@ -97,9 +95,7 @@ fn setup_physics(
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(0.5))
         .insert(Restitution::coefficient(0.0))
-        .insert_bundle(TransformBundle::from(Transform::from_xyz(
-            0.0, 4.0, 0.0,
-        )))
+        .insert_bundle(SpatialBundle::from(Transform::from_xyz(0.0, 4.0, 0.0)))
         .insert_bundle(SceneBundle {
             scene: asset_server.load("sphere/sphere.gltf#Scene0"),
             ..default()
