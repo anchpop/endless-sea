@@ -12,9 +12,7 @@ struct Character;
 
 #[derive(Inspectable, Reflect, Component, Default)]
 #[reflect(Component)]
-struct MainCamera {
-    velocity: Vec3,
-}
+struct MainCamera;
 
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
@@ -67,9 +65,7 @@ fn setup_graphics(mut commands: Commands) {
             ..Default::default()
         })
         .insert(Name::new("Camera"))
-        .insert(MainCamera {
-            velocity: Vec3::ZERO,
-        });
+        .insert(MainCamera {});
 
     commands
         .spawn_bundle(PointLightBundle {
@@ -147,25 +143,20 @@ fn camera_movement(
     time: Res<Time>,
     player_character: Query<(With<PlayerCharacter>, &Transform)>,
     mut main_camera: Query<(
-        &mut MainCamera,
+        With<MainCamera>,
         Without<PlayerCharacter>,
         &mut Transform,
     )>,
 ) {
     if let Some((_, player_transform)) = player_character.iter().next() {
-        if let Some((mut main_camera, _, mut camera_transform)) =
+        if let Some((_, _, mut camera_transform)) =
             main_camera.iter_mut().next()
         {
             let destination =
                 player_transform.translation + Vec3::new(0.0, 9.0, -6.0);
-            camera_transform.translation = smooth_damp(
-                camera_transform.translation,
-                destination,
-                &mut main_camera.velocity,
-                0.1,
-                f32::INFINITY,
-                time.delta_seconds(),
-            )
+            camera_transform.translation = camera_transform
+                .translation
+                .lerp(destination, 10.0 * time.delta_seconds());
         }
     }
 }
@@ -232,80 +223,4 @@ fn impluse_movement(
         external_impulse.impulse =
             Vec3::new(0., if jump { 3. } else { 0. }, 0.);
     }
-}
-
-// Gradually changes a vector towards a desired goal over time.
-// inspired by https://github.com/Unity-Technologies/UnityCsReference/blob/master/Runtime/Export/Math/Vector3.cs#L97
-fn smooth_damp(
-    current: Vec3,
-    mut target: Vec3,
-    current_velocity: &mut Vec3,
-    smooth_time: f32,
-    max_speed: f32,
-    delta_seconds: f32,
-) -> Vec3 {
-    // Based on Game Programming Gems 4 Chapter 1.10
-    let smooth_time = f32::max(0.0001, smooth_time);
-    let omega = 2.0 / smooth_time;
-
-    let x = omega * delta_seconds;
-    let exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
-
-    let mut change_x = current.x - target.x;
-    let mut change_y = current.y - target.y;
-    let mut change_z = current.z - target.z;
-    let original_to = target;
-
-    // Clamp maximum speed
-    let max_change = max_speed * smooth_time;
-
-    let max_change_sq = max_change * max_change;
-    let sqrmag =
-        change_x * change_x + change_y * change_y + change_z * change_z;
-    if sqrmag > max_change_sq {
-        let mag = f32::sqrt(sqrmag);
-        change_x = change_x / mag * max_change;
-        change_y = change_y / mag * max_change;
-        change_z = change_z / mag * max_change;
-    }
-
-    target.x = current.x - change_x;
-    target.y = current.y - change_y;
-    target.z = current.z - change_z;
-
-    let temp_x = (current_velocity.x + omega * change_x) * delta_seconds;
-    let temp_y = (current_velocity.y + omega * change_y) * delta_seconds;
-    let temp_z = (current_velocity.z + omega * change_z) * delta_seconds;
-
-    current_velocity.x = (current_velocity.x - omega * temp_x) * exp;
-    current_velocity.y = (current_velocity.y - omega * temp_y) * exp;
-    current_velocity.z = (current_velocity.z - omega * temp_z) * exp;
-
-    let mut output_x = target.x + (change_x + temp_x) * exp;
-    let mut output_y = target.y + (change_y + temp_y) * exp;
-    let mut output_z = target.z + (change_z + temp_z) * exp;
-
-    // Prevent overshooting
-    let orig_minus_current_x = original_to.x - current.x;
-    let orig_minus_current_y = original_to.y - current.y;
-    let orig_minus_current_z = original_to.z - current.z;
-    let out_minus_orig_x = output_x - original_to.x;
-    let out_minus_orig_y = output_y - original_to.y;
-    let out_minus_orig_z = output_z - original_to.z;
-
-    if orig_minus_current_x * out_minus_orig_x
-        + orig_minus_current_y * out_minus_orig_y
-        + orig_minus_current_z * out_minus_orig_z
-        > 0.0
-    {
-        output_x = original_to.x;
-        output_y = original_to.y;
-        output_z = original_to.z;
-
-        current_velocity.x = (output_x - original_to.x) / delta_seconds;
-        current_velocity.y = (output_y - original_to.y) / delta_seconds;
-        current_velocity.z = (output_z - original_to.z) / delta_seconds;
-    }
-
-    Vec3::new(output_x, output_y, output_z)
 }
