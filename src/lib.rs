@@ -47,7 +47,7 @@ fn setup_graphics(mut commands: Commands) {
                 ..default()
             }
             .into(),
-            transform: Transform::from_xyz(-6.0, 9.0, 0.0)
+            transform: Transform::from_xyz(0.0, 9.0, -6.0)
                 .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
@@ -117,7 +117,7 @@ fn setup_physics(
             transform: Transform::from_xyz(2.0, 0.5, 0.0),
             ..default()
         })
-        .insert(Name::new("Floor"));
+        .insert(Name::new("Obstacle"));
 }
 
 fn movement(
@@ -135,18 +135,18 @@ fn movement(
         let left = keys.pressed(KeyCode::A) || keys.pressed(KeyCode::Left);
         let right = keys.pressed(KeyCode::D) || keys.pressed(KeyCode::Right);
         let direction = Vec3::new(
-            if up {
+            if left {
                 1.
-            } else if down {
+            } else if right {
                 -1.
             } else {
                 0.
             },
             0.0,
-            if left {
-                -1.
-            } else if right {
+            if up {
                 1.
+            } else if down {
+                -1.
             } else {
                 0.
             },
