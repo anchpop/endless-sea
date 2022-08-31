@@ -175,12 +175,9 @@ fn movement(
                 0.
             },
         )
-        .try_normalize();
+        .try_normalize()
+        .unwrap_or(Vec3::ZERO);
 
-        if let Some(direction) = direction {
-            external_force.force = direction * 10.0;
-        } else {
-            external_force.force = Vec3::new(0., 0., 0.);
-        }
+        external_force.force = direction * 10.0;
     }
 }
