@@ -96,6 +96,7 @@ fn setup_physics(
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(0.5))
         .insert(Restitution::coefficient(0.0))
+        .insert(LockedAxes::ROTATION_LOCKED)
         .insert_bundle(SpatialBundle::from(Transform::from_xyz(0.0, 4.0, 0.0)))
         .insert_bundle(SceneBundle {
             scene: asset_server.load("sphere/sphere.gltf#Scene0"),
@@ -111,9 +112,9 @@ fn setup_physics(
             impulse: Vec3::new(0., 0., 0.),
             torque_impulse: Vec3::new(0., 0., 0.),
         })
-        .insert(Damping {
-            linear_damping: 0.5,
-            angular_damping: 0.0,
+        .insert(Friction {
+            coefficient: 0.0,
+            combine_rule: CoefficientCombineRule::Max,
         })
         .insert(Name::new("Ball"));
 
@@ -155,10 +156,10 @@ fn force_movement(
         With<PlayerCharacter>,
         With<Character>,
         &mut ExternalForce,
-        &mut Damping,
+        &mut Friction,
     )>,
 ) {
-    if let Some((_, _, mut external_force, mut damping)) =
+    if let Some((_, _, mut external_force, mut friction)) =
         player_character.iter_mut().next()
     {
         let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
@@ -187,10 +188,11 @@ fn force_movement(
 
         external_force.force = direction * 10.0;
 
-        damping.linear_damping =
-            if direction == Vec3::ZERO { 10.0 } else { 0.5 };
-        damping.angular_damping =
-            if direction == Vec3::ZERO { 10.0 } else { 0.5 };
+        if direction == Vec3::ZERO {
+            friction.coefficient = 4.0;
+        } else {
+            friction.coefficient = 0.0;
+        }
     }
 }
 
