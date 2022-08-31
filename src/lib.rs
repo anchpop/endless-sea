@@ -111,6 +111,10 @@ fn setup_physics(
             impulse: Vec3::new(0., 0., 0.),
             torque_impulse: Vec3::new(0., 0., 0.),
         })
+        .insert(Damping {
+            linear_damping: 0.5,
+            angular_damping: 0.0,
+        })
         .insert(Name::new("Ball"));
 
     /* Create an obstacle. */
@@ -151,9 +155,11 @@ fn force_movement(
         With<PlayerCharacter>,
         With<Character>,
         &mut ExternalForce,
+        &mut Damping,
     )>,
 ) {
-    if let Some((_, _, mut external_force)) = player_character.iter_mut().next()
+    if let Some((_, _, mut external_force, mut damping)) =
+        player_character.iter_mut().next()
     {
         let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
         let down = keys.pressed(KeyCode::S) || keys.pressed(KeyCode::Down);
@@ -180,6 +186,11 @@ fn force_movement(
         .unwrap_or(Vec3::ZERO);
 
         external_force.force = direction * 10.0;
+
+        damping.linear_damping =
+            if direction == Vec3::ZERO { 10.0 } else { 0.5 };
+        damping.angular_damping =
+            if direction == Vec3::ZERO { 10.0 } else { 0.5 };
     }
 }
 
