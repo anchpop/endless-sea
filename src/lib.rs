@@ -10,6 +10,10 @@ struct PlayerCharacter;
 #[reflect(Component)]
 struct Character;
 
+#[derive(Inspectable, Reflect, Component, Default)]
+#[reflect(Component)]
+struct MainCamera;
+
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
 pub fn app() -> App {
@@ -24,7 +28,8 @@ pub fn app() -> App {
     .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
     .add_startup_system(setup_graphics)
     .add_startup_system(setup_physics)
-    .add_system(movement);
+    .add_system(movement)
+    .add_system(camera_movement);
 
     if cfg!(debug_assertions) {
         app.add_plugin(WorldInspectorPlugin::new())
@@ -51,7 +56,8 @@ fn setup_graphics(mut commands: Commands) {
                 .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
-        .insert(Name::new("Camera"));
+        .insert(Name::new("Camera"))
+        .insert(MainCamera {});
 
     commands
         .spawn_bundle(PointLightBundle {
@@ -118,6 +124,24 @@ fn setup_physics(
             ..default()
         })
         .insert(Name::new("Obstacle"));
+}
+
+fn camera_movement(
+    player_character: Query<(With<PlayerCharacter>, &Transform)>,
+    mut main_camera: Query<(
+        With<MainCamera>,
+        Without<PlayerCharacter>,
+        &mut Transform,
+    )>,
+) {
+    if let Some((_, player_transform)) = player_character.iter().next() {
+        if let Some((_, _, mut camera_transform)) =
+            main_camera.iter_mut().next()
+        {
+            camera_transform.translation =
+                player_transform.translation + Vec3::new(0.0, 9.0, -6.0);
+        }
+    }
 }
 
 fn movement(
