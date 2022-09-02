@@ -13,6 +13,7 @@ struct Character {
     stopped_friction: f32,
     acceleration: f32,
     damping_factor: f32,
+    max_speed: f32,
 }
 
 #[derive(Inspectable, Reflect, Component, Default)]
@@ -120,6 +121,7 @@ fn setup_physics(
             stopped_friction: 4.0,
             acceleration: 10.0,
             damping_factor: 30.0,
+            max_speed: 10.0,
         })
         .insert(ExternalForce {
             force: Vec3::new(0., 0., 0.),
@@ -211,9 +213,17 @@ fn force_movement(
             .unwrap_or(Vec3::ZERO);
 
         if direction != Vec3::ZERO {
-            external_force.force = direction * character.acceleration
-                + velocity_direction_difference * character.damping_factor;
-
+            let under_max_speed =
+                velocity.linvel.project_onto(direction).length()
+                    < character.max_speed;
+            let directional_force = if under_max_speed {
+                direction * character.acceleration
+            } else {
+                Vec3::ZERO
+            };
+            let damping_force =
+                velocity_direction_difference * character.damping_factor;
+            external_force.force = directional_force + damping_force;
             friction.coefficient = 0.0;
         } else {
             friction.coefficient = character.stopped_friction;
