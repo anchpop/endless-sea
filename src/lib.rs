@@ -104,6 +104,7 @@ fn setup_physics(
         .insert(Collider::ball(0.5))
         .insert(Restitution::coefficient(0.0))
         .insert(LockedAxes::ROTATION_LOCKED)
+        .insert(Velocity::default())
         .insert_bundle(SpatialBundle::from(Transform::from_xyz(0.0, 4.0, 0.0)))
         .insert_bundle(SceneBundle {
             scene: asset_server.load("sphere/sphere.gltf#Scene0"),
@@ -162,11 +163,12 @@ fn force_movement(
     mut player_character: Query<(
         With<PlayerCharacter>,
         With<Character>,
+        &Velocity,
         &mut ExternalForce,
         &mut Friction,
     )>,
 ) {
-    if let Some((_, _, mut external_force, mut friction)) =
+    if let Some((_, _, velocity, mut external_force, mut friction)) =
         player_character.iter_mut().next()
     {
         let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
@@ -193,13 +195,23 @@ fn force_movement(
         .try_normalize()
         .unwrap_or(Vec3::ZERO);
 
-        external_force.force = direction * 10.0;
+        let velocity_direction_difference = velocity
+            .linvel
+            .try_normalize()
+            .map(|v| direction - v)
+            .unwrap_or(Vec3::ZERO);
 
-        if direction == Vec3::ZERO {
-            friction.coefficient = 4.0;
-        } else {
+        if direction != Vec3::ZERO {
+            external_force.force =
+                direction * 10.0 + velocity_direction_difference * 30.0;
+
             friction.coefficient = 0.0;
+        } else {
+            friction.coefficient = 4.0;
+            external_force.force = direction;
         }
+    } else {
+        println!("No player character found!");
     }
 }
 
