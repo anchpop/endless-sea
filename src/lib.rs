@@ -8,7 +8,12 @@ struct PlayerCharacter;
 
 #[derive(Inspectable, Reflect, Component, Default)]
 #[reflect(Component)]
-struct Character;
+struct Character {
+    // Movement parameters
+    stopped_friction: f32,
+    acceleration: f32,
+    damping_factor: f32,
+}
 
 #[derive(Inspectable, Reflect, Component, Default)]
 #[reflect(Component)]
@@ -111,7 +116,11 @@ fn setup_physics(
             ..default()
         })
         .insert(PlayerCharacter {})
-        .insert(Character {})
+        .insert(Character {
+            stopped_friction: 4.0,
+            acceleration: 10.0,
+            damping_factor: 30.0,
+        })
         .insert(ExternalForce {
             force: Vec3::new(0., 0., 0.),
             torque: Vec3::new(0., 0., 0.),
@@ -162,13 +171,13 @@ fn force_movement(
     keys: Res<Input<KeyCode>>,
     mut player_character: Query<(
         With<PlayerCharacter>,
-        With<Character>,
+        &Character,
         &Velocity,
         &mut ExternalForce,
         &mut Friction,
     )>,
 ) {
-    if let Some((_, _, velocity, mut external_force, mut friction)) =
+    if let Some((_, character, velocity, mut external_force, mut friction)) =
         player_character.iter_mut().next()
     {
         let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
@@ -202,12 +211,12 @@ fn force_movement(
             .unwrap_or(Vec3::ZERO);
 
         if direction != Vec3::ZERO {
-            external_force.force =
-                direction * 10.0 + velocity_direction_difference * 30.0;
+            external_force.force = direction * character.acceleration
+                + velocity_direction_difference * character.damping_factor;
 
             friction.coefficient = 0.0;
         } else {
-            friction.coefficient = 4.0;
+            friction.coefficient = character.stopped_friction;
             external_force.force = direction;
         }
     } else {
