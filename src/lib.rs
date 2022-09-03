@@ -179,6 +179,9 @@ fn force_movement(
         &mut Friction,
     )>,
 ) {
+    fn project_onto_plane(v: Vec3, n: Vec3) -> Vec3 {
+        v - v.project_onto(n)
+    }
     if let Some((_, character, velocity, mut external_force, mut friction)) =
         player_character.iter_mut().next()
     {
@@ -209,7 +212,10 @@ fn force_movement(
         let velocity_direction_difference = velocity
             .linvel
             .try_normalize()
-            .map(|v| direction - v)
+            .map(|v| {
+                project_onto_plane(direction, Vec3::Y)
+                    - project_onto_plane(v, Vec3::Y)
+            })
             .unwrap_or(Vec3::ZERO);
 
         if direction != Vec3::ZERO {
@@ -248,7 +254,8 @@ fn impluse_movement(
     if let Some((entity, _, _, transform, mut external_impulse)) =
         player_character.iter_mut().next()
     {
-        if let Some((_entity, _toi)) = rapier_context.cast_ray( // TODO: Should use a shapecast instead
+        if let Some((_entity, _toi)) = rapier_context.cast_ray(
+            // TODO: Should use a shapecast instead
             transform.translation,
             Vec3::NEG_Y,
             1.1,
