@@ -1,3 +1,4 @@
+#![allow(clippy::type_complexity)]
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::{Inspectable, WorldInspectorPlugin};
 use bevy_rapier3d::prelude::*;
