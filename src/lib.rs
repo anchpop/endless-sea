@@ -236,18 +236,32 @@ fn force_movement(
 
 fn impluse_movement(
     keys: Res<Input<KeyCode>>,
+    rapier_context: Res<RapierContext>,
     mut player_character: Query<(
+        Entity,
         With<PlayerCharacter>,
         With<Character>,
+        &Transform,
         &mut ExternalImpulse,
     )>,
 ) {
-    if let Some((_, _, mut external_impulse)) =
+    if let Some((entity, _, _, transform, mut external_impulse)) =
         player_character.iter_mut().next()
     {
-        let jump = keys.just_released(KeyCode::Space);
+        if let Some((_entity, _toi)) = rapier_context.cast_ray( // TODO: Should use a shapecast instead
+            transform.translation,
+            Vec3::NEG_Y,
+            1.1,
+            true,
+            QueryFilter {
+                exclude_collider: Some(entity),
+                ..default()
+            },
+        ) {
+            let jump = keys.just_released(KeyCode::Space);
 
-        external_impulse.impulse =
-            Vec3::new(0., if jump { 3. } else { 0. }, 0.);
+            external_impulse.impulse =
+                Vec3::new(0., if jump { 3. } else { 0. }, 0.);
+        }
     }
 }
