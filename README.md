@@ -1,3 +1,5 @@
+[![Build & Test](https://github.com/anchpop/endless-sea/actions/workflows/build.yml/badge.svg)](https://github.com/anchpop/endless-sea/actions/workflows/build.yml)
+
 ## Download
 
 Download the version for your OS from [the releases page](https://github.com/anchpop/endless-sea/releases).
