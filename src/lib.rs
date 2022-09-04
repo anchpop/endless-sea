@@ -1,23 +1,39 @@
 #![allow(clippy::type_complexity)]
-use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy::{prelude::*, render::camera::ScalingMode, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, WorldInspectorPlugin};
 use bevy_rapier3d::prelude::*;
 
-#[derive(Inspectable, Reflect, Component, Default)]
+#[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
 struct PlayerCharacter;
 
-#[derive(Inspectable, Reflect, Component, Default)]
+#[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
-struct Character {
-    // Movement parameters
+struct CharacterMovementProperties {
     stopped_friction: f32,
     acceleration: f32,
     damping_factor: f32,
     max_speed: f32,
+    jump_impulse: f32,
 }
 
-#[derive(Inspectable, Reflect, Component, Default)]
+#[derive(Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+enum JumpState {
+    #[default]
+    Normal,
+    Charging(Stopwatch),
+    JumpPressed(Stopwatch),
+}
+
+#[derive(Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+struct CharacterInput {
+    direction: Vec3,
+    jump: JumpState,
+}
+
+#[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
 struct MainCamera;
 
@@ -37,8 +53,9 @@ pub fn app() -> App {
     .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
     .add_startup_system(setup_graphics)
     .add_startup_system(setup_physics)
-    .add_system(force_movement)
-    .add_system(impluse_movement)
+    .add_system(player_input)
+    .add_system(force_movement.after(player_input))
+    .add_system(impluse_movement.after(player_input))
     .add_stage_after(
         PhysicsStages::Writeback,
         POST_SIMULATION,
@@ -118,12 +135,14 @@ fn setup_physics(
             ..default()
         })
         .insert(PlayerCharacter {})
-        .insert(Character {
+        .insert(CharacterMovementProperties {
             stopped_friction: 4.0,
             acceleration: 10.0,
             damping_factor: 30.0,
             max_speed: 10.0,
+            jump_impulse: 3.0,
         })
+        .insert(CharacterInput::default())
         .insert(ExternalForce {
             force: Vec3::new(0., 0., 0.),
             torque: Vec3::new(0., 0., 0.),
@@ -170,11 +189,71 @@ fn camera_movement(
     }
 }
 
-fn force_movement(
+fn player_input(
+    time: Res<Time>,
     keys: Res<Input<KeyCode>>,
+    mut player_character: Query<(With<PlayerCharacter>, &mut CharacterInput)>,
+) {
+    if let Some((_, mut character_input)) = player_character.iter_mut().next() {
+        // directional
+        {
+            let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
+            let down = keys.pressed(KeyCode::S) || keys.pressed(KeyCode::Down);
+            let left = keys.pressed(KeyCode::A) || keys.pressed(KeyCode::Left);
+            let right =
+                keys.pressed(KeyCode::D) || keys.pressed(KeyCode::Right);
+            let direction = Vec3::new(
+                if left {
+                    1.
+                } else if right {
+                    -1.
+                } else {
+                    0.
+                },
+                0.0,
+                if up {
+                    1.
+                } else if down {
+                    -1.
+                } else {
+                    0.
+                },
+            )
+            .try_normalize()
+            .unwrap_or(Vec3::ZERO);
+
+            character_input.direction = direction;
+        }
+
+        // jump
+        {
+            match character_input.jump.clone() {
+                JumpState::Normal => {
+                    if keys.pressed(KeyCode::Space) {
+                        character_input.jump =
+                            JumpState::Charging(Stopwatch::new());
+                    }
+                }
+                JumpState::Charging(mut watch) => {
+                    if keys.pressed(KeyCode::Space) {
+                        watch.tick(time.delta());
+                        character_input.jump = JumpState::Charging(watch);
+                    } else if keys.just_released(KeyCode::Space) {
+                        character_input.jump = JumpState::JumpPressed(watch);
+                    }
+                }
+                JumpState::JumpPressed(_watch) => {
+                    character_input.jump = JumpState::Normal;
+                }
+            }
+        }
+    }
+}
+
+fn force_movement(
     mut player_character: Query<(
-        With<PlayerCharacter>,
-        &Character,
+        &CharacterInput,
+        &CharacterMovementProperties,
         &Velocity,
         &mut ExternalForce,
         &mut Friction,
@@ -183,58 +262,43 @@ fn force_movement(
     fn project_onto_plane(v: Vec3, n: Vec3) -> Vec3 {
         v - v.project_onto(n)
     }
-    if let Some((_, character, velocity, mut external_force, mut friction)) =
-        player_character.iter_mut().next()
+    if let Some((
+        character_input,
+        character_movement_properties,
+        velocity,
+        mut external_force,
+        mut friction,
+    )) = player_character.iter_mut().next()
     {
-        let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
-        let down = keys.pressed(KeyCode::S) || keys.pressed(KeyCode::Down);
-        let left = keys.pressed(KeyCode::A) || keys.pressed(KeyCode::Left);
-        let right = keys.pressed(KeyCode::D) || keys.pressed(KeyCode::Right);
-        let direction = Vec3::new(
-            if left {
-                1.
-            } else if right {
-                -1.
-            } else {
-                0.
-            },
-            0.0,
-            if up {
-                1.
-            } else if down {
-                -1.
-            } else {
-                0.
-            },
-        )
-        .try_normalize()
-        .unwrap_or(Vec3::ZERO);
-
         let velocity_direction_difference = velocity
             .linvel
             .try_normalize()
             .map(|v| {
-                project_onto_plane(direction, Vec3::Y)
+                project_onto_plane(character_input.direction, Vec3::Y)
                     - project_onto_plane(v, Vec3::Y)
             })
             .unwrap_or(Vec3::ZERO);
 
-        if direction != Vec3::ZERO {
-            let under_max_speed =
-                velocity.linvel.project_onto(direction).length()
-                    < character.max_speed;
+        if character_input.direction != Vec3::ZERO {
+            let under_max_speed = velocity
+                .linvel
+                .project_onto(character_input.direction)
+                .length()
+                < character_movement_properties.max_speed;
             let directional_force = if under_max_speed {
-                direction * character.acceleration
+                character_input.direction
+                    * character_movement_properties.acceleration
             } else {
                 Vec3::ZERO
             };
-            let damping_force =
-                velocity_direction_difference * character.damping_factor;
+            let damping_force = velocity_direction_difference
+                * character_movement_properties.damping_factor;
             external_force.force = directional_force + damping_force;
             friction.coefficient = 0.0;
         } else {
-            friction.coefficient = character.stopped_friction;
-            external_force.force = direction;
+            friction.coefficient =
+                character_movement_properties.stopped_friction;
+            external_force.force = character_input.direction;
         }
     } else {
         println!("No player character found!");
@@ -242,18 +306,22 @@ fn force_movement(
 }
 
 fn impluse_movement(
-    keys: Res<Input<KeyCode>>,
     rapier_context: Res<RapierContext>,
     mut player_character: Query<(
         Entity,
-        With<PlayerCharacter>,
-        With<Character>,
+        &CharacterInput,
+        &CharacterMovementProperties,
         &Transform,
         &mut ExternalImpulse,
     )>,
 ) {
-    if let Some((entity, _, _, transform, mut external_impulse)) =
-        player_character.iter_mut().next()
+    if let Some((
+        entity,
+        character_input,
+        character_movement_properties,
+        transform,
+        mut external_impulse,
+    )) = player_character.iter_mut().next()
     {
         if let Some((_entity, _toi)) = rapier_context.cast_ray(
             // TODO: Should use a shapecast instead
@@ -266,10 +334,16 @@ fn impluse_movement(
                 ..default()
             },
         ) {
-            let jump = keys.just_released(KeyCode::Space);
-
-            external_impulse.impulse =
-                Vec3::new(0., if jump { 3. } else { 0. }, 0.);
+            if let JumpState::JumpPressed(_watch) = character_input.jump.clone()
+            {
+                external_impulse.impulse = Vec3::new(
+                    0.,
+                    character_movement_properties.jump_impulse,
+                    0.,
+                );
+            } else {
+                external_impulse.impulse = Vec3::ZERO;
+            }
         }
     }
 }
