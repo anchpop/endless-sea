@@ -89,7 +89,9 @@ fn impluse_movement(
     )) = player_character.iter_mut().next()
     {
         if let Some((_entity, _toi)) = rapier_context.cast_shape(
-            // TODO: This is a hack to make sure the ray doesn't start inside the ground if the collider is slightly underground
+            // TODO: This is a hack to make sure the ray doesn't start inside the 
+            // ground if the collider is slightly underground, bus will cause rare false positives
+            // when the player's head hits the ceiling.
             transform.translation + Vec3::Y * 0.05,
             transform.rotation,
             Vec3::NEG_Y,
