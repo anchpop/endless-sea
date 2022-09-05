@@ -179,6 +179,9 @@ fn player_input(
                     if keys.pressed(KeyCode::Space) {
                         character_input.jump =
                             JumpState::Charging(Stopwatch::new());
+                    } else if keys.just_released(KeyCode::Space) {
+                        character_input.jump =
+                            JumpState::JumpPressed(Stopwatch::new());
                     }
                 }
                 JumpState::Charging(mut watch) => {
