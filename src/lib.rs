@@ -97,7 +97,7 @@ fn setup_physics(
     commands
         .spawn()
         .insert_bundle(SceneBundle {
-            scene: asset_server.load("sphere/sphere.gltf#Scene0"),
+            scene: asset_server.load("capsule/capsule.gltf#Scene0"),
             ..default()
         })
         .insert_bundle(CharacterBundle::default())

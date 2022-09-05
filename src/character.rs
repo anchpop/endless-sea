@@ -148,6 +148,7 @@ pub struct CharacterInput {
 pub struct CharacterBundle {
     pub rigid_body: RigidBody,
     pub collider: Collider,
+    pub collider_mass_properties: ColliderMassProperties,
     pub restitution: Restitution,
     pub locked_axes: LockedAxes,
     pub velocity: Velocity,
@@ -162,16 +163,21 @@ impl Default for CharacterBundle {
     fn default() -> Self {
         Self {
             rigid_body: RigidBody::Dynamic,
-            collider: Collider::ball(0.5),
+            collider: Collider::capsule(
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(0.0, 1.0, 0.0),
+                0.5,
+            ),
+            collider_mass_properties: ColliderMassProperties::Mass(1.0),
             restitution: Restitution::coefficient(0.0),
             locked_axes: LockedAxes::ROTATION_LOCKED,
             velocity: Velocity::default(),
             character_movement_properties: CharacterMovementProperties {
                 stopped_friction: 4.0,
-                acceleration: 10.0,
-                damping_factor: 30.0,
+                acceleration: 20.0,
+                damping_factor: 60.0,
                 max_speed: 10.0,
-                jump_impulse: 3.0,
+                jump_impulse: 6.0,
             },
             character_input: CharacterInput::default(),
             external_force: ExternalForce::default(),
