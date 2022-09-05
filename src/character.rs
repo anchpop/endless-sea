@@ -75,6 +75,7 @@ fn impluse_movement(
         &CharacterInput,
         &CharacterMovementProperties,
         &Transform,
+        &Collider,
         &mut ExternalImpulse,
     )>,
 ) {
@@ -83,30 +84,30 @@ fn impluse_movement(
         character_input,
         character_movement_properties,
         transform,
+        collider,
         mut external_impulse,
     )) = player_character.iter_mut().next()
     {
-        if let Some((_entity, _toi)) = rapier_context.cast_ray(
-            // TODO: Should use a shapecast instead
-            transform.translation,
+        if let Some((_entity, _toi)) = rapier_context.cast_shape(
+            // TODO: This is a hack to make sure the ray doesn't start inside the ground if the collider is slightly underground
+            transform.translation + Vec3::Y * 0.05,
+            transform.rotation,
             Vec3::NEG_Y,
-            1.1,
-            true,
+            collider,
+            0.2,
             QueryFilter {
                 exclude_collider: Some(entity),
                 ..default()
             },
-        ) {
-            if let JumpState::JumpPressed(_watch) = character_input.jump.clone()
-            {
-                external_impulse.impulse = Vec3::new(
-                    0.,
-                    character_movement_properties.jump_impulse,
-                    0.,
-                );
-            } else {
-                external_impulse.impulse = Vec3::ZERO;
-            }
+        ) && let JumpState::JumpPressed(_watch) = character_input.jump.clone()
+        {
+            external_impulse.impulse = Vec3::new(
+                0.,
+                character_movement_properties.jump_impulse,
+                0.,
+            );
+        } else {
+            external_impulse.impulse = Vec3::ZERO;
         }
     }
 }
