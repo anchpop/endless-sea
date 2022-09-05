@@ -3,6 +3,8 @@ use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 
 // Plugin
+// ======
+
 pub struct CharacterPlugin;
 
 impl Plugin for CharacterPlugin {
@@ -110,6 +112,7 @@ fn impluse_movement(
 }
 
 // Bundle
+// ======
 
 #[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
