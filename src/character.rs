@@ -21,6 +21,7 @@ impl Plugin for CharacterPlugin {
 
 fn force_movement(
     mut characters: Query<(
+        &Character,
         &CharacterInput,
         &CharacterMovementProperties,
         &Velocity,
@@ -32,6 +33,7 @@ fn force_movement(
         v - v.project_onto(n)
     }
     if let Some((
+        character,
         character_input,
         character_movement_properties,
         velocity,
@@ -55,13 +57,21 @@ fn force_movement(
                 .length()
                 < character_movement_properties.max_speed;
             let directional_force = if under_max_speed {
-                character_input.direction
-                    * character_movement_properties.acceleration
+                let acceleration = if character.on_ground {
+                    character_movement_properties.acceleration
+                } else {
+                    character_movement_properties.air_acceleration
+                };
+                character_input.direction * acceleration
             } else {
                 Vec3::ZERO
             };
-            let damping_force = velocity_direction_difference
-                * character_movement_properties.damping_factor;
+            let damping_force = if character.on_ground {
+                velocity_direction_difference
+                    * character_movement_properties.damping_factor
+            } else {
+                Vec3::ZERO
+            };
             external_force.force = directional_force + damping_force;
             friction.coefficient = 0.0;
         } else {
@@ -148,6 +158,7 @@ pub struct PlayerCharacter;
 pub struct CharacterMovementProperties {
     pub stopped_friction: f32,
     pub acceleration: f32,
+    pub air_acceleration: f32,
     pub damping_factor: f32,
     pub max_speed: f32,
     pub jump_impulse: f32,
@@ -208,6 +219,7 @@ impl Default for CharacterBundle {
             character_movement_properties: CharacterMovementProperties {
                 stopped_friction: 4.0,
                 acceleration: 20.0,
+                air_acceleration: 10.0,
                 damping_factor: 60.0,
                 max_speed: 10.0,
                 jump_impulse: 6.0,
