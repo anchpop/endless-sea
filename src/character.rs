@@ -9,12 +9,18 @@ pub struct CharacterPlugin;
 
 impl Plugin for CharacterPlugin {
     fn build(&self, app: &mut App) {
-        app.add_system(force_movement).add_system(impluse_movement);
+        app.add_system(force_movement)
+            .add_system(impulse_movement)
+            .add_system(
+                update_grounded
+                    .before(impulse_movement)
+                    .before(force_movement),
+            );
     }
 }
 
 fn force_movement(
-    mut player_character: Query<(
+    mut characters: Query<(
         &CharacterInput,
         &CharacterMovementProperties,
         &Velocity,
@@ -31,7 +37,7 @@ fn force_movement(
         velocity,
         mut external_force,
         mut friction,
-    )) = player_character.iter_mut().next()
+    )) = characters.iter_mut().next()
     {
         let velocity_direction_difference = velocity
             .linvel
@@ -68,30 +74,51 @@ fn force_movement(
     }
 }
 
-fn impluse_movement(
-    rapier_context: Res<RapierContext>,
-    mut player_character: Query<(
-        Entity,
+fn impulse_movement(
+    mut characters: Query<(
+        &Character,
         &CharacterInput,
         &CharacterMovementProperties,
-        &Transform,
-        &Collider,
         &mut ExternalImpulse,
     )>,
 ) {
-    if let Some((
-        entity,
+    for (
+        character,
         character_input,
         character_movement_properties,
-        transform,
-        collider,
         mut external_impulse,
-    )) = player_character.iter_mut().next()
+    ) in characters.iter_mut()
+    {
+        if character.on_ground && let JumpState::JumpPressed(_watch) = character_input.jump.clone()
+        {
+            external_impulse.impulse = Vec3::new(
+                0.,
+                character_movement_properties.jump_impulse,
+                0.,
+            );
+        } else {
+            external_impulse.impulse = Vec3::ZERO;
+        }
+    }
+}
+
+fn update_grounded(
+    rapier_context: Res<RapierContext>,
+    mut player_character: Query<(
+        Entity,
+        &mut Character,
+        &Transform,
+        &Collider,
+    )>,
+) {
+    for (entity, mut character, transform, collider) in
+        player_character.iter_mut()
     {
         if let Some((_entity, _toi)) = rapier_context.cast_shape(
-            // TODO: This is a hack to make sure the ray doesn't start inside the 
-            // ground if the collider is slightly underground, bus will cause rare false positives
-            // when the player's head hits the ceiling.
+            // TODO: This is a hack to make sure the ray doesn't start inside
+            // the ground if the collider is slightly underground,
+            // bus will cause rare false positives when the player'
+            // s head hits the ceiling.
             transform.translation + Vec3::Y * 0.05,
             transform.rotation,
             Vec3::NEG_Y,
@@ -101,15 +128,10 @@ fn impluse_movement(
                 exclude_collider: Some(entity),
                 ..default()
             },
-        ) && let JumpState::JumpPressed(_watch) = character_input.jump.clone()
-        {
-            external_impulse.impulse = Vec3::new(
-                0.,
-                character_movement_properties.jump_impulse,
-                0.,
-            );
+        ) {
+            character.on_ground = true;
         } else {
-            external_impulse.impulse = Vec3::ZERO;
+            character.on_ground = false;
         }
     }
 }
@@ -140,6 +162,12 @@ pub enum JumpState {
     JumpPressed(Stopwatch),
 }
 
+#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+pub struct Character {
+    on_ground: bool,
+}
+
 #[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
 pub struct CharacterInput {
@@ -155,6 +183,7 @@ pub struct CharacterBundle {
     pub restitution: Restitution,
     pub locked_axes: LockedAxes,
     pub velocity: Velocity,
+    pub character: Character,
     pub character_movement_properties: CharacterMovementProperties,
     pub character_input: CharacterInput,
     pub external_force: ExternalForce,
@@ -175,6 +204,7 @@ impl Default for CharacterBundle {
             restitution: Restitution::coefficient(0.0),
             locked_axes: LockedAxes::ROTATION_LOCKED,
             velocity: Velocity::default(),
+            character: Character { on_ground: true },
             character_movement_properties: CharacterMovementProperties {
                 stopped_friction: 4.0,
                 acceleration: 20.0,
