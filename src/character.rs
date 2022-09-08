@@ -1,5 +1,7 @@
+use std::time::Duration;
+
 use bevy::{prelude::*, time::Stopwatch};
-use bevy_inspector_egui::Inspectable;
+use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
 // Plugin
@@ -15,7 +17,10 @@ impl Plugin for CharacterPlugin {
                 update_grounded
                     .before(impulse_movement)
                     .before(force_movement),
-            );
+            )/* 
+            .register_inspectable::<PlayerCharacter>()
+            .register_inspectable::<Character>()
+            .register_inspectable::<CharacterMovementProperties>()*/;
     }
 }
 
@@ -99,11 +104,14 @@ fn impulse_movement(
         mut external_impulse,
     ) in characters.iter_mut()
     {
-        if character.on_ground && let JumpState::JumpPressed(_watch) = character_input.jump.clone()
+        if character.on_ground && let JumpState::JumpPressed(watch) = character_input.jump.clone()
         {
+            let max_charge_time = character_movement_properties.max_charge_time.as_secs_f32();
+            let jump_intensity = watch.elapsed_secs().min(max_charge_time) / max_charge_time;
+            let jump_impulse = character_movement_properties.min_jump_impulse + jump_intensity * (character_movement_properties.max_jump_impulse - character_movement_properties.min_jump_impulse);
             external_impulse.impulse = Vec3::new(
                 0.,
-                character_movement_properties.jump_impulse,
+                jump_impulse,
                 0.,
             );
         } else {
@@ -161,7 +169,10 @@ pub struct CharacterMovementProperties {
     pub air_acceleration: f32,
     pub damping_factor: f32,
     pub max_speed: f32,
-    pub jump_impulse: f32,
+
+    pub max_charge_time: Duration,
+    pub min_jump_impulse: f32,
+    pub max_jump_impulse: f32,
 }
 
 #[derive(Reflect, Component, Default, Clone)]
@@ -222,7 +233,9 @@ impl Default for CharacterBundle {
                 air_acceleration: 10.0,
                 damping_factor: 60.0,
                 max_speed: 10.0,
-                jump_impulse: 6.0,
+                max_charge_time: Duration::from_secs_f32(0.75),
+                min_jump_impulse: 3.0,
+                max_jump_impulse: 6.0,
             },
             character_input: CharacterInput::default(),
             external_force: ExternalForce::default(),
