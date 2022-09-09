@@ -93,7 +93,7 @@ fn setup_physics(
         .insert_bundle(SpatialBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
         .insert(Name::new("Floor"));
 
-    /* Create the bouncing ball. */
+    /* Create the player. */
     commands
         .spawn()
         .insert_bundle(SceneBundle {
@@ -102,20 +102,28 @@ fn setup_physics(
         })
         .insert_bundle(CharacterBundle::default())
         .insert(PlayerCharacter {})
-        .insert(Name::new("Ball"));
+        .insert(Name::new("Player"));
 
     /* Create an obstacle. */
-    commands
-        .spawn()
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(0.5, 0.5, 0.5))
-        .insert_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-            transform: Transform::from_xyz(2.0, 0.5, 0.0),
-            ..default()
-        })
-        .insert(Name::new("Obstacle"));
+    for x in 0..=1 {
+        for z in 0..=1 {
+            commands
+                .spawn()
+                .insert(RigidBody::Dynamic)
+                .insert(Collider::cuboid(0.5, 0.5, 0.5))
+                .insert_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+                    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+                    transform: Transform::from_xyz(
+                        2.0 + x as f32,
+                        0.5,
+                        0.0 + z as f32,
+                    ),
+                    ..default()
+                })
+                .insert(Name::new("Obstacle"));
+        }
+    }
 }
 
 fn camera_movement(
