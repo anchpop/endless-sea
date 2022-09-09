@@ -1,5 +1,6 @@
 #![allow(clippy::type_complexity)]
 mod character;
+mod npc;
 
 use bevy::{prelude::*, render::camera::ScalingMode, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, WorldInspectorPlugin};
@@ -42,6 +43,7 @@ pub fn app() -> App {
     static POST_SIMULATION: &str = "post_simulation";
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(character::Plugin)
+        .add_plugin(npc::Plugin)
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics)
         .add_system(player_input)
@@ -112,6 +114,18 @@ fn setup_physics(
         .insert_bundle(character::Bundle::default())
         .insert(character::Player {})
         .insert(Name::new("Player"));
+
+    /* Create the player. */
+    commands
+        .spawn()
+        .insert_bundle(SceneBundle {
+            scene: asset_server.load("capsule/capsule.gltf#Scene0"),
+            transform: Transform::from_xyz(5.0, 0.0, 5.0),
+            ..default()
+        })
+        .insert_bundle(character::Bundle::default())
+        .insert(npc::Npc { peaceful: true })
+        .insert(Name::new("Friendly"));
 
     /* Create an obstacle. */
     for x in 0..=1 {
@@ -207,9 +221,11 @@ fn player_input(
                 character::JumpState::Charging(mut watch) => {
                     if keys.pressed(KeyCode::Space) {
                         watch.tick(time.delta());
-                        character_input.jump = character::JumpState::Charging(watch);
+                        character_input.jump =
+                            character::JumpState::Charging(watch);
                     } else if keys.just_released(KeyCode::Space) {
-                        character_input.jump = character::JumpState::JumpPressed(watch);
+                        character_input.jump =
+                            character::JumpState::JumpPressed(watch);
                     }
                 }
                 character::JumpState::JumpPressed(_watch) => {
