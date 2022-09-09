@@ -15,7 +15,7 @@ pub const LAUNCHER_TITLE: &str = "Endless Sea";
 pub fn app() -> App {
     let mut app = App::new();
 
-    static POST_SIMULATION: &str = "debug";
+    static POST_SIMULATION: &str = "post_simulation";
     app.insert_resource(WindowDescriptor {
         title: LAUNCHER_TITLE.to_string(),
         canvas: Some("#bevy".to_string()),
