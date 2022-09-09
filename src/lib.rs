@@ -1,6 +1,5 @@
 #![allow(clippy::type_complexity)]
 mod character;
-use character::*;
 
 use bevy::{prelude::*, render::camera::ScalingMode, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, WorldInspectorPlugin};
@@ -32,7 +31,6 @@ pub fn app() -> App {
             ..Default::default()
         });
 
-
     if cfg!(debug_assertions) {
         app.add_plugin(WorldInspectorPlugin::new())
             .add_plugin(RapierDebugRenderPlugin::default());
@@ -43,7 +41,7 @@ pub fn app() -> App {
 
     static POST_SIMULATION: &str = "post_simulation";
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(CharacterPlugin)
+        .add_plugin(character::Plugin)
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics)
         .add_system(player_input)
@@ -111,8 +109,8 @@ fn setup_physics(
             scene: asset_server.load("capsule/capsule.gltf#Scene0"),
             ..default()
         })
-        .insert_bundle(CharacterBundle::default())
-        .insert(PlayerCharacter {})
+        .insert_bundle(character::Bundle::default())
+        .insert(character::Player {})
         .insert(Name::new("Player"));
 
     /* Create an obstacle. */
@@ -138,10 +136,10 @@ fn setup_physics(
 }
 
 fn camera_movement(
-    player_character: Query<(With<PlayerCharacter>, &Transform)>,
+    player_character: Query<(With<character::Player>, &Transform)>,
     mut main_camera: Query<(
         With<MainCamera>,
-        Without<PlayerCharacter>,
+        Without<character::Player>,
         &mut Transform,
     )>,
 ) {
@@ -158,7 +156,10 @@ fn camera_movement(
 fn player_input(
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
-    mut player_character: Query<(With<PlayerCharacter>, &mut CharacterInput)>,
+    mut player_character: Query<(
+        With<character::Player>,
+        &mut character::Input,
+    )>,
 ) {
     if let Some((_, mut character_input)) = player_character.iter_mut().next() {
         // directional
@@ -194,25 +195,25 @@ fn player_input(
         // jump
         {
             match character_input.jump.clone() {
-                JumpState::Normal => {
+                character::JumpState::Normal => {
                     if keys.pressed(KeyCode::Space) {
                         character_input.jump =
-                            JumpState::Charging(Stopwatch::new());
+                            character::JumpState::Charging(Stopwatch::new());
                     } else if keys.just_released(KeyCode::Space) {
                         character_input.jump =
-                            JumpState::JumpPressed(Stopwatch::new());
+                            character::JumpState::JumpPressed(Stopwatch::new());
                     }
                 }
-                JumpState::Charging(mut watch) => {
+                character::JumpState::Charging(mut watch) => {
                     if keys.pressed(KeyCode::Space) {
                         watch.tick(time.delta());
-                        character_input.jump = JumpState::Charging(watch);
+                        character_input.jump = character::JumpState::Charging(watch);
                     } else if keys.just_released(KeyCode::Space) {
-                        character_input.jump = JumpState::JumpPressed(watch);
+                        character_input.jump = character::JumpState::JumpPressed(watch);
                     }
                 }
-                JumpState::JumpPressed(_watch) => {
-                    character_input.jump = JumpState::Normal;
+                character::JumpState::JumpPressed(_watch) => {
+                    character_input.jump = character::JumpState::Normal;
                 }
             }
         }
