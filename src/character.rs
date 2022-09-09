@@ -11,7 +11,7 @@ use bevy_rapier3d::prelude::*;
 #[reflect(Component)]
 pub struct Player;
 
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[derive(Inspectable, Reflect, Component, Clone)]
 #[reflect(Component)]
 pub struct MovementProperties {
     pub stopped_friction: f32,
@@ -23,6 +23,22 @@ pub struct MovementProperties {
     pub max_charge_time: Duration,
     pub min_jump_impulse: f32,
     pub max_jump_impulse: f32,
+}
+
+impl Default for MovementProperties {
+    fn default() -> Self {
+        Self {
+            stopped_friction: 4.0,
+            acceleration: 20.0,
+            air_acceleration: 10.0,
+            damping_factor: 60.0,
+            max_speed: 10.0,
+
+            max_charge_time: Duration::from_secs_f32(0.75),
+            min_jump_impulse: 3.0,
+            max_jump_impulse: 6.0,
+        }
+    }
 }
 
 #[derive(Reflect, Component, Default, Clone)]
@@ -77,16 +93,7 @@ impl Default for Bundle {
             locked_axes: LockedAxes::ROTATION_LOCKED,
             velocity: Velocity::default(),
             character: Character { on_ground: true },
-            movement_properties: MovementProperties {
-                stopped_friction: 4.0,
-                acceleration: 20.0,
-                air_acceleration: 10.0,
-                damping_factor: 60.0,
-                max_speed: 10.0,
-                max_charge_time: Duration::from_secs_f32(0.75),
-                min_jump_impulse: 3.0,
-                max_jump_impulse: 6.0,
-            },
+            movement_properties: default(),
             input: Input::default(),
             external_force: ExternalForce::default(),
             external_impulse: ExternalImpulse::default(),
@@ -130,14 +137,14 @@ fn force_movement(
     fn project_onto_plane(v: Vec3, n: Vec3) -> Vec3 {
         v - v.project_onto(n)
     }
-    if let Some((
+    for (
         character,
         input,
         movement_properties,
         velocity,
         mut external_force,
         mut friction,
-    )) = characters.iter_mut().next()
+    ) in characters.iter_mut()
     {
         let velocity_direction_difference = velocity
             .linvel
@@ -174,8 +181,6 @@ fn force_movement(
             friction.coefficient = movement_properties.stopped_friction;
             external_force.force = input.direction;
         }
-    } else {
-        println!("No player character found!");
     }
 }
 
