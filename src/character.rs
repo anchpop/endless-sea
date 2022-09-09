@@ -9,11 +9,11 @@ use bevy_rapier3d::prelude::*;
 
 #[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
-pub struct PlayerCharacter;
+pub struct Player;
 
 #[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
-pub struct CharacterMovementProperties {
+pub struct MovementProperties {
     pub stopped_friction: f32,
     pub acceleration: f32,
     pub air_acceleration: f32,
@@ -42,13 +42,13 @@ pub struct Character {
 
 #[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
-pub struct CharacterInput {
+pub struct Input {
     pub direction: Vec3,
     pub jump: JumpState,
 }
 
 #[derive(Bundle)]
-pub struct CharacterBundle {
+pub struct Bundle {
     pub rigid_body: RigidBody,
     pub collider: Collider,
     pub collider_mass_properties: ColliderMassProperties,
@@ -56,14 +56,14 @@ pub struct CharacterBundle {
     pub locked_axes: LockedAxes,
     pub velocity: Velocity,
     pub character: Character,
-    pub character_movement_properties: CharacterMovementProperties,
-    pub character_input: CharacterInput,
+    pub movement_properties: MovementProperties,
+    pub input: Input,
     pub external_force: ExternalForce,
     pub external_impulse: ExternalImpulse,
     pub friction: Friction,
 }
 
-impl Default for CharacterBundle {
+impl Default for Bundle {
     fn default() -> Self {
         Self {
             rigid_body: RigidBody::Dynamic,
@@ -77,7 +77,7 @@ impl Default for CharacterBundle {
             locked_axes: LockedAxes::ROTATION_LOCKED,
             velocity: Velocity::default(),
             character: Character { on_ground: true },
-            character_movement_properties: CharacterMovementProperties {
+            movement_properties: MovementProperties {
                 stopped_friction: 4.0,
                 acceleration: 20.0,
                 air_acceleration: 10.0,
@@ -87,7 +87,7 @@ impl Default for CharacterBundle {
                 min_jump_impulse: 3.0,
                 max_jump_impulse: 6.0,
             },
-            character_input: CharacterInput::default(),
+            input: Input::default(),
             external_force: ExternalForce::default(),
             external_impulse: ExternalImpulse::default(),
             friction: Friction {
@@ -101,9 +101,9 @@ impl Default for CharacterBundle {
 // Plugin
 // ======
 
-pub struct CharacterPlugin;
+pub struct Plugin;
 
-impl Plugin for CharacterPlugin {
+impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_system(force_movement)
             .add_system(impulse_movement)
@@ -113,15 +113,15 @@ impl Plugin for CharacterPlugin {
                     .before(force_movement),
             )
             .register_inspectable::<Character>()
-            .register_inspectable::<CharacterMovementProperties>();
+            .register_inspectable::<MovementProperties>();
     }
 }
 
 fn force_movement(
     mut characters: Query<(
         &Character,
-        &CharacterInput,
-        &CharacterMovementProperties,
+        &Input,
+        &MovementProperties,
         &Velocity,
         &mut ExternalForce,
         &mut Friction,
@@ -132,8 +132,8 @@ fn force_movement(
     }
     if let Some((
         character,
-        character_input,
-        character_movement_properties,
+        input,
+        movement_properties,
         velocity,
         mut external_force,
         mut friction,
@@ -143,30 +143,30 @@ fn force_movement(
             .linvel
             .try_normalize()
             .map(|v| {
-                project_onto_plane(character_input.direction, Vec3::Y)
+                project_onto_plane(input.direction, Vec3::Y)
                     - project_onto_plane(v, Vec3::Y)
             })
             .unwrap_or(Vec3::ZERO);
 
-        if character_input.direction != Vec3::ZERO {
+        if input.direction != Vec3::ZERO {
             let under_max_speed = velocity
                 .linvel
-                .project_onto(character_input.direction)
+                .project_onto(input.direction)
                 .length()
-                < character_movement_properties.max_speed;
+                < movement_properties.max_speed;
             let directional_force = if under_max_speed {
                 let acceleration = if character.on_ground {
-                    character_movement_properties.acceleration
+                    movement_properties.acceleration
                 } else {
-                    character_movement_properties.air_acceleration
+                    movement_properties.air_acceleration
                 };
-                character_input.direction * acceleration
+                input.direction * acceleration
             } else {
                 Vec3::ZERO
             };
             let damping_force = if character.on_ground {
                 velocity_direction_difference
-                    * character_movement_properties.damping_factor
+                    * movement_properties.damping_factor
             } else {
                 Vec3::ZERO
             };
@@ -174,8 +174,8 @@ fn force_movement(
             friction.coefficient = 0.0;
         } else {
             friction.coefficient =
-                character_movement_properties.stopped_friction;
-            external_force.force = character_input.direction;
+                movement_properties.stopped_friction;
+            external_force.force = input.direction;
         }
     } else {
         println!("No player character found!");
@@ -185,23 +185,23 @@ fn force_movement(
 fn impulse_movement(
     mut characters: Query<(
         &Character,
-        &CharacterInput,
-        &CharacterMovementProperties,
+        &Input,
+        &MovementProperties,
         &mut ExternalImpulse,
     )>,
 ) {
     for (
         character,
-        character_input,
-        character_movement_properties,
+        input,
+        movement_properties,
         mut external_impulse,
     ) in characters.iter_mut()
     {
-        if character.on_ground && let JumpState::JumpPressed(watch) = character_input.jump.clone()
+        if character.on_ground && let JumpState::JumpPressed(watch) = input.jump.clone()
         {
-            let max_charge_time = character_movement_properties.max_charge_time.as_secs_f32();
+            let max_charge_time = movement_properties.max_charge_time.as_secs_f32();
             let jump_intensity = watch.elapsed_secs().min(max_charge_time) / max_charge_time;
-            let jump_impulse = character_movement_properties.min_jump_impulse + jump_intensity * (character_movement_properties.max_jump_impulse - character_movement_properties.min_jump_impulse);
+            let jump_impulse = movement_properties.min_jump_impulse + jump_intensity * (movement_properties.max_jump_impulse - movement_properties.min_jump_impulse);
             external_impulse.impulse = Vec3::new(
                 0.,
                 jump_impulse,
