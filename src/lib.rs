@@ -123,7 +123,13 @@ fn setup_physics(
             transform: Transform::from_xyz(5.0, 0.0, 5.0),
             ..default()
         })
-        .insert_bundle(character::Bundle::default())
+        .insert_bundle(character::Bundle {
+            movement_properties: character::MovementProperties {
+                max_speed: 3.0,
+                ..Default::default()
+            },
+            ..character::Bundle::default()
+        })
         .insert(npc::Npc { peaceful: true })
         .insert(Name::new("Friendly"));
 
