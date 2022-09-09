@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::{prelude::*, time::Stopwatch};
-use bevy_inspector_egui::Inspectable;
+use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
 // Bundle
@@ -111,7 +111,9 @@ impl Plugin for CharacterPlugin {
                 update_grounded
                     .before(impulse_movement)
                     .before(force_movement),
-            );
+            )
+            .register_inspectable::<Character>()
+            .register_inspectable::<CharacterMovementProperties>();
     }
 }
 

@@ -12,28 +12,26 @@ struct MainCamera;
 
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
+#[derive(Inspectable, Default)]
+struct Data {
+    should_render: bool,
+    text: String,
+    #[inspectable(min = 42.0, max = 100.0)]
+    size: f32,
+}
+
 pub fn app() -> App {
     let mut app = App::new();
 
-    static POST_SIMULATION: &str = "post_simulation";
-    app.insert_resource(WindowDescriptor {
-        title: LAUNCHER_TITLE.to_string(),
-        canvas: Some("#bevy".to_string()),
-        fit_canvas_to_parent: true,
-        ..Default::default()
-    })
-    .add_plugins(DefaultPlugins)
-    .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-    .add_plugin(CharacterPlugin)
-    .add_startup_system(setup_graphics)
-    .add_startup_system(setup_physics)
-    .add_system(player_input)
-    .add_stage_after(
-        PhysicsStages::Writeback,
-        POST_SIMULATION,
-        SystemStage::parallel(),
-    )
-    .add_system_to_stage(POST_SIMULATION, camera_movement);
+    // Basic setup
+    app.add_plugins(DefaultPlugins)
+        .insert_resource(WindowDescriptor {
+            title: LAUNCHER_TITLE.to_string(),
+            canvas: Some("#bevy".to_string()),
+            fit_canvas_to_parent: true,
+            ..Default::default()
+        });
+
 
     if cfg!(debug_assertions) {
         app.add_plugin(WorldInspectorPlugin::new())
@@ -42,6 +40,19 @@ pub fn app() -> App {
     } else {
         bevy::log::info!("Debug mode disabled");
     };
+
+    static POST_SIMULATION: &str = "post_simulation";
+    app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(CharacterPlugin)
+        .add_startup_system(setup_graphics)
+        .add_startup_system(setup_physics)
+        .add_system(player_input)
+        .add_stage_after(
+            PhysicsStages::Writeback,
+            POST_SIMULATION,
+            SystemStage::parallel(),
+        )
+        .add_system_to_stage(POST_SIMULATION, camera_movement);
 
     app
 }
