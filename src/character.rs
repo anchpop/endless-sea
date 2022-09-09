@@ -4,6 +4,100 @@ use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 
+// Bundle
+// ======
+
+#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+pub struct PlayerCharacter;
+
+#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+pub struct CharacterMovementProperties {
+    pub stopped_friction: f32,
+    pub acceleration: f32,
+    pub air_acceleration: f32,
+    pub damping_factor: f32,
+    pub max_speed: f32,
+
+    pub max_charge_time: Duration,
+    pub min_jump_impulse: f32,
+    pub max_jump_impulse: f32,
+}
+
+#[derive(Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+pub enum JumpState {
+    #[default]
+    Normal,
+    Charging(Stopwatch),
+    JumpPressed(Stopwatch),
+}
+
+#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+pub struct Character {
+    on_ground: bool,
+}
+
+#[derive(Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+pub struct CharacterInput {
+    pub direction: Vec3,
+    pub jump: JumpState,
+}
+
+#[derive(Bundle)]
+pub struct CharacterBundle {
+    pub rigid_body: RigidBody,
+    pub collider: Collider,
+    pub collider_mass_properties: ColliderMassProperties,
+    pub restitution: Restitution,
+    pub locked_axes: LockedAxes,
+    pub velocity: Velocity,
+    pub character: Character,
+    pub character_movement_properties: CharacterMovementProperties,
+    pub character_input: CharacterInput,
+    pub external_force: ExternalForce,
+    pub external_impulse: ExternalImpulse,
+    pub friction: Friction,
+}
+
+impl Default for CharacterBundle {
+    fn default() -> Self {
+        Self {
+            rigid_body: RigidBody::Dynamic,
+            collider: Collider::capsule(
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(0.0, 1.0, 0.0),
+                0.5,
+            ),
+            collider_mass_properties: ColliderMassProperties::Mass(1.0),
+            restitution: Restitution::coefficient(0.0),
+            locked_axes: LockedAxes::ROTATION_LOCKED,
+            velocity: Velocity::default(),
+            character: Character { on_ground: true },
+            character_movement_properties: CharacterMovementProperties {
+                stopped_friction: 4.0,
+                acceleration: 20.0,
+                air_acceleration: 10.0,
+                damping_factor: 60.0,
+                max_speed: 10.0,
+                max_charge_time: Duration::from_secs_f32(0.75),
+                min_jump_impulse: 3.0,
+                max_jump_impulse: 6.0,
+            },
+            character_input: CharacterInput::default(),
+            external_force: ExternalForce::default(),
+            external_impulse: ExternalImpulse::default(),
+            friction: Friction {
+                coefficient: 0.0,
+                combine_rule: CoefficientCombineRule::Max,
+            },
+        }
+    }
+}
+
 // Plugin
 // ======
 
@@ -147,100 +241,6 @@ fn update_grounded(
             character.on_ground = true;
         } else {
             character.on_ground = false;
-        }
-    }
-}
-
-// Bundle
-// ======
-
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
-#[reflect(Component)]
-pub struct PlayerCharacter;
-
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
-#[reflect(Component)]
-pub struct CharacterMovementProperties {
-    pub stopped_friction: f32,
-    pub acceleration: f32,
-    pub air_acceleration: f32,
-    pub damping_factor: f32,
-    pub max_speed: f32,
-
-    pub max_charge_time: Duration,
-    pub min_jump_impulse: f32,
-    pub max_jump_impulse: f32,
-}
-
-#[derive(Reflect, Component, Default, Clone)]
-#[reflect(Component)]
-pub enum JumpState {
-    #[default]
-    Normal,
-    Charging(Stopwatch),
-    JumpPressed(Stopwatch),
-}
-
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
-#[reflect(Component)]
-pub struct Character {
-    on_ground: bool,
-}
-
-#[derive(Reflect, Component, Default, Clone)]
-#[reflect(Component)]
-pub struct CharacterInput {
-    pub direction: Vec3,
-    pub jump: JumpState,
-}
-
-#[derive(Bundle)]
-pub struct CharacterBundle {
-    pub rigid_body: RigidBody,
-    pub collider: Collider,
-    pub collider_mass_properties: ColliderMassProperties,
-    pub restitution: Restitution,
-    pub locked_axes: LockedAxes,
-    pub velocity: Velocity,
-    pub character: Character,
-    pub character_movement_properties: CharacterMovementProperties,
-    pub character_input: CharacterInput,
-    pub external_force: ExternalForce,
-    pub external_impulse: ExternalImpulse,
-    pub friction: Friction,
-}
-
-impl Default for CharacterBundle {
-    fn default() -> Self {
-        Self {
-            rigid_body: RigidBody::Dynamic,
-            collider: Collider::capsule(
-                Vec3::new(0.0, 0.0, 0.0),
-                Vec3::new(0.0, 1.0, 0.0),
-                0.5,
-            ),
-            collider_mass_properties: ColliderMassProperties::Mass(1.0),
-            restitution: Restitution::coefficient(0.0),
-            locked_axes: LockedAxes::ROTATION_LOCKED,
-            velocity: Velocity::default(),
-            character: Character { on_ground: true },
-            character_movement_properties: CharacterMovementProperties {
-                stopped_friction: 4.0,
-                acceleration: 20.0,
-                air_acceleration: 10.0,
-                damping_factor: 60.0,
-                max_speed: 10.0,
-                max_charge_time: Duration::from_secs_f32(0.75),
-                min_jump_impulse: 3.0,
-                max_jump_impulse: 6.0,
-            },
-            character_input: CharacterInput::default(),
-            external_force: ExternalForce::default(),
-            external_impulse: ExternalImpulse::default(),
-            friction: Friction {
-                coefficient: 0.0,
-                combine_rule: CoefficientCombineRule::Max,
-            },
         }
     }
 }
