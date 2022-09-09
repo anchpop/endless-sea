@@ -37,7 +37,7 @@ pub enum JumpState {
 #[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
 pub struct Character {
-    on_ground: bool,
+    pub on_ground: bool,
 }
 
 #[derive(Reflect, Component, Default, Clone)]
@@ -149,11 +149,9 @@ fn force_movement(
             .unwrap_or(Vec3::ZERO);
 
         if input.direction != Vec3::ZERO {
-            let under_max_speed = velocity
-                .linvel
-                .project_onto(input.direction)
-                .length()
-                < movement_properties.max_speed;
+            let under_max_speed =
+                velocity.linvel.project_onto(input.direction).length()
+                    < movement_properties.max_speed;
             let directional_force = if under_max_speed {
                 let acceleration = if character.on_ground {
                     movement_properties.acceleration
@@ -173,8 +171,7 @@ fn force_movement(
             external_force.force = directional_force + damping_force;
             friction.coefficient = 0.0;
         } else {
-            friction.coefficient =
-                movement_properties.stopped_friction;
+            friction.coefficient = movement_properties.stopped_friction;
             external_force.force = input.direction;
         }
     } else {
@@ -190,12 +187,8 @@ fn impulse_movement(
         &mut ExternalImpulse,
     )>,
 ) {
-    for (
-        character,
-        input,
-        movement_properties,
-        mut external_impulse,
-    ) in characters.iter_mut()
+    for (character, input, movement_properties, mut external_impulse) in
+        characters.iter_mut()
     {
         if character.on_ground && let JumpState::JumpPressed(watch) = input.jump.clone()
         {
