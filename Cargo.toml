@@ -4,14 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [workspace]
-members = [
-    "launchers/wasm",
-    "launchers/native",
-]
+members = ["launchers/wasm", "launchers/native"]
 
 [[bin]]
-name="native-launcher"
-path="launchers/native/src/main.rs"
+name = "native-launcher"
+path = "launchers/native/src/main.rs"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
@@ -33,6 +30,13 @@ lto = true
 [dependencies]
 bevy = { version = "0.8.1" }
 bevy-inspector-egui = "*"
-bevy_rapier3d = { version = "*", features = [ "simd-stable", "debug-render" ] }
+bevy_rapier3d = { version = "*", features = ["simd-stable"] }
 image = "0.24.3"
 winit = "0.26.1"
+
+[dev-dependencies]
+pretty_assertions = "1.3.0"
+more-asserts = "0.3.0"
+
+[patch.crates-io]
+bevy = { git = 'https://github.com/anchpop/bevy.git', branch = "@anchpop/soft-error-when-no-gpu-0.8.1" }

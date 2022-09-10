@@ -1,6 +1,9 @@
 #![allow(clippy::type_complexity)]
+
 mod character;
 mod npc;
+#[cfg(test)]
+mod tests;
 
 use bevy::{prelude::*, render::camera::ScalingMode, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, WorldInspectorPlugin};
