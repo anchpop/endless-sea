@@ -146,18 +146,16 @@ fn force_movement(
         mut friction,
     ) in characters.iter_mut()
     {
+        let input_direction = project_onto_plane(input.direction, Vec3::Y);
         let velocity_direction_difference = velocity
             .linvel
             .try_normalize()
-            .map(|v| {
-                project_onto_plane(input.direction, Vec3::Y)
-                    - project_onto_plane(v, Vec3::Y)
-            })
+            .map(|v| input_direction - project_onto_plane(v, Vec3::Y))
             .unwrap_or(Vec3::ZERO);
 
-        if input.direction != Vec3::ZERO {
+        if input_direction != Vec3::ZERO {
             let under_max_speed =
-                velocity.linvel.project_onto(input.direction).length()
+                velocity.linvel.project_onto(input_direction).length()
                     < movement_properties.max_speed;
             let directional_force = if under_max_speed {
                 let acceleration = if character.on_ground {
@@ -165,7 +163,7 @@ fn force_movement(
                 } else {
                     movement_properties.air_acceleration
                 };
-                input.direction * acceleration
+                input_direction * acceleration
             } else {
                 Vec3::ZERO
             };
@@ -179,7 +177,7 @@ fn force_movement(
             friction.coefficient = 0.0;
         } else {
             friction.coefficient = movement_properties.stopped_friction;
-            external_force.force = input.direction;
+            external_force.force = input_direction;
         }
     }
 }
