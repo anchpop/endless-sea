@@ -1,5 +1,5 @@
+use bevy::prelude::*;
 use bevy::render::camera::ScalingMode;
-use bevy::{prelude::*, TestPlugins};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::render::RapierDebugRenderPlugin;
 
@@ -57,7 +57,7 @@ fn app() -> (App, bool) {
         app.add_plugins(DefaultPlugins)
             .add_plugin(RapierDebugRenderPlugin::default());
     } else {
-        app.add_plugins(TestPlugins);
+        app.add_plugins(DefaultPlugins::for_testing());
     }
     app.add_plugin(WorldInspectorPlugin::new());
 
