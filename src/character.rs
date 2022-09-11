@@ -134,7 +134,6 @@ fn force_movement(
         &mut Friction,
     )>,
 ) {
-    bevy::log::info!("force_movement");
     fn project_onto_plane(v: Vec3, n: Vec3) -> Vec3 {
         v - v.project_onto(n)
     }
