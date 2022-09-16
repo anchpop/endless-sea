@@ -20,7 +20,7 @@ fn npc_input(
 ) {
     if let Some((_, player_transform)) = player.iter().next() {
         for (_, mut npc_input, npc_transform) in npcs.iter_mut() {
-            npc_input.direction = (player_transform.translation
+            npc_input.movement_direction = (player_transform.translation
                 - npc_transform.translation)
                 .try_normalize()
                 .unwrap_or(Vec3::ZERO);

@@ -212,7 +212,7 @@ fn player_input(
             .try_normalize()
             .unwrap_or(Vec3::ZERO);
 
-            character_input.direction = direction;
+            character_input.movement_direction = direction;
         }
 
         // jump

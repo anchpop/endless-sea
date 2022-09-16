@@ -39,7 +39,7 @@ mod test {
                     .insert_bundle(SpatialBundle::default())
                     .insert_bundle(character::Bundle {
                         input: character::Input {
-                            direction: Vec3::X,
+                            movement_direction: Vec3::X,
                             ..character::Input::default()
                         },
                         ..character::Bundle::default()
@@ -74,7 +74,7 @@ mod test {
                     .insert_bundle(SpatialBundle::default())
                     .insert_bundle(character::Bundle {
                         input: character::Input {
-                            direction: Vec3::Y,
+                            movement_direction: Vec3::Y,
                             ..character::Input::default()
                         },
                         ..character::Bundle::default()
