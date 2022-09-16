@@ -179,6 +179,7 @@ fn camera_movement(
 fn player_input(
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
+    mouse: Res<Input<MouseButton>>,
     mut player_character: Query<(
         With<character::Player>,
         &mut character::Input,
@@ -217,28 +218,39 @@ fn player_input(
 
         // jump
         {
+            use character::JumpState::*;
             match character_input.jump.clone() {
-                character::JumpState::Normal => {
+                None => {
                     if keys.pressed(KeyCode::Space) {
-                        character_input.jump =
-                            character::JumpState::Charging(Stopwatch::new());
+                        character_input.jump = Some(Charging(Stopwatch::new()));
                     } else if keys.just_released(KeyCode::Space) {
                         character_input.jump =
-                            character::JumpState::JumpPressed(Stopwatch::new());
+                            Some(JumpPressed(Stopwatch::new()));
                     }
                 }
-                character::JumpState::Charging(mut watch) => {
+                Some(Charging(mut watch)) => {
                     if keys.pressed(KeyCode::Space) {
                         watch.tick(time.delta());
-                        character_input.jump =
-                            character::JumpState::Charging(watch);
+                        character_input.jump = Some(Charging(watch));
                     } else if keys.just_released(KeyCode::Space) {
-                        character_input.jump =
-                            character::JumpState::JumpPressed(watch);
+                        character_input.jump = Some(JumpPressed(watch));
                     }
                 }
-                character::JumpState::JumpPressed(_watch) => {
-                    character_input.jump = character::JumpState::Normal;
+                Some(JumpPressed(_watch)) => {
+                    character_input.jump = None;
+                }
+            }
+
+            // attack
+            {
+                if mouse.just_pressed(MouseButton::Left) {
+                    character_input.attack =
+                        Some(character::AttackState::Primary);
+                } else if mouse.just_released(MouseButton::Right) {
+                    character_input.attack =
+                        Some(character::AttackState::Secondary);
+                } else {
+                    character_input.attack = None;
                 }
             }
         }
