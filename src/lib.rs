@@ -8,7 +8,6 @@ mod tests;
 use bevy::{prelude::*, render::camera::ScalingMode, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, WorldInspectorPlugin};
 use bevy_rapier3d::prelude::*;
-use character::Player;
 
 #[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
