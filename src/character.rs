@@ -41,16 +41,19 @@ impl Default for MovementProperties {
     }
 }
 
-#[derive(Reflect, Component, Default, Clone)]
-#[reflect(Component)]
+#[derive(Component, Clone)]
 pub enum JumpState {
-    #[default]
-    Normal,
     Charging(Stopwatch),
     JumpPressed(Stopwatch),
 }
 
-#[derive(Inspectable, Reflect, Component, Clone)]
+#[derive(Clone)]
+pub enum AttackState {
+    Primary,
+    Secondary,
+}
+
+#[derive(Component, Reflect, Inspectable, Clone)]
 #[reflect(Component)]
 pub struct Character {
     pub on_ground: bool,
@@ -68,10 +71,12 @@ impl Default for Character {
     }
 }
 
-#[derive(Reflect, Component, Default, Clone)]
-#[reflect(Component)]
+#[derive(Component, Default, Clone)]
 pub struct Input {
     pub movement_direction: Vec3,
+    pub looking_direction: Vec3,
+    pub attack: Option<AttackState>,
+    pub jump: Option<JumpState>,
 }
 
 #[derive(Bundle)]
@@ -214,7 +219,7 @@ fn impulse_movement(
     for (character, input, movement_properties, mut external_impulse) in
         characters.iter_mut()
     {
-        if character.on_ground && let JumpState::JumpPressed(watch) = input.jump.clone()
+        if character.on_ground && let Some(JumpState::JumpPressed(watch)) = input.jump.clone()
         {
             let max_charge_time = movement_properties.max_charge_time.as_secs_f32();
             let jump_intensity = watch.elapsed_secs().min(max_charge_time) / max_charge_time;
