@@ -71,8 +71,7 @@ impl Default for Character {
 #[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
 pub struct Input {
-    pub direction: Vec3,
-    pub jump: JumpState,
+    pub movement_direction: Vec3,
 }
 
 #[derive(Bundle)]
@@ -159,7 +158,8 @@ fn force_movement(
         mut friction,
     ) in characters.iter_mut()
     {
-        let input_direction = project_onto_plane(input.direction, Vec3::Y);
+        let input_direction =
+            project_onto_plane(input.movement_direction, Vec3::Y);
         let velocity_direction_difference = velocity
             .linvel
             .try_normalize()
