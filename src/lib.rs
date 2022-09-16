@@ -8,6 +8,7 @@ mod tests;
 use bevy::{prelude::*, render::camera::ScalingMode, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, WorldInspectorPlugin};
 use bevy_rapier3d::prelude::*;
+use character::Player;
 
 #[derive(Inspectable, Reflect, Component, Default, Clone)]
 #[reflect(Component)]
@@ -50,6 +51,7 @@ pub fn app() -> App {
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics)
         .add_system(player_input)
+        .add_system(player_looking_input)
         .add_stage_after(
             PhysicsStages::Writeback,
             POST_SIMULATION,
@@ -251,6 +253,87 @@ fn player_input(
                         Some(character::AttackState::Secondary);
                 } else {
                     character_input.attack = None;
+                }
+            }
+        }
+    }
+}
+
+fn player_looking_input(
+    wnds: Res<Windows>,
+    q_camera: Query<(
+        &Camera,
+        &GlobalTransform,
+        With<MainCamera>,
+        Without<character::Player>,
+    )>,
+    mut player_character: Query<(
+        With<character::Player>,
+        &GlobalTransform,
+        &mut character::Input,
+    )>,
+) {
+    if let Some((_, player_transform, mut player_input)) =
+        player_character.iter_mut().next()
+    {
+        if let Some((camera, camera_transform, _, _)) = q_camera.iter().next() {
+            // directional
+            {
+                // get the window that the camera is displaying to (or the
+                // primary window)
+                let wnd =
+                    if let bevy::render::camera::RenderTarget::Window(id) =
+                        camera.target
+                    {
+                        wnds.get(id).unwrap()
+                    } else {
+                        wnds.get_primary().unwrap()
+                    };
+
+                // check if the cursor is inside the window and get its position
+                if let Some(cursor_pos_screen_pixels) = wnd.cursor_position() {
+                    // get the size of the window
+                    let window_size =
+                        Vec2::new(wnd.width() as f32, wnd.height() as f32);
+
+                    // Convert screen position [0..resolution] to ndc [-1..1]
+                    // (normalized device coordinates)
+                    let cursor_ndc = (cursor_pos_screen_pixels / window_size)
+                        * 2.0
+                        - Vec2::ONE;
+
+                    // matrix for undoing the projection and camera transform
+                    let ndc_to_world = camera_transform.compute_matrix()
+                        * camera.projection_matrix().inverse();
+
+                    // Use near and far ndc points to generate a ray in world
+                    // space. This method is more robust than using the location
+                    // of the camera as the start of the ray, because ortho
+                    // cameras have a focal point at infinity!
+                    let cursor_world_pos_near =
+                        ndc_to_world.project_point3(cursor_ndc.extend(-1.0));
+                    let cursor_world_pos_far =
+                        ndc_to_world.project_point3(cursor_ndc.extend(1.0));
+
+                    // Compute intersection with the player's plane
+
+                    let ray_direction =
+                        cursor_world_pos_far - cursor_world_pos_near;
+
+                    let player_plane_normal = player_transform.up();
+                    let playr_plane_point = player_transform.translation();
+
+                    let d = ray_direction.dot(player_plane_normal);
+                    // if this is false, line is probably parallel to th plane.
+                    if d.abs() > 0.0001 {
+                        let diff = cursor_world_pos_near - playr_plane_point;
+                        let p = diff.dot(player_plane_normal);
+                        let dist = p / d;
+                        let intersection =
+                            cursor_world_pos_near - ray_direction * dist;
+                        player_input.looking_direction =
+                            intersection - player_transform.translation();
+                    }
                 }
             }
         }
