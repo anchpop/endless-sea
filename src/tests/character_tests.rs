@@ -2,7 +2,7 @@
 mod test {
     use more_asserts::*;
 
-    use crate::tests::helpers::*;
+    use crate::{character::Character, tests::helpers::*};
 
     use bevy::prelude::*;
     use bevy_rapier3d::prelude::*;
@@ -129,6 +129,42 @@ mod test {
                     app.world.get::<Transform>(character_id).unwrap();
                 assert!(
                     character.translation.y == initial_character_translation.y
+                );
+            },
+        }
+        .run()
+    }
+
+    #[test]
+    fn character_dies() {
+        use crate::character;
+        Test {
+            setup: |app| {
+                app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+                    .add_plugin(character::Plugin);
+
+                // Setup test entities
+                let character_id = app
+                    .world
+                    .spawn()
+                    .insert_bundle(SpatialBundle::default())
+                    .insert_bundle(character::Bundle {
+                        character: Character {
+                            current_health: 0.0,
+                            ..character::Character::default()
+                        },
+                        ..character::Bundle::default()
+                    })
+                    .id();
+                spawn_floor_beneath_capsule(app, character_id);
+                character_id
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 10,
+            check: |app, character_id| {
+                assert!(
+                    app.world.get::<Transform>(character_id).is_none(),
+                    "Character should be despawned"
                 );
             },
         }

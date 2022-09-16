@@ -50,12 +50,22 @@ pub enum JumpState {
     JumpPressed(Stopwatch),
 }
 
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[derive(Inspectable, Reflect, Component, Clone)]
 #[reflect(Component)]
 pub struct Character {
     pub on_ground: bool,
     pub max_health: f64,
     pub current_health: f64,
+}
+
+impl Default for Character {
+    fn default() -> Self {
+        Self {
+            on_ground: false,
+            max_health: 1.0,
+            current_health: 1.0,
+        }
+    }
 }
 
 #[derive(Reflect, Component, Default, Clone)]
@@ -94,11 +104,7 @@ impl Default for Bundle {
             restitution: Restitution::coefficient(0.0),
             locked_axes: LockedAxes::ROTATION_LOCKED,
             velocity: Velocity::default(),
-            character: Character {
-                on_ground: true,
-                max_health: 1.0,
-                current_health: 1.0,
-            },
+            character: Character::default(),
             movement_properties: default(),
             input: Input::default(),
             external_force: ExternalForce::default(),
