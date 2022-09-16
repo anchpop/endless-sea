@@ -54,6 +54,8 @@ pub enum JumpState {
 #[reflect(Component)]
 pub struct Character {
     pub on_ground: bool,
+    pub max_health: f64,
+    pub current_health: f64,
 }
 
 #[derive(Reflect, Component, Default, Clone)]
@@ -92,7 +94,11 @@ impl Default for Bundle {
             restitution: Restitution::coefficient(0.0),
             locked_axes: LockedAxes::ROTATION_LOCKED,
             velocity: Velocity::default(),
-            character: Character { on_ground: true },
+            character: Character {
+                on_ground: true,
+                max_health: 1.0,
+                current_health: 1.0,
+            },
             movement_properties: default(),
             input: Input::default(),
             external_force: ExternalForce::default(),
@@ -119,6 +125,7 @@ impl bevy::app::Plugin for Plugin {
                     .before(impulse_movement)
                     .before(force_movement),
             )
+            .add_system(death)
             .register_inspectable::<Character>()
             .register_inspectable::<MovementProperties>();
     }
@@ -178,6 +185,14 @@ fn force_movement(
         } else {
             friction.coefficient = movement_properties.stopped_friction;
             external_force.force = input_direction;
+        }
+    }
+}
+
+fn death(mut commands: Commands, mut characters: Query<(Entity, &Character)>) {
+    for (entity, character) in characters.iter_mut() {
+        if character.current_health <= 0.0 {
+            commands.entity(entity).despawn_recursive();
         }
     }
 }
