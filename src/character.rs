@@ -1,3 +1,4 @@
+use crate::helpers::*;
 use crate::object;
 
 use std::time::Duration;
@@ -155,9 +156,6 @@ fn force_movement(
         &mut Friction,
     )>,
 ) {
-    fn project_onto_plane(v: Vec3, n: Vec3) -> Vec3 {
-        v - v.project_onto(n)
-    }
     for (
         character,
         input,
@@ -334,10 +332,12 @@ fn set_external_impulse(
 
 fn rotate_character(mut characters: Query<(&mut Transform, &Input)>) {
     for (mut transform, input) in characters.iter_mut() {
-        if input.looking_direction != Vec3::ZERO {
+        let looking_direction =
+            project_onto_plane(input.looking_direction, Vec3::Y);
+        if looking_direction != Vec3::ZERO {
             let up = transform.up();
             let translation = transform.translation;
-            transform.look_at(translation + input.looking_direction, up);
+            transform.look_at(translation + looking_direction, up);
         }
     }
 }
