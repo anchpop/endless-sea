@@ -46,7 +46,7 @@ pub enum JumpState {
     JumpPressed(Stopwatch),
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Debug)]
 pub enum AttackState {
     Primary,
     Secondary,
