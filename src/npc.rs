@@ -1,4 +1,5 @@
 use crate::character;
+use crate::player;
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
 
@@ -16,7 +17,7 @@ pub struct Npc {
 
 fn npc_input(
     mut npcs: Query<(With<Npc>, &mut character::Input, &Transform)>,
-    player: Query<(With<character::Player>, &Transform)>,
+    player: Query<(With<player::Player>, &Transform)>,
 ) {
     if let Some((_, player_transform)) = player.iter().next() {
         for (_, mut npc_input, npc_transform) in npcs.iter_mut() {

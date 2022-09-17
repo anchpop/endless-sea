@@ -7,10 +7,6 @@ use bevy_rapier3d::prelude::*;
 // Bundle
 // ======
 
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
-#[reflect(Component)]
-pub struct Player;
-
 #[derive(Inspectable, Reflect, Component, Clone)]
 #[reflect(Component)]
 pub struct MovementProperties {
