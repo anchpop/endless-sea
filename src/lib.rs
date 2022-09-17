@@ -13,6 +13,10 @@ use bevy_rapier3d::prelude::*;
 #[reflect(Component)]
 struct MainCamera;
 
+#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[reflect(Component)]
+struct Reticle;
+
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
 pub fn app() -> App {
@@ -110,6 +114,12 @@ fn setup_physics(
         .insert_bundle(character::Bundle::default())
         .insert(character::Player {})
         .insert(Name::new("Player"));
+
+    /* Create the reticle. */
+    commands
+        .spawn()
+        .insert(Reticle {})
+        .insert(Name::new("Reticle"));
 
     /* Create the player. */
     commands
