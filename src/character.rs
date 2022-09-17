@@ -129,7 +129,7 @@ pub struct Plugin;
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_system(force_movement)
-            .add_system(impulse_movement)
+            .add_system(impulse_movement.before(attack))
             .add_system(
                 update_grounded
                     .before(impulse_movement)
@@ -212,7 +212,7 @@ fn death(mut commands: Commands, mut characters: Query<(Entity, &Character)>) {
 fn attack(
     rapier_context: Res<RapierContext>,
     mut characters: Query<(Entity, &Input, &GlobalTransform)>,
-    mut character_q: Query<&mut Character>,
+    mut character_q: Query<(&mut Character, &mut ExternalImpulse)>,
 ) {
     for (entity, input, transform) in characters.iter_mut() {
         if let Some(AttackState::Primary) = input.attack {
@@ -227,7 +227,12 @@ fn attack(
                 },
             ) {
                 if let Ok(mut character) = character_q.get_mut(entity) {
-                    character.current_health -= 1.0;
+                    character.0.current_health -= 0.5;
+                    character.1.impulse = input
+                        .looking_direction
+                        .try_normalize()
+                        .unwrap_or(Vec3::ZERO)
+                        * 10.0;
                 }
             }
         }
