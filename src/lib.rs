@@ -15,14 +15,6 @@ struct MainCamera;
 
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
-#[derive(Inspectable, Default)]
-struct Data {
-    should_render: bool,
-    text: String,
-    #[inspectable(min = 42.0, max = 100.0)]
-    size: f32,
-}
-
 pub fn app() -> App {
     let mut app = App::new();
 
