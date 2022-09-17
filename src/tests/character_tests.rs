@@ -2,7 +2,7 @@
 mod test {
     use more_asserts::*;
 
-    use crate::{character::Character, tests::helpers::*};
+    use crate::tests::helpers::*;
 
     use bevy::prelude::*;
     use bevy_rapier3d::prelude::*;
@@ -138,9 +138,11 @@ mod test {
     #[test]
     fn character_dies() {
         use crate::character;
+        use crate::object;
         Test {
             setup: |app| {
                 app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+                    .add_plugin(object::Plugin)
                     .add_plugin(character::Plugin);
 
                 // Setup test entities
@@ -149,9 +151,9 @@ mod test {
                     .spawn()
                     .insert_bundle(SpatialBundle::default())
                     .insert_bundle(character::Bundle {
-                        character: Character {
-                            current_health: 0.0,
-                            ..character::Character::default()
+                        health: object::Health {
+                            current: 0.0,
+                            ..object::Health::default()
                         },
                         ..character::Bundle::default()
                     })

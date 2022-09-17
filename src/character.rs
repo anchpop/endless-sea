@@ -71,9 +71,6 @@ pub struct WalkForce(pub Vec3);
 #[derive(Component, Default, Clone)]
 pub struct JumpImpulse(pub Vec3);
 
-#[derive(Component, Default, Clone)]
-pub struct KnockbackImpulse(pub Vec3);
-
 #[derive(Bundle)]
 pub struct Bundle {
     pub rigid_body: RigidBody,
@@ -90,7 +87,7 @@ pub struct Bundle {
     pub friction: Friction,
     pub walk_force: WalkForce,
     pub jump_impulse: JumpImpulse,
-    pub knockback_impulse: KnockbackImpulse,
+    pub knockback_impulse: object::KnockbackImpulse,
     pub health: object::Health,
 }
 
@@ -118,7 +115,7 @@ impl Default for Bundle {
             },
             walk_force: WalkForce::default(),
             jump_impulse: JumpImpulse::default(),
-            knockback_impulse: KnockbackImpulse::default(),
+            knockback_impulse: object::KnockbackImpulse::default(),
             health: object::Health::default(),
         }
     }
@@ -142,6 +139,7 @@ impl bevy::app::Plugin for Plugin {
             .add_system(set_external_force)
             .add_system(set_external_impulse)
             .add_system(rotate_character)
+            .add_system(check_no_character_and_object)
             .register_inspectable::<Character>()
             .register_inspectable::<MovementProperties>();
     }
@@ -209,7 +207,10 @@ fn force_movement(
 fn attack(
     rapier_context: Res<RapierContext>,
     mut characters: Query<(Entity, &Input, &GlobalTransform)>,
-    mut character_q: Query<(&mut object::Health, &mut KnockbackImpulse)>,
+    mut character_q: Query<(
+        &mut object::Health,
+        &mut object::KnockbackImpulse,
+    )>,
 ) {
     for (entity, input, transform) in characters.iter_mut() {
         if let Some(AttackState::Primary) = input.attack {
@@ -226,7 +227,7 @@ fn attack(
                 if let Ok((mut health, mut impulse)) =
                     character_q.get_mut(entity)
                 {
-                    health.current_health -= 0.5;
+                    health.current -= 0.5;
                     impulse.0 = input
                         .looking_direction
                         .try_normalize()
@@ -300,9 +301,14 @@ fn update_grounded(
 }
 
 fn set_external_force(
-    mut characters: Query<(&mut ExternalForce, &mut WalkForce)>,
+    mut characters: Query<(
+        &mut ExternalForce,
+        &mut WalkForce,
+        With<Character>,
+        Without<object::Object>,
+    )>,
 ) {
-    for (mut external_force, mut walk_force) in characters.iter_mut() {
+    for (mut external_force, mut walk_force, _, _) in characters.iter_mut() {
         external_force.force = walk_force.0;
         walk_force.0 = Vec3::ZERO;
     }
@@ -312,10 +318,12 @@ fn set_external_impulse(
     mut characters: Query<(
         &mut ExternalImpulse,
         &mut JumpImpulse,
-        &mut KnockbackImpulse,
+        &mut object::KnockbackImpulse,
+        With<Character>,
+        Without<object::Object>,
     )>,
 ) {
-    for (mut external_impulse, mut jump_impulse, mut knockback_impulse) in
+    for (mut external_impulse, mut jump_impulse, mut knockback_impulse, _, _) in
         characters.iter_mut()
     {
         external_impulse.impulse = jump_impulse.0 + knockback_impulse.0;
@@ -331,5 +339,13 @@ fn rotate_character(mut characters: Query<(&mut Transform, &Input)>) {
             let translation = transform.translation;
             transform.look_at(translation + input.looking_direction, up);
         }
+    }
+}
+
+fn check_no_character_and_object(
+    characters_with_objects: Query<(With<Character>, With<object::Object>)>,
+) {
+    for _ in characters_with_objects.iter() {
+        panic!("Character and Object components cannot be on the same entity");
     }
 }
