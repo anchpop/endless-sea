@@ -239,7 +239,7 @@ fn player_input(
                 if mouse.just_pressed(MouseButton::Left) {
                     character_input.attack =
                         Some(character::AttackState::Primary);
-                } else if mouse.just_released(MouseButton::Right) {
+                } else if mouse.just_pressed(MouseButton::Right) {
                     character_input.attack =
                         Some(character::AttackState::Secondary);
                 } else {
