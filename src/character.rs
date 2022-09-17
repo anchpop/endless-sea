@@ -47,7 +47,7 @@ pub enum JumpState {
     JumpPressed(Stopwatch),
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 pub enum AttackState {
     Primary,
     Secondary,
@@ -136,6 +136,7 @@ impl bevy::app::Plugin for Plugin {
                     .before(force_movement),
             )
             .add_system(death)
+            .add_system(attack)
             .register_inspectable::<Character>()
             .register_inspectable::<MovementProperties>();
     }
@@ -204,6 +205,31 @@ fn death(mut commands: Commands, mut characters: Query<(Entity, &Character)>) {
     for (entity, character) in characters.iter_mut() {
         if character.current_health <= 0.0 {
             commands.entity(entity).despawn_recursive();
+        }
+    }
+}
+
+fn attack(
+    rapier_context: Res<RapierContext>,
+    mut characters: Query<(Entity, &Input, &GlobalTransform)>,
+    mut character_q: Query<&mut Character>,
+) {
+    for (entity, input, transform) in characters.iter_mut() {
+        if let Some(AttackState::Primary) = input.attack {
+            if let Some((entity, _toi)) = rapier_context.cast_ray(
+                transform.translation(),
+                input.looking_direction,
+                1000.0,
+                true,
+                QueryFilter {
+                    exclude_collider: Some(entity),
+                    ..default()
+                },
+            ) {
+                if let Ok(mut character) = character_q.get_mut(entity) {
+                    character.current_health -= 1.0;
+                }
+            }
         }
     }
 }
