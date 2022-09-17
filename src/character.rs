@@ -154,6 +154,7 @@ impl bevy::app::Plugin for Plugin {
             .add_system(attack)
             .add_system(set_external_force)
             .add_system(set_external_impulse)
+            .add_system(rotate_character)
             .register_inspectable::<Character>()
             .register_inspectable::<MovementProperties>();
     }
@@ -341,5 +342,15 @@ fn set_external_impulse(
         external_impulse.impulse = jump_impulse.0 + knockback_impulse.0;
         jump_impulse.0 = Vec3::ZERO;
         knockback_impulse.0 = Vec3::ZERO;
+    }
+}
+
+fn rotate_character(mut characters: Query<(&mut Transform, &Input)>) {
+    for (mut transform, input) in characters.iter_mut() {
+        if input.looking_direction != Vec3::ZERO {
+            let up = transform.up();
+            let translation = transform.translation;
+            transform.look_at(translation + input.looking_direction, up);
+        }
     }
 }
