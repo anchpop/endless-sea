@@ -90,7 +90,6 @@ fn player_input(
 
             direction
         };
-        character_input.movement_direction = direction_keys;
 
         // jump
         let jump_state_keys = {
@@ -118,7 +117,6 @@ fn player_input(
                 Some(JumpPressed(_watch)) => None,
             }
         };
-        character_input.jump = jump_state_keys;
 
         // attack
         let attack_keys = {
@@ -130,6 +128,9 @@ fn player_input(
                 None
             }
         };
+
+        character_input.movement_direction = direction_keys;
+        character_input.jump = jump_state_keys;
         character_input.attack = attack_keys;
     }
 }
