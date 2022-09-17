@@ -15,8 +15,12 @@ pub struct Player;
 #[reflect(Component)]
 pub struct PlayerCamera;
 
-// Bundle
-// ======
+// Resources
+// =========
+
+/// Simple resource to store the ID of the connected gamepad.
+/// We need to know which gamepad to use for player input.
+struct PrimaryGamepad(Gamepad);
 
 // Plugin
 // ======
@@ -25,7 +29,8 @@ pub struct Plugin;
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         static POST_SIMULATION: &str = "post_simulation";
-        app.add_system(player_input)
+        app.add_system(gamepad_connections)
+            .add_system(player_input)
             .add_system(player_looking_input)
             .add_stage_after(
                 PhysicsStages::Writeback,
@@ -58,6 +63,9 @@ fn player_input(
     time: Res<Time>,
     keys: Res<Input<KeyCode>>,
     mouse: Res<Input<MouseButton>>,
+    axes: Res<Axis<GamepadAxis>>,
+    buttons: Res<Input<GamepadButton>>,
+    primary_gamepad: Option<Res<PrimaryGamepad>>,
     mut player_character: Query<(With<Player>, &mut character::Input)>,
 ) {
     if let Some((_, mut character_input)) = player_character.iter_mut().next() {
@@ -129,9 +137,63 @@ fn player_input(
             }
         };
 
-        character_input.movement_direction = direction_keys;
-        character_input.jump = jump_state_keys;
-        character_input.attack = attack_keys;
+        let (direction, jump_state, attack) = {
+            if let Some(gamepad) = primary_gamepad {
+                // a gamepad is connected, we have the id
+                let gamepad = gamepad.0;
+                let direction_joystick = {
+                    // The joysticks are represented using a separate axis for X
+                    // and Y
+                    let axis_lx = GamepadAxis {
+                        gamepad,
+                        axis_type: GamepadAxisType::LeftStickX,
+                    };
+                    let axis_ly = GamepadAxis {
+                        gamepad,
+                        axis_type: GamepadAxisType::LeftStickY,
+                    };
+
+                    if let (Some(x), Some(z)) =
+                        (axes.get(axis_lx), axes.get(axis_ly))
+                    {
+                        Vec3::new(x, 0.0, z)
+                    } else {
+                        Vec3::ZERO
+                    }
+                };
+
+                // In a real game, the buttons would be configurable, but here
+                // we hardcode them
+                let jump_button = GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::South,
+                };
+                let heal_button = GamepadButton {
+                    gamepad,
+                    button_type: GamepadButtonType::East,
+                };
+
+                if buttons.just_pressed(jump_button) {
+                    println!("jump");
+                }
+
+                if buttons.pressed(heal_button) {
+                    println!("heal");
+                }
+
+                (
+                    direction_keys + direction_joystick,
+                    jump_state_keys,
+                    attack_keys,
+                )
+            } else {
+                (direction_keys, jump_state_keys, attack_keys)
+            }
+        };
+
+        character_input.movement_direction = direction;
+        character_input.jump = jump_state;
+        character_input.attack = attack;
     }
 }
 
@@ -212,6 +274,40 @@ fn player_looking_input(
                     }
                 }
             }
+        }
+    }
+}
+
+fn gamepad_connections(
+    mut commands: Commands,
+    my_gamepad: Option<Res<PrimaryGamepad>>,
+    mut gamepad_evr: EventReader<GamepadEvent>,
+) {
+    for ev in gamepad_evr.iter() {
+        // the ID of the gamepad
+        let id = ev.gamepad;
+        match ev.event_type {
+            GamepadEventType::Connected => {
+                println!("New gamepad connected with ID: {:?}", id);
+
+                // if we don't have any gamepad yet, use this one
+                if my_gamepad.is_none() {
+                    commands.insert_resource(PrimaryGamepad(id));
+                }
+            }
+            GamepadEventType::Disconnected => {
+                println!("Lost gamepad connection with ID: {:?}", id);
+
+                // if it's the one we previously associated with the player,
+                // disassociate it:
+                if let Some(PrimaryGamepad(old_id)) = my_gamepad.as_deref() {
+                    if *old_id == id {
+                        commands.remove_resource::<PrimaryGamepad>();
+                    }
+                }
+            }
+            // other events are irrelevant
+            _ => {}
         }
     }
 }
