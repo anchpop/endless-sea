@@ -20,6 +20,8 @@ fn npc_input(
 ) {
     if let Some((_, player_transform)) = player.iter().next() {
         for (_, mut npc_input, npc_transform) in npcs.iter_mut() {
+            npc_input.looking_direction =
+                player_transform.translation - npc_transform.translation;
             if npc_transform
                 .translation
                 .distance(player_transform.translation)
