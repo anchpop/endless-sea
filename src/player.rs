@@ -62,7 +62,7 @@ fn player_input(
 ) {
     if let Some((_, mut character_input)) = player_character.iter_mut().next() {
         // directional
-        {
+        let direction_keys = {
             let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
             let down = keys.pressed(KeyCode::S) || keys.pressed(KeyCode::Down);
             let left = keys.pressed(KeyCode::A) || keys.pressed(KeyCode::Left);
@@ -88,47 +88,49 @@ fn player_input(
             .try_normalize()
             .unwrap_or(Vec3::ZERO);
 
-            character_input.movement_direction = direction;
-        }
+            direction
+        };
+        character_input.movement_direction = direction_keys;
 
         // jump
-        {
+        let jump_state_keys = {
             use character::JumpState::*;
             match character_input.jump.clone() {
                 None => {
                     if keys.pressed(KeyCode::Space) {
-                        character_input.jump = Some(Charging(Stopwatch::new()));
+                        Some(Charging(Stopwatch::new()))
                     } else if keys.just_released(KeyCode::Space) {
-                        character_input.jump =
-                            Some(JumpPressed(Stopwatch::new()));
+                        Some(JumpPressed(Stopwatch::new()))
+                    } else {
+                        character_input.jump.clone()
                     }
                 }
                 Some(Charging(mut watch)) => {
                     if keys.pressed(KeyCode::Space) {
                         watch.tick(time.delta());
-                        character_input.jump = Some(Charging(watch));
+                        Some(Charging(watch))
                     } else if keys.just_released(KeyCode::Space) {
-                        character_input.jump = Some(JumpPressed(watch));
+                        Some(JumpPressed(watch))
+                    } else {
+                        character_input.jump.clone()
                     }
                 }
-                Some(JumpPressed(_watch)) => {
-                    character_input.jump = None;
-                }
+                Some(JumpPressed(_watch)) => None,
             }
+        };
+        character_input.jump = jump_state_keys;
 
-            // attack
-            {
-                if mouse.just_pressed(MouseButton::Left) {
-                    character_input.attack =
-                        Some(character::AttackState::Primary);
-                } else if mouse.just_pressed(MouseButton::Right) {
-                    character_input.attack =
-                        Some(character::AttackState::Secondary);
-                } else {
-                    character_input.attack = None;
-                }
+        // attack
+        let attack_keys = {
+            if mouse.just_pressed(MouseButton::Left) {
+                Some(character::AttackState::Primary)
+            } else if mouse.just_pressed(MouseButton::Right) {
+                Some(character::AttackState::Secondary)
+            } else {
+                None
             }
-        }
+        };
+        character_input.attack = attack_keys;
     }
 }
 
