@@ -2,6 +2,7 @@
 
 mod character;
 mod npc;
+mod object;
 mod player;
 #[cfg(test)]
 mod tests;
@@ -33,6 +34,7 @@ pub fn app() -> App {
     };
 
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(object::Plugin)
         .add_plugin(character::Plugin)
         .add_plugin(npc::Plugin)
         .add_plugin(player::Plugin)

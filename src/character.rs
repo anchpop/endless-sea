@@ -1,3 +1,5 @@
+use crate::object;
+
 use std::time::Duration;
 
 use bevy::{prelude::*, time::Stopwatch};
@@ -49,22 +51,10 @@ pub enum AttackState {
     Secondary,
 }
 
-#[derive(Component, Reflect, Inspectable, Clone)]
+#[derive(Component, Reflect, Inspectable, Default, Clone)]
 #[reflect(Component)]
 pub struct Character {
     pub on_ground: bool,
-    pub max_health: f64,
-    pub current_health: f64,
-}
-
-impl Default for Character {
-    fn default() -> Self {
-        Self {
-            on_ground: false,
-            max_health: 1.0,
-            current_health: 1.0,
-        }
-    }
 }
 
 #[derive(Component, Default, Clone)]
@@ -101,6 +91,7 @@ pub struct Bundle {
     pub walk_force: WalkForce,
     pub jump_impulse: JumpImpulse,
     pub knockback_impulse: KnockbackImpulse,
+    pub health: object::Health,
 }
 
 impl Default for Bundle {
@@ -128,6 +119,7 @@ impl Default for Bundle {
             walk_force: WalkForce::default(),
             jump_impulse: JumpImpulse::default(),
             knockback_impulse: KnockbackImpulse::default(),
+            health: object::Health::default(),
         }
     }
 }
@@ -146,7 +138,6 @@ impl bevy::app::Plugin for Plugin {
                     .before(impulse_movement)
                     .before(force_movement),
             )
-            .add_system(death)
             .add_system(attack)
             .add_system(set_external_force)
             .add_system(set_external_impulse)
@@ -215,18 +206,10 @@ fn force_movement(
     }
 }
 
-fn death(mut commands: Commands, mut characters: Query<(Entity, &Character)>) {
-    for (entity, character) in characters.iter_mut() {
-        if character.current_health <= 0.0 {
-            commands.entity(entity).despawn_recursive();
-        }
-    }
-}
-
 fn attack(
     rapier_context: Res<RapierContext>,
     mut characters: Query<(Entity, &Input, &GlobalTransform)>,
-    mut character_q: Query<(&mut Character, &mut KnockbackImpulse)>,
+    mut character_q: Query<(&mut object::Health, &mut KnockbackImpulse)>,
 ) {
     for (entity, input, transform) in characters.iter_mut() {
         if let Some(AttackState::Primary) = input.attack {
@@ -240,10 +223,10 @@ fn attack(
                     ..default()
                 },
             ) {
-                if let Ok((mut character, mut impulse)) =
+                if let Ok((mut health, mut impulse)) =
                     character_q.get_mut(entity)
                 {
-                    character.current_health -= 0.5;
+                    health.current_health -= 0.5;
                     impulse.0 = input
                         .looking_direction
                         .try_normalize()
