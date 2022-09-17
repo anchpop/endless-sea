@@ -1,6 +1,7 @@
 #![allow(clippy::type_complexity)]
 
 mod character;
+mod helpers;
 mod npc;
 mod object;
 mod player;
