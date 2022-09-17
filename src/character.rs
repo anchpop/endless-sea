@@ -79,6 +79,15 @@ pub struct Input {
     pub jump: Option<JumpState>,
 }
 
+#[derive(Component, Default, Clone)]
+pub struct WalkForce(pub Vec3);
+
+#[derive(Component, Default, Clone)]
+pub struct JumpImpulse(pub Vec3);
+
+#[derive(Component, Default, Clone)]
+pub struct KnockbackImpulse(pub Vec3);
+
 #[derive(Bundle)]
 pub struct Bundle {
     pub rigid_body: RigidBody,
@@ -93,6 +102,9 @@ pub struct Bundle {
     pub external_force: ExternalForce,
     pub external_impulse: ExternalImpulse,
     pub friction: Friction,
+    pub walk_force: WalkForce,
+    pub jump_impulse: JumpImpulse,
+    pub knockback_impulse: KnockbackImpulse,
 }
 
 impl Default for Bundle {
@@ -117,6 +129,9 @@ impl Default for Bundle {
                 coefficient: 0.0,
                 combine_rule: CoefficientCombineRule::Max,
             },
+            walk_force: WalkForce::default(),
+            jump_impulse: JumpImpulse::default(),
+            knockback_impulse: KnockbackImpulse::default(),
         }
     }
 }
@@ -137,6 +152,8 @@ impl bevy::app::Plugin for Plugin {
             )
             .add_system(death)
             .add_system(attack)
+            .add_system(set_external_force)
+            .add_system(set_external_impulse)
             .register_inspectable::<Character>()
             .register_inspectable::<MovementProperties>();
     }
@@ -148,7 +165,7 @@ fn force_movement(
         &Input,
         &MovementProperties,
         &Velocity,
-        &mut ExternalForce,
+        &mut WalkForce,
         &mut Friction,
     )>,
 ) {
@@ -192,11 +209,11 @@ fn force_movement(
             } else {
                 Vec3::ZERO
             };
-            external_force.force = directional_force + damping_force;
+            external_force.0 = directional_force + damping_force;
             friction.coefficient = 0.0;
         } else {
             friction.coefficient = movement_properties.stopped_friction;
-            external_force.force = input_direction;
+            external_force.0 = input_direction;
         }
     }
 }
@@ -212,7 +229,7 @@ fn death(mut commands: Commands, mut characters: Query<(Entity, &Character)>) {
 fn attack(
     rapier_context: Res<RapierContext>,
     mut characters: Query<(Entity, &Input, &GlobalTransform)>,
-    mut character_q: Query<(&mut Character, &mut ExternalImpulse)>,
+    mut character_q: Query<(&mut Character, &mut KnockbackImpulse)>,
 ) {
     for (entity, input, transform) in characters.iter_mut() {
         if let Some(AttackState::Primary) = input.attack {
@@ -226,9 +243,11 @@ fn attack(
                     ..default()
                 },
             ) {
-                if let Ok(mut character) = character_q.get_mut(entity) {
-                    character.0.current_health -= 0.5;
-                    character.1.impulse = input
+                if let Ok((mut character, mut impulse)) =
+                    character_q.get_mut(entity)
+                {
+                    character.current_health -= 0.5;
+                    impulse.0 = input
                         .looking_direction
                         .try_normalize()
                         .unwrap_or(Vec3::ZERO)
@@ -244,7 +263,7 @@ fn impulse_movement(
         &Character,
         &Input,
         &MovementProperties,
-        &mut ExternalImpulse,
+        &mut JumpImpulse,
     )>,
 ) {
     for (character, input, movement_properties, mut external_impulse) in
@@ -255,13 +274,13 @@ fn impulse_movement(
             let max_charge_time = movement_properties.max_charge_time.as_secs_f32();
             let jump_intensity = watch.elapsed_secs().min(max_charge_time) / max_charge_time;
             let jump_impulse = movement_properties.min_jump_impulse + jump_intensity * (movement_properties.max_jump_impulse - movement_properties.min_jump_impulse);
-            external_impulse.impulse = Vec3::new(
+            external_impulse.0 = Vec3::new(
                 0.,
                 jump_impulse,
                 0.,
             );
         } else {
-            external_impulse.impulse = Vec3::ZERO;
+            external_impulse.0 = Vec3::ZERO;
         }
     }
 }
@@ -297,5 +316,30 @@ fn update_grounded(
         } else {
             character.on_ground = false;
         }
+    }
+}
+
+fn set_external_force(
+    mut characters: Query<(&mut ExternalForce, &mut WalkForce)>,
+) {
+    for (mut external_force, mut walk_force) in characters.iter_mut() {
+        external_force.force = walk_force.0;
+        walk_force.0 = Vec3::ZERO;
+    }
+}
+
+fn set_external_impulse(
+    mut characters: Query<(
+        &mut ExternalImpulse,
+        &mut JumpImpulse,
+        &mut KnockbackImpulse,
+    )>,
+) {
+    for (mut external_impulse, mut jump_impulse, mut knockback_impulse) in
+        characters.iter_mut()
+    {
+        external_impulse.impulse = jump_impulse.0 + knockback_impulse.0;
+        jump_impulse.0 = Vec3::ZERO;
+        knockback_impulse.0 = Vec3::ZERO;
     }
 }
