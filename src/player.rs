@@ -168,7 +168,7 @@ fn player_input(
 }
 
 fn player_looking_input(
-    wnds: Res<Windows>,
+    windows: Res<Windows>,
     q_camera: Query<(
         &Camera,
         &GlobalTransform,
@@ -195,9 +195,9 @@ fn player_looking_input(
                     if let bevy::render::camera::RenderTarget::Window(id) =
                         camera.target
                     {
-                        wnds.get(id).unwrap()
+                        windows.get(id).unwrap()
                     } else {
-                        wnds.get_primary().unwrap()
+                        windows.get_primary().unwrap()
                     };
 
                 let mouse_moved = motion_evr.iter().next().is_some();
@@ -237,14 +237,14 @@ fn player_looking_input(
                         cursor_world_pos_far - cursor_world_pos_near;
 
                     let player_plane_normal = player_transform.up();
-                    let playr_plane_point = player_transform.translation();
+                    let player_plane_point = player_transform.translation();
 
                     let d = ray_direction.dot(player_plane_normal);
                     // if this is false, line is probably parallel to th
                     // plane.
                     if d.abs() > 0.0001 {
                         let diff =
-                            cursor_world_pos_near - playr_plane_point;
+                            cursor_world_pos_near - player_plane_point;
                         let p = diff.dot(player_plane_normal);
                         let dist = p / d;
                         let intersection =
