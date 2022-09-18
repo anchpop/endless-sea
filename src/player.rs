@@ -1,6 +1,6 @@
 use crate::character;
 
-use bevy::{prelude::*, time::Stopwatch};
+use bevy::{input::mouse::MouseMotion, prelude::*, time::Stopwatch};
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 
@@ -213,8 +213,8 @@ fn player_looking_input(
         &mut character::Input,
     )>,
     axes: Res<Axis<GamepadAxis>>,
-    buttons: Res<Input<GamepadButton>>,
     primary_gamepad: Option<Res<PrimaryGamepad>>,
+    mut motion_evr: EventReader<MouseMotion>,
 ) {
     if let Some((_, player_transform, mut player_input)) =
         player_character.iter_mut().next()
@@ -233,62 +233,62 @@ fn player_looking_input(
                         wnds.get_primary().unwrap()
                     };
 
+                let mouse_moved = motion_evr.iter().next().is_some();
+
                 // check if the cursor is inside the window and get its position
-                let look_direction_mouse =
-                    if let Some(cursor_pos_screen_pixels) =
-                        wnd.cursor_position()
-                    {
-                        // get the size of the window
-                        let window_size =
-                            Vec2::new(wnd.width() as f32, wnd.height() as f32);
+                let look_direction_mouse = if mouse_moved && let Some(cursor_pos_screen_pixels) = wnd.cursor_position()
+                {
+                    // get the size of the window
+                    let window_size =
+                        Vec2::new(wnd.width() as f32, wnd.height() as f32);
 
-                        // Convert screen position [0..resolution] to ndc
-                        // [-1..1] (normalized device
-                        // coordinates)
-                        let cursor_ndc =
-                            (cursor_pos_screen_pixels / window_size) * 2.0
-                                - Vec2::ONE;
+                    // Convert screen position [0..resolution] to ndc
+                    // [-1..1] (normalized device
+                    // coordinates)
+                    let cursor_ndc =
+                        (cursor_pos_screen_pixels / window_size) * 2.0
+                            - Vec2::ONE;
 
-                        // matrix for undoing the projection and camera
-                        // transform
-                        let ndc_to_world = camera_transform.compute_matrix()
-                            * camera.projection_matrix().inverse();
+                    // matrix for undoing the projection and camera
+                    // transform
+                    let ndc_to_world = camera_transform.compute_matrix()
+                        * camera.projection_matrix().inverse();
 
-                        // Use near and far ndc points to generate a ray in
-                        // world space. This method is
-                        // more robust than using the location
-                        // of the camera as the start of the ray, because ortho
-                        // cameras have a focal point at infinity!
-                        let cursor_world_pos_near = ndc_to_world
-                            .project_point3(cursor_ndc.extend(-1.0));
-                        let cursor_world_pos_far =
-                            ndc_to_world.project_point3(cursor_ndc.extend(1.0));
+                    // Use near and far ndc points to generate a ray in
+                    // world space. This method is
+                    // more robust than using the location
+                    // of the camera as the start of the ray, because ortho
+                    // cameras have a focal point at infinity!
+                    let cursor_world_pos_near = ndc_to_world
+                        .project_point3(cursor_ndc.extend(-1.0));
+                    let cursor_world_pos_far =
+                        ndc_to_world.project_point3(cursor_ndc.extend(1.0));
 
-                        // Compute intersection with the player's plane
+                    // Compute intersection with the player's plane
 
-                        let ray_direction =
-                            cursor_world_pos_far - cursor_world_pos_near;
+                    let ray_direction =
+                        cursor_world_pos_far - cursor_world_pos_near;
 
-                        let player_plane_normal = player_transform.up();
-                        let playr_plane_point = player_transform.translation();
+                    let player_plane_normal = player_transform.up();
+                    let playr_plane_point = player_transform.translation();
 
-                        let d = ray_direction.dot(player_plane_normal);
-                        // if this is false, line is probably parallel to th
-                        // plane.
-                        if d.abs() > 0.0001 {
-                            let diff =
-                                cursor_world_pos_near - playr_plane_point;
-                            let p = diff.dot(player_plane_normal);
-                            let dist = p / d;
-                            let intersection =
-                                cursor_world_pos_near - ray_direction * dist;
-                            Some(intersection - player_transform.translation())
-                        } else {
-                            None
-                        }
+                    let d = ray_direction.dot(player_plane_normal);
+                    // if this is false, line is probably parallel to th
+                    // plane.
+                    if d.abs() > 0.0001 {
+                        let diff =
+                            cursor_world_pos_near - playr_plane_point;
+                        let p = diff.dot(player_plane_normal);
+                        let dist = p / d;
+                        let intersection =
+                            cursor_world_pos_near - ray_direction * dist;
+                        Some(intersection - player_transform.translation())
                     } else {
                         None
-                    };
+                    }
+                } else {
+                    None
+                };
                 let look_direction_gamepad = {
                     if let Some(gamepad) = primary_gamepad {
                         // a gamepad is connected, we have the id
