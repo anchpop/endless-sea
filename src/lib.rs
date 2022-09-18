@@ -10,6 +10,7 @@ mod tests;
 
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_polyline::{prelude::*, PolylinePlugin};
 use bevy_rapier3d::prelude::*;
 
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
@@ -35,6 +36,7 @@ pub fn app() -> App {
     };
 
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_plugin(PolylinePlugin)
         .add_plugin(object::Plugin)
         .add_plugin(character::Plugin)
         .add_plugin(npc::Plugin)

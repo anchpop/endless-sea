@@ -7,8 +7,10 @@
         "gltf",
         "Inspectable",
         "knockback",
+        "leafwing",
         "linvel",
-        "Writeback",
-        "leafwing"
+        "polyline",
+        "polylines",
+        "Writeback"
     ]
 }

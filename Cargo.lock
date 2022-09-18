@@ -577,6 +577,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_polyline"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1198822d48734a1de7f0fe9ddb67111a0b63ab732a612458249d7ccb23c32666"
+dependencies = [
+ "bevy",
+ "bitflags",
+ "naga",
+]
+
+[[package]]
 name = "bevy_ptr"
 version = "0.8.1"
 source = "git+https://github.com/anchpop/bevy.git?branch=@anchpop/soft-error-when-no-gpu-0.8.1#cbb8ed17df49330648b505d6152a2749591f412c"
@@ -1499,6 +1510,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy-inspector-egui",
+ "bevy_polyline",
  "bevy_rapier3d",
  "image 0.24.3",
  "leafwing-input-manager",
