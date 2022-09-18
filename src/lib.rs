@@ -18,13 +18,13 @@ pub fn app() -> App {
     let mut app = App::new();
 
     // Basic setup
-    app.add_plugins(DefaultPlugins)
-        .insert_resource(WindowDescriptor {
-            title: LAUNCHER_TITLE.to_string(),
-            canvas: Some("#bevy".to_string()),
-            fit_canvas_to_parent: true,
-            ..Default::default()
-        });
+    app.insert_resource(WindowDescriptor {
+        title: LAUNCHER_TITLE.to_string(),
+        canvas: Some("#bevy".to_string()),
+        fit_canvas_to_parent: true,
+        ..Default::default()
+    })
+    .add_plugins(DefaultPlugins);
 
     if cfg!(debug_assertions) {
         app.add_plugin(WorldInspectorPlugin::new())
