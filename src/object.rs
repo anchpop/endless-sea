@@ -43,10 +43,12 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.register_inspectable::<Health>()
-            .register_inspectable::<KnockbackImpulse>()
-            .add_system(death)
-            .add_system(set_external_impulse);
+        app.add_system(death).add_system(set_external_impulse);
+
+        if cfg!(debug_assertions) {
+            app.register_inspectable::<Health>()
+                .register_inspectable::<KnockbackImpulse>();
+        }
     }
 }
 
