@@ -411,22 +411,42 @@ fn check_no_character_and_object(
 
 fn draw_reticle(
     mut reticles: Query<(
+        Entity,
+        &GlobalTransform,
         &Input,
         &mut Handle<PolylineMaterial>,
         &mut Handle<Polyline>,
     )>,
     mut polyline_materials: Res<ReticleMaterials>,
     mut polylines: ResMut<Assets<Polyline>>,
+    rapier_context: Res<RapierContext>,
 ) {
-    for (input, mut material, mut line) in reticles.iter_mut() {
-        *material = polyline_materials.main.clone();
-        *line = polylines.add(Polyline {
-            vertices: vec![
-                Vec3::ZERO,
-                Vec3::NEG_Z * input.looking_direction.length(),
-            ],
-            ..Default::default()
-        });
+    for (entity, transform, input, mut material, mut line) in
+        reticles.iter_mut()
+    {
+        if let Some(dir) = input.looking_direction.try_normalize() {
+            let (color, distance) = {
+                if let Some((_entity, toi)) = rapier_context.cast_ray(
+                    transform.translation(),
+                    dir,
+                    1000.0,
+                    true,
+                    QueryFilter {
+                        exclude_collider: Some(entity),
+                        ..default()
+                    },
+                ) {
+                    (polyline_materials.main.clone(), toi)
+                } else {
+                    (polyline_materials.main.clone(), 1000.0)
+                }
+            };
+            *material = color;
+            *line = polylines.add(Polyline {
+                vertices: vec![Vec3::ZERO, Vec3::NEG_Z * distance],
+                ..Default::default()
+            });
+        }
     }
 }
 
