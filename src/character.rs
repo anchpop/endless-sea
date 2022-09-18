@@ -42,8 +42,8 @@ impl Default for MovementProperties {
 
 #[derive(Component, Clone)]
 pub enum JumpState {
-    Charging(Stopwatch),
-    JumpPressed(Stopwatch),
+    Charging,
+    JumpPressed,
 }
 
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Debug)]
@@ -67,6 +67,11 @@ pub struct Input {
 }
 
 #[derive(Component, Default, Clone)]
+pub struct JumpCharge {
+    charge: Option<Stopwatch>,
+}
+
+#[derive(Component, Default, Clone)]
 pub struct WalkForce(pub Vec3);
 
 #[derive(Component, Default, Clone)]
@@ -83,6 +88,7 @@ pub struct Bundle {
     pub character: Character,
     pub movement_properties: MovementProperties,
     pub input: Input,
+    pub jump_charge: JumpCharge,
     pub external_force: ExternalForce,
     pub external_impulse: ExternalImpulse,
     pub friction: Friction,
@@ -108,6 +114,7 @@ impl Default for Bundle {
             character: Character::default(),
             movement_properties: default(),
             input: Input::default(),
+            jump_charge: JumpCharge::default(),
             external_force: ExternalForce::default(),
             external_impulse: ExternalImpulse::default(),
             friction: Friction {
@@ -129,7 +136,8 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(force_movement)
+        app.add_system(update_jump_state)
+            .add_system(force_movement)
             .add_system(impulse_movement.before(attack))
             .add_system(
                 update_grounded
@@ -149,6 +157,29 @@ impl bevy::app::Plugin for Plugin {
     }
 }
 
+fn update_jump_state(
+    mut query: Query<(&Input, &mut JumpCharge)>,
+    time: Res<Time>,
+) {
+    for (input, mut jump_charge) in query.iter_mut() {
+        let charge = &mut jump_charge.charge;
+        match input.jump {
+            Some(JumpState::Charging) => match charge {
+                Some(ref mut charge) => {
+                    charge.tick(time.delta());
+                }
+                None => {
+                    *charge = Some(Stopwatch::new());
+                }
+            },
+            Some(JumpState::JumpPressed) => {}
+            None => {
+                *charge = None;
+            }
+        }
+    }
+}
+
 fn force_movement(
     mut characters: Query<(
         &Character,
@@ -164,7 +195,7 @@ fn force_movement(
         input,
         movement_properties,
         velocity,
-        mut external_force,
+        mut walk_force,
         mut friction,
     ) in characters.iter_mut()
     {
@@ -196,11 +227,11 @@ fn force_movement(
             } else {
                 Vec3::ZERO
             };
-            external_force.0 = directional_force + damping_force;
+            walk_force.0 = directional_force + damping_force;
             friction.coefficient = 0.0;
         } else {
             friction.coefficient = movement_properties.stopped_friction;
-            external_force.0 = input_direction;
+            walk_force.0 = input_direction;
         }
     }
 }
@@ -244,14 +275,20 @@ fn impulse_movement(
     mut characters: Query<(
         &Character,
         &Input,
+        &JumpCharge,
         &MovementProperties,
         &mut JumpImpulse,
     )>,
 ) {
-    for (character, input, movement_properties, mut external_impulse) in
-        characters.iter_mut()
+    for (
+        character,
+        input,
+        jump_charge,
+        movement_properties,
+        mut external_impulse,
+    ) in characters.iter_mut()
     {
-        if character.on_ground && let Some(JumpState::JumpPressed(watch)) = input.jump.clone()
+        if character.on_ground && let (Some(JumpState::JumpPressed), Some(watch)) = (input.jump.clone(), jump_charge.charge.clone())
         {
             let max_charge_time = movement_properties.max_charge_time.as_secs_f32();
             let jump_intensity = watch.elapsed_secs().min(max_charge_time) / max_charge_time;

@@ -1,6 +1,6 @@
 use crate::character;
 
-use bevy::{input::mouse::MouseMotion, prelude::*, time::Stopwatch};
+use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 use leafwing_input_manager::{prelude::*, Actionlike};
@@ -111,7 +111,6 @@ fn camera_movement(
 }
 
 fn player_input(
-    time: Res<Time>,
     mut player_character: Query<(
         With<Player>,
         &mut character::Input,
@@ -142,28 +141,13 @@ fn player_input(
         }
 
         // Jump
-        character_input.jump = match character_input.jump.clone() {
-            None => {
-                if action_state.pressed(Action::Jump) {
-                    Some(Charging(Stopwatch::new()))
-                } else if action_state.just_released(Action::Jump) {
-                    Some(JumpPressed(Stopwatch::new()))
-                } else {
-                    character_input.jump.clone()
-                }
-            }
-            Some(Charging(mut watch)) => {
-                if action_state.pressed(Action::Jump) {
-                    watch.tick(time.delta());
-                    Some(Charging(watch))
-                } else if action_state.just_released(Action::Jump) {
-                    Some(JumpPressed(watch))
-                } else {
-                    character_input.jump.clone()
-                }
-            }
-            Some(JumpPressed(_watch)) => None,
-        }
+        character_input.jump = if action_state.just_released(Action::Jump) {
+            Some(JumpPressed)
+        } else if action_state.pressed(Action::Jump) {
+            Some(Charging)
+        } else {
+            None
+        };
     }
 }
 
