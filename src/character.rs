@@ -5,7 +5,6 @@ use std::time::Duration;
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
-use bevy_polyline::prelude::*;
 use bevy_rapier3d::prelude::*;
 
 // Bundle
@@ -100,10 +99,6 @@ pub struct Bundle {
     pub jump_impulse: JumpImpulse,
     pub knockback_impulse: object::KnockbackImpulse,
     pub health: object::Health,
-
-    // reticle
-    pub polyline_material: Handle<PolylineMaterial>,
-    pub polyline: Handle<Polyline>,
 }
 
 impl Default for Bundle {
@@ -133,8 +128,6 @@ impl Default for Bundle {
             jump_impulse: JumpImpulse::default(),
             knockback_impulse: object::KnockbackImpulse::default(),
             health: object::Health::default(),
-            polyline_material: Handle::<PolylineMaterial>::default(),
-            polyline: Handle::<Polyline>::default(),
         }
     }
 }
@@ -146,8 +139,7 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_reticle_materials)
-            .add_system(update_jump_state)
+        app.add_system(update_jump_state)
             .add_system(force_movement)
             .add_system(impulse_movement.before(attack))
             .add_system(
@@ -159,8 +151,7 @@ impl bevy::app::Plugin for Plugin {
             .add_system(set_external_force)
             .add_system(set_external_impulse)
             .add_system(rotate_character)
-            .add_system(check_no_character_and_object)
-            .add_system(draw_reticle);
+            .add_system(check_no_character_and_object);
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Character>()
@@ -407,64 +398,4 @@ fn check_no_character_and_object(
     for _ in characters_with_objects.iter() {
         panic!("Character and Object components cannot be on the same entity");
     }
-}
-
-fn draw_reticle(
-    mut reticles: Query<(
-        Entity,
-        &GlobalTransform,
-        &Input,
-        &mut Handle<PolylineMaterial>,
-        &mut Handle<Polyline>,
-    )>,
-    mut polyline_materials: Res<ReticleMaterials>,
-    mut polylines: ResMut<Assets<Polyline>>,
-    rapier_context: Res<RapierContext>,
-) {
-    for (entity, transform, input, mut material, mut line) in
-        reticles.iter_mut()
-    {
-        if let Some(dir) = input.looking_direction.try_normalize() {
-            let (color, distance) = {
-                if let Some((_entity, toi)) = rapier_context.cast_ray(
-                    transform.translation(),
-                    dir,
-                    1000.0,
-                    true,
-                    QueryFilter {
-                        exclude_collider: Some(entity),
-                        ..default()
-                    },
-                ) {
-                    (polyline_materials.main.clone(), toi)
-                } else {
-                    (polyline_materials.main.clone(), 1000.0)
-                }
-            };
-            *material = color;
-            *line = polylines.add(Polyline {
-                vertices: vec![Vec3::ZERO, Vec3::NEG_Z * distance],
-                ..Default::default()
-            });
-        }
-    }
-}
-
-struct ReticleMaterials {
-    main: Handle<PolylineMaterial>,
-}
-
-fn setup_reticle_materials(
-    mut commands: Commands,
-    mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
-) {
-    let resource = ReticleMaterials {
-        main: polyline_materials.add(PolylineMaterial {
-            width: 3.0,
-            color: Color::RED,
-            perspective: true,
-            ..Default::default()
-        }),
-    };
-    commands.insert_resource(resource);
 }

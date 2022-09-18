@@ -5,12 +5,13 @@ mod helpers;
 mod npc;
 mod object;
 mod player;
+mod reticle;
 #[cfg(test)]
 mod tests;
 
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
-use bevy_polyline::{prelude::*, PolylinePlugin};
+use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
 
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
@@ -41,6 +42,7 @@ pub fn app() -> App {
         .add_plugin(character::Plugin)
         .add_plugin(npc::Plugin)
         .add_plugin(player::Plugin)
+        .add_plugin(reticle::Plugin)
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics);
 
@@ -103,9 +105,13 @@ fn setup_physics(
         })
         .insert_bundle(character::Bundle::default())
         .insert_bundle(player::Bundle::default())
+        .insert_bundle(reticle::Bundle {
+            reticle_emit_color: reticle::ReticleEmitColor(true),
+            ..default()
+        })
         .insert(Name::new("Player"));
 
-    /* Create the player. */
+    /* Create an NPC. */
     commands
         .spawn()
         .insert_bundle(SceneBundle {
@@ -121,6 +127,8 @@ fn setup_physics(
             ..character::Bundle::default()
         })
         .insert(npc::Npc { peaceful: true })
+        .insert_bundle(reticle::Bundle::default())
+        .insert(reticle::ReticleReceiveType::Enemy)
         .insert(Name::new("Friendly"));
 
     /* Create an obstacle. */
@@ -141,6 +149,7 @@ fn setup_physics(
                     ),
                     ..default()
                 })
+                .insert(reticle::ReticleReceiveType::Object)
                 .insert(Name::new("Obstacle"));
         }
     }
