@@ -33,6 +33,7 @@ bevy-inspector-egui = "*"
 bevy_rapier3d = { version = "*", features = ["simd-stable"] }
 image = "0.24.3"
 winit = "0.26.1"
+leafwing-input-manager = "0.5.2"
 
 [dev-dependencies]
 pretty_assertions = "1.3.0"

@@ -100,7 +100,7 @@ fn setup_physics(
             ..default()
         })
         .insert_bundle(character::Bundle::default())
-        .insert(player::Player {})
+        .insert_bundle(player::Bundle::default())
         .insert(Name::new("Player"));
 
     /* Create the player. */

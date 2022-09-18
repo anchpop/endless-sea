@@ -3,6 +3,7 @@ use crate::character;
 use bevy::{input::mouse::MouseMotion, prelude::*, time::Stopwatch};
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
+use leafwing_input_manager::{prelude::*, Actionlike};
 
 // Components
 // ==========
@@ -15,12 +16,61 @@ pub struct Player;
 #[reflect(Component)]
 pub struct PlayerCamera;
 
-// Resources
-// =========
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+enum Action {
+    Move,
+    Jump,
+    Look,
+    ShootPrimary,
+    ShootSecondary,
+}
 
-/// Simple resource to store the ID of the connected gamepad.
-/// We need to know which gamepad to use for player input.
-struct PrimaryGamepad(Gamepad);
+// Bundle
+// ======
+
+#[derive(Bundle)]
+pub struct Bundle {
+    player: Player,
+    action_state: ActionState<Action>,
+    input_map: InputMap<Action>,
+}
+
+impl Default for Bundle {
+    fn default() -> Self {
+        Self {
+            player: Player::default(),
+            action_state: ActionState::default(),
+            input_map: InputMap::default()
+                .insert(DualAxis::left_stick(), Action::Move)
+                .insert(
+                    VirtualDPad {
+                        up: KeyCode::W.into(),
+                        down: KeyCode::S.into(),
+                        left: KeyCode::A.into(),
+                        right: KeyCode::D.into(),
+                    },
+                    Action::Move,
+                )
+                .insert(
+                    VirtualDPad {
+                        up: KeyCode::Up.into(),
+                        down: KeyCode::Down.into(),
+                        left: KeyCode::Left.into(),
+                        right: KeyCode::Right.into(),
+                    },
+                    Action::Move,
+                )
+                .insert(DualAxis::right_stick(), Action::Look)
+                .insert(GamepadButtonType::RightTrigger2, Action::ShootPrimary)
+                .insert(MouseButton::Left, Action::ShootPrimary)
+                .insert(GamepadButtonType::RightTrigger, Action::ShootSecondary)
+                .insert(MouseButton::Right, Action::ShootPrimary)
+                .insert(GamepadButtonType::East, Action::Jump)
+                .insert(KeyCode::Space, Action::Jump)
+                .build(),
+        }
+    }
+}
 
 // Plugin
 // ======
@@ -29,7 +79,7 @@ pub struct Plugin;
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         static POST_SIMULATION: &str = "post_simulation";
-        app.add_system(gamepad_connections)
+        app.add_plugin(InputManagerPlugin::<Action>::default())
             .add_system(player_input)
             .add_system(player_looking_input)
             .add_stage_after(
@@ -61,141 +111,58 @@ fn camera_movement(
 
 fn player_input(
     time: Res<Time>,
-    keys: Res<Input<KeyCode>>,
-    mouse: Res<Input<MouseButton>>,
-    axes: Res<Axis<GamepadAxis>>,
-    buttons: Res<Input<GamepadButton>>,
-    primary_gamepad: Option<Res<PrimaryGamepad>>,
-    mut player_character: Query<(With<Player>, &mut character::Input)>,
+    mut player_character: Query<(
+        With<Player>,
+        &mut character::Input,
+        &ActionState<Action>,
+    )>,
 ) {
-    if let Some((_, mut character_input)) = player_character.iter_mut().next() {
-        // directional
-        let direction_keys = {
-            let up = keys.pressed(KeyCode::W) || keys.pressed(KeyCode::Up);
-            let down = keys.pressed(KeyCode::S) || keys.pressed(KeyCode::Down);
-            let left = keys.pressed(KeyCode::A) || keys.pressed(KeyCode::Left);
-            let right =
-                keys.pressed(KeyCode::D) || keys.pressed(KeyCode::Right);
-            let direction = Vec3::new(
-                if left {
-                    1.
-                } else if right {
-                    -1.
-                } else {
-                    0.
-                },
-                0.0,
-                if up {
-                    1.
-                } else if down {
-                    -1.
-                } else {
-                    0.
-                },
-            )
-            .try_normalize()
-            .unwrap_or(Vec3::ZERO);
+    use character::JumpState::*;
+    if let Some((_, mut character_input, action_state)) =
+        player_character.iter_mut().next()
+    {
+        // Movement
+        if action_state.pressed(Action::Move) {
+            let axis_pair =
+                action_state.clamped_axis_pair(Action::Move).unwrap();
+            character_input.movement_direction =
+                Vec3::new(-axis_pair.x(), 0.0, axis_pair.y());
+        } else {
+            character_input.movement_direction = Vec3::ZERO;
+        }
 
-            direction
-        };
+        // Attack
+        if action_state.just_pressed(Action::ShootPrimary) {
+            character_input.attack = Some(character::AttackState::Primary);
+        } else if action_state.just_pressed(Action::ShootSecondary) {
+            character_input.attack = Some(character::AttackState::Secondary);
+        } else {
+            character_input.attack = None;
+        }
 
-        // jump
-        let jump_state_keys = {
-            use character::JumpState::*;
-            match character_input.jump.clone() {
-                None => {
-                    if keys.pressed(KeyCode::Space) {
-                        Some(Charging(Stopwatch::new()))
-                    } else if keys.just_released(KeyCode::Space) {
-                        Some(JumpPressed(Stopwatch::new()))
-                    } else {
-                        character_input.jump.clone()
-                    }
+        // Jump
+        character_input.jump = match character_input.jump.clone() {
+            None => {
+                if action_state.pressed(Action::Jump) {
+                    Some(Charging(Stopwatch::new()))
+                } else if action_state.just_released(Action::Jump) {
+                    Some(JumpPressed(Stopwatch::new()))
+                } else {
+                    character_input.jump.clone()
                 }
-                Some(Charging(mut watch)) => {
-                    if keys.pressed(KeyCode::Space) {
-                        watch.tick(time.delta());
-                        Some(Charging(watch))
-                    } else if keys.just_released(KeyCode::Space) {
-                        Some(JumpPressed(watch))
-                    } else {
-                        character_input.jump.clone()
-                    }
-                }
-                Some(JumpPressed(_watch)) => None,
             }
-        };
-
-        // attack
-        let attack_keys = {
-            if mouse.just_pressed(MouseButton::Left) {
-                Some(character::AttackState::Primary)
-            } else if mouse.just_pressed(MouseButton::Right) {
-                Some(character::AttackState::Secondary)
-            } else {
-                None
-            }
-        };
-
-        let (direction, jump_state, attack) = {
-            if let Some(gamepad) = primary_gamepad {
-                // a gamepad is connected, we have the id
-                let gamepad = gamepad.0;
-                let direction_joystick = {
-                    // The joysticks are represented using a separate axis for X
-                    // and Y
-                    let axis_lx = GamepadAxis {
-                        gamepad,
-                        axis_type: GamepadAxisType::LeftStickX,
-                    };
-                    let axis_ly = GamepadAxis {
-                        gamepad,
-                        axis_type: GamepadAxisType::LeftStickY,
-                    };
-
-                    if let (Some(x), Some(z)) =
-                        (axes.get(axis_lx), axes.get(axis_ly))
-                    {
-                        Vec3::new(-x, 0.0, z)
-                    } else {
-                        Vec3::ZERO
-                    }
-                };
-
-                let _jump_button = GamepadButton {
-                    gamepad,
-                    button_type: GamepadButtonType::East,
-                };
-
-                let shoot_primary = GamepadButton {
-                    gamepad,
-                    button_type: GamepadButtonType::RightTrigger2,
-                };
-                let shoot_secondary = GamepadButton {
-                    gamepad,
-                    button_type: GamepadButtonType::RightTrigger,
-                };
-                let gamepad_attack = if buttons.just_pressed(shoot_primary) {
-                    Some(character::AttackState::Primary)
-                } else if buttons.just_pressed(shoot_secondary) {
-                    Some(character::AttackState::Secondary)
+            Some(Charging(mut watch)) => {
+                if action_state.pressed(Action::Jump) {
+                    watch.tick(time.delta());
+                    Some(Charging(watch))
+                } else if action_state.just_released(Action::Jump) {
+                    Some(JumpPressed(watch))
                 } else {
-                    None
-                };
-
-                (
-                    direction_keys + direction_joystick,
-                    jump_state_keys,
-                    attack_keys.max(gamepad_attack),
-                )
-            } else {
-                (direction_keys, jump_state_keys, attack_keys)
+                    character_input.jump.clone()
+                }
             }
-        };
-
-        character_input.movement_direction = direction;
-        character_input.jump = jump_state;
-        character_input.attack = attack;
+            Some(JumpPressed(_watch)) => None,
+        }
     }
 }
 
@@ -211,12 +178,11 @@ fn player_looking_input(
         With<Player>,
         &GlobalTransform,
         &mut character::Input,
+        &ActionState<Action>,
     )>,
-    axes: Res<Axis<GamepadAxis>>,
-    primary_gamepad: Option<Res<PrimaryGamepad>>,
     mut motion_evr: EventReader<MouseMotion>,
 ) {
-    if let Some((_, player_transform, mut player_input)) =
+    if let Some((_, player_transform, mut player_input, action_state)) =
         player_character.iter_mut().next()
     {
         if let Some((camera, camera_transform, _, _)) = q_camera.iter().next() {
@@ -289,77 +255,23 @@ fn player_looking_input(
                 } else {
                     None
                 };
-                let look_direction_gamepad = {
-                    if let Some(gamepad) = primary_gamepad {
-                        // a gamepad is connected, we have the id
-                        let gamepad = gamepad.0;
-                        let direction_joystick = {
-                            // The joysticks are represented using a separate
-                            // axis for X and Y
-                            let axis_lx = GamepadAxis {
-                                gamepad,
-                                axis_type: GamepadAxisType::RightStickX,
-                            };
-                            let axis_ly = GamepadAxis {
-                                gamepad,
-                                axis_type: GamepadAxisType::RightStickY,
-                            };
-
-                            if let (Some(x), Some(z)) =
-                                (axes.get(axis_lx), axes.get(axis_ly))
-                            {
-                                Vec3::new(-x, 0.0, z)
-                            } else {
-                                Vec3::ZERO
-                            }
-                        };
-
-                        Some(direction_joystick)
-                    } else {
-                        None
-                    }
+                // Look
+                let look_direction_gamepad = if action_state
+                    .pressed(Action::Look)
+                {
+                    let axis_pair =
+                        action_state.clamped_axis_pair(Action::Look).unwrap();
+                    Some(Vec3::new(-axis_pair.x(), 0.0, axis_pair.y()))
+                } else {
+                    None
                 };
                 if let Some(look_direction) = look_direction_mouse
                     .or(look_direction_gamepad)
-                    .filter(|v| v.clone() != Vec3::ZERO)
+                    .filter(|v| *v != Vec3::ZERO)
                 {
                     player_input.looking_direction = look_direction;
                 }
             }
-        }
-    }
-}
-
-fn gamepad_connections(
-    mut commands: Commands,
-    my_gamepad: Option<Res<PrimaryGamepad>>,
-    mut gamepad_evr: EventReader<GamepadEvent>,
-) {
-    for ev in gamepad_evr.iter() {
-        // the ID of the gamepad
-        let id = ev.gamepad;
-        match ev.event_type {
-            GamepadEventType::Connected => {
-                println!("New gamepad connected with ID: {:?}", id);
-
-                // if we don't have any gamepad yet, use this one
-                if my_gamepad.is_none() {
-                    commands.insert_resource(PrimaryGamepad(id));
-                }
-            }
-            GamepadEventType::Disconnected => {
-                println!("Lost gamepad connection with ID: {:?}", id);
-
-                // if it's the one we previously associated with the player,
-                // disassociate it:
-                if let Some(PrimaryGamepad(old_id)) = my_gamepad.as_deref() {
-                    if *old_id == id {
-                        commands.remove_resource::<PrimaryGamepad>();
-                    }
-                }
-            }
-            // other events are irrelevant
-            _ => {}
         }
     }
 }
