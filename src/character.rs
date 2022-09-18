@@ -140,9 +140,12 @@ impl bevy::app::Plugin for Plugin {
             .add_system(set_external_force)
             .add_system(set_external_impulse)
             .add_system(rotate_character)
-            .add_system(check_no_character_and_object)
-            .register_inspectable::<Character>()
-            .register_inspectable::<MovementProperties>();
+            .add_system(check_no_character_and_object);
+
+        if cfg!(debug_assertions) {
+            app.register_inspectable::<Character>()
+                .register_inspectable::<MovementProperties>();
+        }
     }
 }
 
