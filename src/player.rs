@@ -74,6 +74,7 @@ impl Default for Bundle {
 
 // Plugin
 // ======
+
 pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
