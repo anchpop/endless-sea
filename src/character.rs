@@ -199,8 +199,15 @@ fn force_movement(
         mut friction,
     ) in characters.iter_mut()
     {
-        let input_direction =
-            project_onto_plane(input.movement_direction, Vec3::Y);
+        let input_direction = {
+            let projected =
+                project_onto_plane(input.movement_direction, Vec3::Y);
+            if projected.length() > 1.0 {
+                projected.normalize()
+            } else {
+                projected
+            }
+        };
         let velocity_direction_difference = velocity
             .linvel
             .try_normalize()
