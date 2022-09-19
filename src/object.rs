@@ -24,6 +24,11 @@ impl Default for Health {
     }
 }
 
+#[derive(Component, Default, Clone)]
+pub struct ExplodeIntoPieces {
+    pub pieces: Vec<(Handle<Scene>, Collider)>,
+}
+
 #[derive(Inspectable, Component, Default, Clone)]
 pub struct KnockbackImpulse(pub Vec3);
 
@@ -53,27 +58,32 @@ impl bevy::app::Plugin for Plugin {
 }
 
 fn death(
-    asset_server: Res<AssetServer>,
     mut commands: Commands,
-    mut objects: Query<(Entity, &Health, &GlobalTransform)>,
+    mut objects: Query<(
+        Entity,
+        &Health,
+        &GlobalTransform,
+        Option<&ExplodeIntoPieces>,
+    )>,
 ) {
-    for (entity, health, transform) in objects.iter_mut() {
+    for (entity, health, transform, pieces) in objects.iter_mut() {
         if health.current <= 0.0 {
             commands.entity(entity).despawn_recursive();
 
-            for i in 0..4 {
-                commands
-                    .spawn()
-                    .insert(RigidBody::Dynamic)
-                    .insert(Collider::cuboid(0.1, 0.1, 0.1))
-                    .insert(Friction::coefficient(10.0))
-                    .insert_bundle(SceneBundle {
-                        scene: asset_server
-                            .load(&format!("cube/cube.gltf#Scene{i}")),
-                        transform: transform.compute_transform(),
-                        ..default()
-                    })
-                    .insert(Name::new("Gib"));
+            if let Some(ExplodeIntoPieces { pieces }) = pieces {
+                for (scene, collider) in pieces.iter().cloned() {
+                    commands
+                        .spawn()
+                        .insert(RigidBody::Dynamic)
+                        .insert(collider)
+                        .insert(Friction::coefficient(10.0))
+                        .insert_bundle(SceneBundle {
+                            scene,
+                            transform: transform.compute_transform(),
+                            ..default()
+                        })
+                        .insert(Name::new("Gib"));
+                }
             }
         }
     }
