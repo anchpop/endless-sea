@@ -246,7 +246,12 @@ fn player_looking_input(
                 {
                     let axis_pair =
                         action_state.clamped_axis_pair(Action::Look).unwrap();
-                    Some(Vec3::new(-axis_pair.x(), 0.0, axis_pair.y()))
+                    let dir = Vec3::new(-axis_pair.x(), 0.0, axis_pair.y());
+                    if dir.length() > 0.6 {
+                        Some(dir)
+                    } else {
+                        None
+                    }
                 } else {
                     None
                 };
