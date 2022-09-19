@@ -5,6 +5,11 @@ use bevy_rapier3d::prelude::*;
 // Components
 // ==========
 
+#[derive(Component, Clone, Default)]
+pub struct Lifetime {
+    pub time: Timer,
+}
+
 #[derive(Inspectable, Component, Clone, Default)]
 pub struct Object;
 
@@ -48,7 +53,9 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(death).add_system(set_external_impulse);
+        app.add_system(death)
+            .add_system(set_external_impulse)
+            .add_system(count_down_lifetime);
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Health>()
@@ -83,7 +90,10 @@ fn death(
                             transform: transform.compute_transform(),
                             ..default()
                         })
-                        .insert(Name::new("Gib"));
+                        .insert(Name::new("Gib"))
+                        .insert(Lifetime {
+                            time: Timer::from_seconds(10.0, false),
+                        });
                 }
             }
         }
@@ -102,5 +112,18 @@ fn set_external_impulse(
     {
         external_impulse.impulse = knockback_impulse.0;
         knockback_impulse.0 = Vec3::ZERO;
+    }
+}
+
+fn count_down_lifetime(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut objects: Query<(Entity, &mut Lifetime)>,
+) {
+    for (entity, mut lifetime) in objects.iter_mut() {
+        lifetime.time.tick(time.delta());
+        if lifetime.time.finished() {
+            commands.entity(entity).despawn_recursive();
+        }
     }
 }
