@@ -52,10 +52,34 @@ impl bevy::app::Plugin for Plugin {
     }
 }
 
-fn death(mut commands: Commands, mut objects: Query<(Entity, &Health)>) {
-    for (entity, health) in objects.iter_mut() {
+fn death(
+    asset_server: Res<AssetServer>,
+    mut commands: Commands,
+    mut objects: Query<(Entity, &Health, &GlobalTransform)>,
+) {
+    for (entity, health, transform) in objects.iter_mut() {
         if health.current <= 0.0 {
             commands.entity(entity).despawn_recursive();
+
+            for i in 0..4 {
+                commands
+                    .spawn()
+                    //.insert(RigidBody::Dynamic)
+                    .insert(
+                        Collider::from_bevy_mesh(
+                            todo!(),
+                            &ComputedColliderShape::TriMesh,
+                        )
+                        .unwrap(),
+                    )
+                    .insert_bundle(SceneBundle {
+                        scene: asset_server
+                            .load(&format!("cube/cube.gltf#Scene{i}")),
+                        transform: transform.compute_transform(),
+                        ..default()
+                    })
+                    .insert(Name::new("Gib"));
+            }
         }
     }
 }
