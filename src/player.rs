@@ -64,7 +64,7 @@ impl Default for Bundle {
                 .insert(GamepadButtonType::RightTrigger2, Action::ShootPrimary)
                 .insert(MouseButton::Left, Action::ShootPrimary)
                 .insert(GamepadButtonType::RightTrigger, Action::ShootSecondary)
-                .insert(MouseButton::Right, Action::ShootPrimary)
+                .insert(MouseButton::Right, Action::ShootSecondary)
                 .insert(GamepadButtonType::South, Action::Jump)
                 .insert(KeyCode::Space, Action::Jump)
                 .build(),
@@ -133,8 +133,10 @@ fn player_input(
 
         // Attack
         if action_state.just_pressed(Action::ShootPrimary) {
+            bevy::log::info!("Shoot primary");
             character_input.attack = Some(character::AttackState::Primary);
         } else if action_state.just_pressed(Action::ShootSecondary) {
+            bevy::log::info!("Shoot secondary");
             character_input.attack = Some(character::AttackState::Secondary);
         } else {
             character_input.attack = None;
