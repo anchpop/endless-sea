@@ -71,7 +71,7 @@ fn draw_reticle(
         &mut Handle<PolylineMaterial>,
         &mut Handle<Polyline>,
     )>,
-    reciever: Query<&ReticleReceiveType>,
+    receiver: Query<&ReticleReceiveType>,
     polyline_materials: Res<ReticleMaterials>,
     mut polylines: ResMut<Assets<Polyline>>,
     rapier_context: Res<RapierContext>,
@@ -99,7 +99,7 @@ fn draw_reticle(
                 ) {
                     (
                         if reticle_emit_color.0 {
-                            if let Ok(receiver) = reciever.get(entity) {
+                            if let Ok(receiver) = receiver.get(entity) {
                                 match receiver {
                                     ReticleReceiveType::Player => {
                                         polyline_materials.player.clone()
