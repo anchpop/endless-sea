@@ -139,9 +139,8 @@ fn setup_physics(
                 .insert(RigidBody::Dynamic)
                 .insert(Collider::cuboid(0.5, 0.5, 0.5))
                 .insert_bundle(object::Bundle::default())
-                .insert_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+                .insert_bundle(SceneBundle {
+                    scene: asset_server.load("cube/cube.gltf#Scene4"),
                     transform: Transform::from_xyz(
                         2.0 + x as f32,
                         0.5,
