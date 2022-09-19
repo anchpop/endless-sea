@@ -65,7 +65,7 @@ impl Default for Bundle {
                 .insert(MouseButton::Left, Action::ShootPrimary)
                 .insert(GamepadButtonType::RightTrigger, Action::ShootSecondary)
                 .insert(MouseButton::Right, Action::ShootPrimary)
-                .insert(GamepadButtonType::East, Action::Jump)
+                .insert(GamepadButtonType::South, Action::Jump)
                 .insert(KeyCode::Space, Action::Jump)
                 .build(),
         }
