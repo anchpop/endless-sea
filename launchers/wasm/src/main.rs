@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use stylist::yew::styled_component;
 use stylist::{css, global_style};
+use yew::events::MouseEvent;
 use yew::prelude::*;
 
 use endless_sea::LAUNCHER_TITLE;
@@ -46,7 +47,7 @@ fn view() -> Html {
 
     html! {
         <div class={ css }>
-            <canvas id="bevy"></canvas>
+            <canvas id="bevy" oncontextmenu={|mouse_event: MouseEvent| mouse_event.prevent_default() }></canvas>
         </div>
     }
 }
