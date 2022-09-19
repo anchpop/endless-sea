@@ -76,6 +76,7 @@ fn death(
                         .spawn()
                         .insert(RigidBody::Dynamic)
                         .insert(collider)
+                        .insert(Dominance::group(-1)) // prevents them from influencing main physics behavior
                         .insert(Friction::coefficient(10.0))
                         .insert_bundle(SceneBundle {
                             scene,

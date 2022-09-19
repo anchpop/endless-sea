@@ -133,10 +133,8 @@ fn player_input(
 
         // Attack
         if action_state.just_pressed(Action::ShootPrimary) {
-            bevy::log::info!("Shoot primary");
             character_input.attack = Some(character::AttackState::Primary);
         } else if action_state.just_pressed(Action::ShootSecondary) {
-            bevy::log::info!("Shoot secondary");
             character_input.attack = Some(character::AttackState::Secondary);
         } else {
             character_input.attack = None;
