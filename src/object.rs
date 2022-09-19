@@ -64,14 +64,9 @@ fn death(
             for i in 0..4 {
                 commands
                     .spawn()
-                    //.insert(RigidBody::Dynamic)
-                    .insert(
-                        Collider::from_bevy_mesh(
-                            todo!(),
-                            &ComputedColliderShape::TriMesh,
-                        )
-                        .unwrap(),
-                    )
+                    .insert(RigidBody::Dynamic)
+                    .insert(Collider::cuboid(0.1, 0.1, 0.1))
+                    .insert(Friction::coefficient(10.0))
                     .insert_bundle(SceneBundle {
                         scene: asset_server
                             .load(&format!("cube/cube.gltf#Scene{i}")),
