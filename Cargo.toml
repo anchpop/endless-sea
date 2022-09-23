@@ -10,10 +10,6 @@ members = ["launchers/wasm", "launchers/native"]
 name = "native-launcher"
 path = "launchers/native/src/main.rs"
 
-# Enable a small amount of optimization in debug mode
-[profile.dev]
-opt-level = 3
-
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package.endless-sea]
 opt-level = 0
