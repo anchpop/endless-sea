@@ -21,7 +21,6 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('**/rust-toolchain.toml') }}
       - name: Build
-        if: steps.cache-build.outputs.cache-hit != 'true'
         run: cargo build
 
   build-mac:
@@ -38,7 +37,6 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('**/rust-toolchain.toml') }}
       - name: Build
-        if: steps.cache-build.outputs.cache-hit != 'true'
         run: cargo build
 
   build-ubuntu:
@@ -55,10 +53,8 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('**/rust-toolchain.toml') }}
       - name: Get dependencies
-        if: steps.cache-build.outputs.cache-hit != 'true'
         run: sudo apt install libasound2-dev libudev-dev pkg-config
       - name: Build
-        if: steps.cache-build.outputs.cache-hit != 'true'
         run: cargo build
 
   build-wasm:
@@ -75,12 +71,10 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('**/rust-toolchain.toml') }}
       - name: Install Trunk
-        if: steps.cache-build.outputs.cache-hit != 'true'
         uses: jetli/trunk-action@v0.1.0
         with:
           version: "latest"
       - name: Trunk Build
-        if: steps.cache-build.outputs.cache-hit != 'true'
         run: trunk build
 
   test:
@@ -89,7 +83,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Get dependencies
-        if: steps.cache-build.outputs.cache-hit != 'true'
         run: sudo apt install libasound2-dev libudev-dev pkg-config
       - name: Pull Rust cache
         uses: actions/cache@v3
@@ -116,7 +109,6 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-lint-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('**/rust-toolchain.toml') }}
       - name: Get dependencies
-        if: steps.cache-build.outputs.cache-hit != 'true'
         run: sudo apt install libasound2-dev libudev-dev pkg-config
       - name: Update local toolchain
         run: |
