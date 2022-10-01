@@ -677,7 +677,7 @@ dependencies = [
  "futures-lite",
  "hex",
  "hexasphere",
- "image 0.24.3",
+ "image 0.24.4",
  "naga",
  "once_cell",
  "parking_lot 0.12.1",
@@ -1524,7 +1524,7 @@ dependencies = [
  "bevy-inspector-egui",
  "bevy_polyline",
  "bevy_rapier3d",
- "image 0.24.3",
+ "image 0.24.4",
  "leafwing-input-manager",
  "more-asserts",
  "pretty_assertions",
@@ -2136,9 +2136,9 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.24.3"
+version = "0.24.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e30ca2ecf7666107ff827a8e481de6a132a9b687ed3bb20bb1c144a36c00964"
+checksum = "bd8e4fb07cf672b1642304e731ef8a6a4c7891d67bb4fd4f5ce58cd6ed86803c"
 dependencies = [
  "bytemuck",
  "byteorder",
@@ -2622,7 +2622,7 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "endless-sea",
- "image 0.24.3",
+ "image 0.24.4",
  "winit",
 ]
 
