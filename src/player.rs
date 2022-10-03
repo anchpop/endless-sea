@@ -1,9 +1,9 @@
-use crate::character;
-
 use bevy::{input::mouse::MouseMotion, prelude::*};
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 use leafwing_input_manager::{prelude::*, Actionlike};
+
+use crate::character;
 
 // Components
 // ==========
@@ -170,7 +170,7 @@ fn player_looking_input(
     if let Some((_, player_transform, mut player_input, action_state)) =
         player_character.iter_mut().next()
     {
-        if let Some((camera, camera_transform, _, _)) = q_camera.iter().next() {
+        if let Some((camera, camera_transform, ..)) = q_camera.iter().next() {
             // directional
             {
                 // get the window that the camera is displaying to (or the

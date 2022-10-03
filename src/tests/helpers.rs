@@ -1,9 +1,8 @@
-use bevy::prelude::*;
-use bevy::render::camera::ScalingMode;
+use std::thread;
+
+use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::render::RapierDebugRenderPlugin;
-
-use std::thread;
 
 pub fn on_main_thread() -> bool {
     matches!(thread::current().name(), Some("main"))

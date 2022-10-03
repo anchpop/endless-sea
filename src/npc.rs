@@ -1,7 +1,7 @@
-use crate::character;
-use crate::player;
 use bevy::prelude::*;
 use bevy_inspector_egui::Inspectable;
+
+use crate::{character, player};
 
 // Bundle
 // ======

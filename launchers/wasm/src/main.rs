@@ -1,10 +1,7 @@
 use bevy::prelude::*;
-use stylist::yew::styled_component;
-use stylist::{css, global_style};
-use yew::events::MouseEvent;
-use yew::prelude::*;
-
 use endless_sea::LAUNCHER_TITLE;
+use stylist::{css, global_style, yew::styled_component};
+use yew::{events::MouseEvent, prelude::*};
 
 fn set_window_title(title: &str) {
     web_sys::window()
