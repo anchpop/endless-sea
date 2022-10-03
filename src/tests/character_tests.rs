@@ -1,11 +1,10 @@
 #[cfg(test)]
 mod test {
+    use bevy::prelude::*;
+    use bevy_rapier3d::prelude::*;
     use more_asserts::*;
 
     use crate::tests::helpers::*;
-
-    use bevy::prelude::*;
-    use bevy_rapier3d::prelude::*;
 
     fn spawn_floor_beneath_capsule(app: &mut App, capsule_id: Entity) {
         let transform = *app.world.get::<Transform>(capsule_id).unwrap();
@@ -137,8 +136,7 @@ mod test {
 
     #[test]
     fn character_dies() {
-        use crate::character;
-        use crate::object;
+        use crate::{character, object};
         Test {
             setup: |app| {
                 app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())

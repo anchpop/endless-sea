@@ -1,11 +1,10 @@
-use crate::helpers::*;
-use crate::object;
-
 use std::time::Duration;
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
+
+use crate::{helpers::*, object};
 
 // Bundle
 // ======
@@ -356,7 +355,7 @@ fn set_external_force(
         Without<object::Object>,
     )>,
 ) {
-    for (mut external_force, mut walk_force, _, _) in characters.iter_mut() {
+    for (mut external_force, mut walk_force, ..) in characters.iter_mut() {
         external_force.force = walk_force.0;
         walk_force.0 = Vec3::ZERO;
     }
@@ -371,7 +370,7 @@ fn set_external_impulse(
         Without<object::Object>,
     )>,
 ) {
-    for (mut external_impulse, mut jump_impulse, mut knockback_impulse, _, _) in
+    for (mut external_impulse, mut jump_impulse, mut knockback_impulse, ..) in
         characters.iter_mut()
     {
         external_impulse.impulse = jump_impulse.0 + knockback_impulse.0;
