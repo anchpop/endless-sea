@@ -3,6 +3,7 @@
 
 mod character;
 mod helpers;
+mod item;
 mod npc;
 mod object;
 mod player;
@@ -159,4 +160,23 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
                 });
         }
     }
+
+    /* Create a pickup. */
+    commands
+        .spawn()
+        .with_children(|children| {
+            children.spawn_bundle(SceneBundle {
+                scene: asset_server.load("sword/sword.gltf#Scene0"),
+                transform: Transform::from_xyz(-0.6, 0.0, 0.0),
+                ..default()
+            });
+        })
+        .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
+            5.0, 0.0, 5.0,
+        )))
+        .insert_bundle(item::Bundle {
+            collider: Collider::cuboid(1.0, 0.3, 0.3),
+            ..default()
+        })
+        .insert(Name::new("Sword"));
 }
