@@ -3,7 +3,7 @@ use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 use leafwing_input_manager::{prelude::*, Actionlike};
 
-use crate::character;
+use crate::character::{self, CanPickUpItems};
 
 // Components
 // ==========
@@ -33,6 +33,7 @@ pub struct Bundle {
     player: Player,
     action_state: ActionState<Action>,
     input_map: InputMap<Action>,
+    can_pick_up_items: CanPickUpItems,
 }
 
 impl Default for Bundle {
@@ -68,6 +69,7 @@ impl Default for Bundle {
                 .insert(GamepadButtonType::South, Action::Jump)
                 .insert(KeyCode::Space, Action::Jump)
                 .build(),
+            can_pick_up_items: CanPickUpItems {},
         }
     }
 }
