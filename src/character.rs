@@ -4,7 +4,7 @@ use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
-use crate::{helpers::*, object};
+use crate::{helpers::*, item, object};
 
 // Bundle
 // ======
@@ -76,6 +76,14 @@ pub struct WalkForce(pub Vec3);
 #[derive(Component, Default, Clone)]
 pub struct JumpImpulse(pub Vec3);
 
+#[derive(Inspectable, Component, Clone, Default)]
+pub struct Inventory {
+    pub holding: Vec<item::Item>,
+}
+
+// Bundle
+// ======
+
 #[derive(Bundle)]
 pub struct Bundle {
     // physics
@@ -96,6 +104,7 @@ pub struct Bundle {
     pub friction: Friction,
     pub walk_force: WalkForce,
     pub jump_impulse: JumpImpulse,
+    pub inventory: Inventory,
     pub knockback_impulse: object::KnockbackImpulse,
     pub health: object::Health,
 }
@@ -125,6 +134,7 @@ impl Default for Bundle {
             },
             walk_force: WalkForce::default(),
             jump_impulse: JumpImpulse::default(),
+            inventory: Inventory::default(),
             knockback_impulse: object::KnockbackImpulse::default(),
             health: object::Health::default(),
         }
