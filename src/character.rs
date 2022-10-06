@@ -81,6 +81,9 @@ pub struct Inventory {
     pub holding: Vec<item::Item>,
 }
 
+#[derive(Inspectable, Component, Clone, Default)]
+pub struct CanPickUpItems {}
+
 // Bundle
 // ======
 
@@ -160,7 +163,8 @@ impl bevy::app::Plugin for Plugin {
             .add_system(set_external_force)
             .add_system(set_external_impulse)
             .add_system(rotate_character)
-            .add_system(check_no_character_and_object);
+            .add_system(check_no_character_and_object)
+            .add_system(pick_up_items);
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Character>()
@@ -397,6 +401,28 @@ fn rotate_character(mut characters: Query<(&mut Transform, &Input)>) {
             let up = transform.up();
             let translation = transform.translation;
             transform.look_at(translation + looking_direction, up);
+        }
+    }
+}
+
+fn pick_up_items(
+    mut commands: Commands,
+    mut characters: Query<(Entity, &mut Inventory, With<CanPickUpItems>)>,
+    item: Query<&item::Item>,
+    rapier_context: Res<RapierContext>,
+) {
+    for (character_entity, mut inventory, _) in characters.iter_mut() {
+        /* Iterate through all the intersection pairs involving a specific
+         * collider. */
+        for (item_entity, _, intersecting) in
+            rapier_context.intersections_with(character_entity)
+        {
+            if intersecting {
+                if let Ok(item) = item.get(item_entity) {
+                    inventory.holding.push(item.clone());
+                    commands.entity(item_entity).despawn_recursive();
+                }
+            }
         }
     }
 }

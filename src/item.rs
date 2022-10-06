@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
+use bevy_inspector_egui::{Inspectable};
 use bevy_rapier3d::prelude::*;
 
 // Components
@@ -34,5 +34,5 @@ impl Default for Bundle {
 pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
-    fn build(&self, app: &mut App) {}
+    fn build(&self, _app: &mut App) {}
 }
