@@ -170,13 +170,15 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
                 transform: Transform::from_xyz(-0.6, 0.0, 0.0),
                 ..default()
             });
+            children.spawn().insert(Collider::cuboid(1.0, 0.3, 0.3));
         })
         .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
             5.0, 0.0, 5.0,
         )))
         .insert_bundle(item::Bundle {
-            collider: Collider::cuboid(1.0, 0.3, 0.3),
+            collider: Collider::cuboid(1.2, 0.5, 0.5),
             ..default()
         })
+        .insert(RigidBody::Dynamic)
         .insert(Name::new("Sword"));
 }
