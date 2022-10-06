@@ -14,16 +14,16 @@ pub struct Item;
 #[derive(Bundle)]
 pub struct Bundle {
     pub item: Item,
-    pub rigid_body: RigidBody,
     pub collider: Collider,
+    pub sensor: Sensor,
 }
 
 impl Default for Bundle {
     fn default() -> Self {
         Self {
             item: Default::default(),
-            rigid_body: RigidBody::Dynamic,
             collider: Collider::cuboid(0.3, 0.3, 0.3),
+            sensor: Sensor::default(),
         }
     }
 }
