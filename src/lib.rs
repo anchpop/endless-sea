@@ -1,4 +1,5 @@
 #![allow(clippy::type_complexity)]
+#![feature(iter_intersperse)]
 #![feature(let_chains)]
 
 mod character;
@@ -8,6 +9,8 @@ mod npc;
 mod object;
 mod player;
 mod reticle;
+mod ui;
+
 #[cfg(test)]
 mod tests;
 
@@ -45,6 +48,8 @@ pub fn app() -> App {
         .add_plugin(npc::Plugin)
         .add_plugin(player::Plugin)
         .add_plugin(reticle::Plugin)
+        .add_plugin(item::Plugin)
+        .add_plugin(ui::Plugin)
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics);
 
@@ -160,24 +165,25 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
                 });
         }
     }
-
     /* Create a pickup. */
     commands
         .spawn()
-        .with_children(|children| {
-            children.spawn_bundle(SceneBundle {
+        .with_children(|parent| {
+            parent.spawn_bundle(SceneBundle {
                 scene: asset_server.load("sword/sword.gltf#Scene0"),
                 transform: Transform::from_xyz(-0.6, 0.0, 0.0),
                 ..default()
             });
-            children.spawn().insert(Collider::cuboid(1.0, 0.3, 0.3));
+            parent.spawn().insert(Collider::cuboid(1.0, 0.3, 0.3));
         })
         .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
-            5.0, 0.0, 5.0,
+            5.0 * 3.0,
+            0.0,
+            5.0 * 3.0,
         )))
         .insert_bundle(item::Bundle {
             collider: Collider::cuboid(1.2, 0.5, 0.5),
-            ..default()
+            ..item::Bundle::sword()
         })
         .insert(RigidBody::Dynamic)
         .insert(Name::new("Sword"));

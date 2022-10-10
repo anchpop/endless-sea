@@ -76,7 +76,7 @@ pub struct WalkForce(pub Vec3);
 #[derive(Component, Default, Clone)]
 pub struct JumpImpulse(pub Vec3);
 
-#[derive(Inspectable, Component, Clone, Default)]
+#[derive(Component, Clone, Default)]
 pub struct Inventory {
     pub holding: Vec<item::Item>,
 }
