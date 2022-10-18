@@ -76,7 +76,7 @@ pub struct WalkForce(pub Vec3);
 #[derive(Component, Default, Clone)]
 pub struct JumpImpulse(pub Vec3);
 
-#[derive(Component, Clone, Default)]
+#[derive(Component, Clone, Default, Debug)]
 pub struct Inventory {
     pub holding: Vec<item::Item>,
 }
@@ -413,7 +413,7 @@ fn pick_up_items(
 ) {
     for (character_entity, mut inventory, _) in characters.iter_mut() {
         /* Iterate through all the intersection pairs involving a specific
-         * collider. */
+        collider. */
         for (item_entity, _, intersecting) in
             rapier_context.intersections_with(character_entity)
         {

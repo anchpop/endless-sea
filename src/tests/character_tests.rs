@@ -1,3 +1,5 @@
+// Example usage: cargo test character_moves_horizontally -- --test-threads=1
+
 #[cfg(test)]
 mod test {
     use bevy::prelude::*;

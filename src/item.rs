@@ -5,16 +5,24 @@ use bevy_rapier3d::prelude::*;
 // Components
 // ==========
 
-#[derive(Inspectable, Component, Clone)]
+#[derive(Inspectable, Component, Clone, Debug)]
 pub enum Item {
     Sword,
+    Gun,
 }
 
 impl ToString for Item {
     fn to_string(&self) -> String {
         match self {
             Item::Sword => "Sword".to_string(),
+            Item::Gun => "Gun".to_string(),
         }
+    }
+}
+
+impl From<&Item> for String {
+    fn from(i: &Item) -> String {
+        i.to_string()
     }
 }
 
@@ -32,6 +40,13 @@ impl Bundle {
     pub fn sword() -> Self {
         Self {
             item: Item::Sword,
+            collider: Collider::cuboid(0.3, 0.3, 0.3),
+            sensor: Sensor::default(),
+        }
+    }
+    pub fn gun() -> Self {
+        Self {
+            item: Item::Gun,
             collider: Collider::cuboid(0.3, 0.3, 0.3),
             sensor: Sensor::default(),
         }

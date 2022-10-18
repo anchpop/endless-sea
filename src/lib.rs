@@ -185,4 +185,25 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
         })
         .insert(RigidBody::Dynamic)
         .insert(Name::new("Sword"));
+
+    /* Create a pickup. */
+    commands
+        .spawn()
+        .with_children(|parent| {
+            parent.spawn_bundle(SceneBundle {
+                scene: asset_server.load("gun/gun.gltf#Scene0"),
+                transform: Transform::from_xyz(-0.6, 0.0, 0.0),
+                ..default()
+            });
+            parent.spawn().insert(Collider::cuboid(1.0, 0.3, 0.3));
+        })
+        .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
+            8.0, 0.0, 5.0,
+        )))
+        .insert_bundle(item::Bundle {
+            collider: Collider::cuboid(1.2, 0.5, 0.5),
+            ..item::Bundle::gun()
+        })
+        .insert(RigidBody::Dynamic)
+        .insert(Name::new("Gun"));
 }
