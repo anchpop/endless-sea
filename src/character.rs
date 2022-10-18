@@ -78,7 +78,9 @@ pub struct JumpImpulse(pub Vec3);
 
 #[derive(Component, Clone, Default, Debug)]
 pub struct Inventory {
-    pub holding: Vec<item::Item>,
+    pub right: Option<item::Item>,
+    pub left: Option<item::Item>,
+    pub backpack: Vec<item::Item>,
 }
 
 #[derive(Inspectable, Component, Clone, Default)]
@@ -419,7 +421,23 @@ fn pick_up_items(
         {
             if intersecting {
                 if let Ok(item) = item.get(item_entity) {
-                    inventory.holding.push(item.clone());
+                    match *inventory {
+                        Inventory { right: None, .. } => {
+                            inventory.right = Some(item.clone());
+                        }
+                        Inventory {
+                            right: Some(_),
+                            left: None,
+                            ..
+                        } => {
+                            inventory.left = Some(item.clone());
+                        }
+                        Inventory {
+                            right: Some(_),
+                            left: Some(_),
+                            backpack: _,
+                        } => inventory.backpack.push(item.clone()),
+                    }
                     commands.entity(item_entity).despawn_recursive();
                 }
             }
