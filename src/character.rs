@@ -263,35 +263,42 @@ fn force_movement(
 
 fn attack(
     rapier_context: Res<RapierContext>,
-    mut characters: Query<(Entity, &Input, &GlobalTransform)>,
+    mut characters: Query<(Entity, &Input, &GlobalTransform, &Inventory)>,
     mut character_q: Query<(
         &mut object::Health,
         &mut object::KnockbackImpulse,
     )>,
 ) {
-    for (entity, input, transform) in characters.iter_mut() {
-        if let Some(AttackState::Primary) = input.attack {
-            if let Some((entity, _toi)) = rapier_context.cast_ray(
-                transform.translation(),
-                input.looking_direction,
-                1000.0,
-                true,
-                QueryFilter {
-                    exclude_collider: Some(entity),
-                    ..default()
-                },
-            ) {
-                if let Ok((mut health, mut impulse)) =
-                    character_q.get_mut(entity)
-                {
-                    health.current -= 0.5;
-                    impulse.0 = input
-                        .looking_direction
-                        .try_normalize()
-                        .unwrap_or(Vec3::ZERO)
-                        * 10.0;
+    for (entity, input, transform, inventory) in characters.iter_mut() {
+        match (&inventory.right, &input.attack) {
+            (_, None) => {}
+            (None, _) => {}
+            (Some(item::Item::Gun), Some(AttackState::Primary)) => {
+                if let Some((entity, _toi)) = rapier_context.cast_ray(
+                    transform.translation(),
+                    input.looking_direction,
+                    1000.0,
+                    true,
+                    QueryFilter {
+                        exclude_collider: Some(entity),
+                        ..default()
+                    },
+                ) {
+                    if let Ok((mut health, mut impulse)) =
+                        character_q.get_mut(entity)
+                    {
+                        health.current -= 0.5;
+                        impulse.0 = input
+                            .looking_direction
+                            .try_normalize()
+                            .unwrap_or(Vec3::ZERO)
+                            * 10.0;
+                    }
                 }
             }
+            (Some(item::Item::Gun), Some(AttackState::Secondary)) => {}
+            (Some(item::Item::Sword), Some(AttackState::Primary)) => {}
+            (Some(item::Item::Sword), Some(AttackState::Secondary)) => {}
         }
     }
 }
