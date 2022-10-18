@@ -66,18 +66,35 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         .with_style(Style { ..default() }),
                     );
                     parent
-                        .spawn_bundle(
-                            TextBundle::from_section(
+                        .spawn_bundle(TextBundle::from_sections([
+                            TextSection::new(
                                 "Items go here",
                                 TextStyle {
                                     font: asset_server
-                                        .load("fonts/FiraCode-Bold.ttf"),
+                                        .load("fonts/FiraCode-regular.ttf"),
                                     font_size: 20.0,
                                     color: Color::WHITE,
                                 },
-                            )
-                            .with_style(Style { ..default() }),
-                        )
+                            ),
+                            TextSection::new(
+                                "\n",
+                                TextStyle {
+                                    font: asset_server
+                                        .load("fonts/FiraCode-regular.ttf"),
+                                    font_size: 20.0,
+                                    color: Color::WHITE,
+                                },
+                            ),
+                            TextSection::new(
+                                "Items go here",
+                                TextStyle {
+                                    font: asset_server
+                                        .load("fonts/FiraCode-regular.ttf"),
+                                    font_size: 20.0,
+                                    color: Color::WHITE,
+                                },
+                            ),
+                        ]))
                         .insert(InventoryUI);
                 });
         });
@@ -86,16 +103,34 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
 fn update_inventory(
     player_inventory: Query<(&Inventory, With<Player>)>,
     mut ui_inventory: Query<(&mut Text, With<InventoryUI>)>,
+    asset_server: Res<AssetServer>,
 ) {
     if let Some((inventory, _)) = player_inventory.iter().next() {
         if let Some((mut text, _)) = ui_inventory.iter_mut().next() {
-            let items: String = inventory
+            let items: Vec<TextSection> = inventory
                 .holding
                 .iter()
-                .map(|item| item.to_string())
-                .intersperse("\n".to_string())
+                .map(|item| {
+                    TextSection::new(
+                        item,
+                        TextStyle {
+                            font: asset_server
+                                .load("fonts/FiraCode-Regular.ttf"),
+                            font_size: 20.0,
+                            color: Color::WHITE,
+                        },
+                    )
+                })
+                .intersperse(TextSection::new(
+                    "\n",
+                    TextStyle {
+                        font: asset_server.load("fonts/FiraCode-Regular.ttf"),
+                        font_size: 20.0,
+                        color: Color::WHITE,
+                    },
+                ))
                 .collect();
-            text.sections[0].value = items;
+            *text = Text::from_sections(items);
         }
     }
 }
