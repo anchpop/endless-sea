@@ -18,6 +18,7 @@ use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
+use reticle::ReticleBrightness;
 
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
@@ -108,7 +109,10 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
         .insert_bundle(character::Bundle::default())
         .insert_bundle(player::Bundle::default())
         .insert_bundle(reticle::Bundle {
-            reticle_emit_color: reticle::ReticleEmitColor(true),
+            reticle: reticle::Reticle {
+                brightness: ReticleBrightness::Full,
+                enabled: true,
+            },
             ..default()
         })
         .insert(Name::new("Player"));
@@ -129,7 +133,13 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
             ..character::Bundle::default()
         })
         .insert(npc::Npc { peaceful: true })
-        .insert_bundle(reticle::Bundle::default())
+        .insert_bundle(reticle::Bundle {
+            reticle: reticle::Reticle {
+                enabled: true,
+                ..default()
+            },
+            ..reticle::Bundle::default()
+        })
         .insert(reticle::ReticleReceiveType::Enemy)
         .insert(Name::new("Friendly"));
 
