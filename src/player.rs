@@ -23,6 +23,7 @@ enum Action {
     Look,
     ShootPrimary,
     ShootSecondary,
+    SwitchWeapon,
 }
 
 // Bundle
@@ -68,6 +69,7 @@ impl Default for Bundle {
                 .insert(MouseButton::Right, Action::ShootSecondary)
                 .insert(GamepadButtonType::South, Action::Jump)
                 .insert(KeyCode::Space, Action::Jump)
+                .insert(KeyCode::F, Action::SwitchWeapon)
                 .build(),
             can_pick_up_items: CanPickUpItems {},
         }
@@ -150,6 +152,9 @@ fn player_input(
         } else {
             None
         };
+
+        character_input.switch_hands =
+            action_state.just_pressed(Action::SwitchWeapon);
     }
 }
 

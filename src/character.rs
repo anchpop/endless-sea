@@ -63,6 +63,7 @@ pub struct Input {
     pub looking_direction: Vec3,
     pub attack: Option<AttackState>,
     pub jump: Option<JumpState>,
+    pub switch_hands: bool,
 }
 
 #[derive(Component, Default, Clone)]
@@ -167,7 +168,8 @@ impl bevy::app::Plugin for Plugin {
             .add_system(rotate_character)
             .add_system(check_no_character_and_object)
             .add_system(pick_up_items)
-            .add_system(control_reticle_based_on_inventory);
+            .add_system(control_reticle_based_on_inventory)
+            .add_system(switch_hands);
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Character>()
@@ -475,6 +477,17 @@ fn control_reticle_based_on_inventory(
             _ => {
                 reticle.enabled = false;
             }
+        }
+    }
+}
+
+fn switch_hands(mut characters: Query<(&Input, &mut Inventory)>) {
+    for (input, mut inventory) in characters.iter_mut() {
+        if input.switch_hands {
+            let left = inventory.left.clone();
+            let right = inventory.right.clone();
+            inventory.left = right;
+            inventory.right = left;
         }
     }
 }
