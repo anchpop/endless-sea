@@ -16,8 +16,23 @@ pub enum ReticleReceiveType {
     Object,
 }
 
-#[derive(Component, Clone)]
-pub struct ReticleEmitColor(pub bool);
+#[derive(Clone, Debug)]
+pub enum ReticleBrightness {
+    Full,
+    Faint,
+}
+
+impl Default for ReticleBrightness {
+    fn default() -> Self {
+        ReticleBrightness::Faint
+    }
+}
+
+#[derive(Component, Clone, Debug, Default)]
+pub struct Reticle {
+    pub brightness: ReticleBrightness,
+    pub enabled: bool,
+}
 
 // Bundle
 // ======
@@ -26,7 +41,7 @@ pub struct ReticleEmitColor(pub bool);
 pub struct Bundle {
     pub polyline_material: Handle<PolylineMaterial>,
     pub polyline: Handle<Polyline>,
-    pub reticle_emit_color: ReticleEmitColor,
+    pub reticle: Reticle,
 }
 
 impl Default for Bundle {
@@ -34,7 +49,7 @@ impl Default for Bundle {
         Self {
             polyline_material: Handle::<PolylineMaterial>::default(),
             polyline: Handle::<Polyline>::default(),
-            reticle_emit_color: ReticleEmitColor(false),
+            reticle: Reticle::default(),
         }
     }
 }
@@ -67,7 +82,7 @@ fn draw_reticle(
         Entity,
         &GlobalTransform,
         &character::Input,
-        &ReticleEmitColor,
+        &Reticle,
         &mut Handle<PolylineMaterial>,
         &mut Handle<Polyline>,
     )>,
@@ -76,16 +91,11 @@ fn draw_reticle(
     mut polylines: ResMut<Assets<Polyline>>,
     rapier_context: Res<RapierContext>,
 ) {
-    for (
-        entity,
-        transform,
-        input,
-        reticle_emit_color,
-        mut material,
-        mut line,
-    ) in reticles.iter_mut()
+    use ReticleBrightness::*;
+    for (entity, transform, input, reticle, mut material, mut line) in
+        reticles.iter_mut()
     {
-        if let Some(dir) = input.looking_direction.try_normalize() {
+        if let Some(dir) = input.looking_direction.try_normalize() && reticle.enabled {
             let (color, distance) = {
                 if let Some((entity, toi)) = rapier_context.cast_ray(
                     transform.translation(),
@@ -98,24 +108,31 @@ fn draw_reticle(
                     },
                 ) {
                     (
-                        if reticle_emit_color.0 {
-                            if let Ok(receiver) = receiver.get(entity) {
-                                match receiver {
-                                    ReticleReceiveType::Player => {
-                                        polyline_materials.player.clone()
+                        if let Ok(receiver) = receiver.get(entity) {
+                            match reticle.brightness {
+                                Full => {
+                                        match receiver {
+                                            ReticleReceiveType::Player => {
+                                                polyline_materials
+                                                    .player
+                                                    .clone()
+                                            }
+                                            ReticleReceiveType::Enemy => {
+                                                polyline_materials.enemy.clone()
+                                            }
+                                            ReticleReceiveType::Friendly => {
+                                                polyline_materials
+                                                    .friendly
+                                                    .clone()
+                                            }
+                                            ReticleReceiveType::Object => {
+                                                polyline_materials
+                                                    .object
+                                                    .clone()
+                                            }
+                                        }
                                     }
-                                    ReticleReceiveType::Enemy => {
-                                        polyline_materials.enemy.clone()
-                                    }
-                                    ReticleReceiveType::Friendly => {
-                                        polyline_materials.friendly.clone()
-                                    }
-                                    ReticleReceiveType::Object => {
-                                        polyline_materials.object.clone()
-                                    }
-                                }
-                            } else {
-                                polyline_materials.default.clone()
+                                Faint => polyline_materials.no_color.clone()
                             }
                         } else {
                             polyline_materials.no_color.clone()
@@ -124,10 +141,9 @@ fn draw_reticle(
                     )
                 } else {
                     (
-                        if reticle_emit_color.0 {
-                            polyline_materials.default.clone()
-                        } else {
-                            polyline_materials.no_color.clone()
+                        match reticle.brightness {
+                            Full => polyline_materials.default.clone(),
+                            Faint => polyline_materials.no_color.clone(),
                         },
                         1000.0,
                     )

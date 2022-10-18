@@ -1,5 +1,3 @@
-
-
 use bevy::prelude::*;
 
 use crate::{character::Inventory, player::Player};
