@@ -154,6 +154,9 @@ fn draw_reticle(
                 vertices: vec![Vec3::ZERO, Vec3::NEG_Z * distance],
             });
         }
+        else {
+            *line = polylines.add(Polyline { vertices: vec![] });
+        }
     }
 }
 
