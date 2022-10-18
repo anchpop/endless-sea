@@ -4,7 +4,7 @@ use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
-use crate::{helpers::*, item, object};
+use crate::{helpers::*, item, object, reticle::Reticle};
 
 // Bundle
 // ======
@@ -166,7 +166,8 @@ impl bevy::app::Plugin for Plugin {
             .add_system(set_external_impulse)
             .add_system(rotate_character)
             .add_system(check_no_character_and_object)
-            .add_system(pick_up_items);
+            .add_system(pick_up_items)
+            .add_system(control_reticle_based_on_inventory);
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Character>()
@@ -457,5 +458,23 @@ fn check_no_character_and_object(
 ) {
     for _ in characters_with_objects.iter() {
         panic!("Character and Object components cannot be on the same entity");
+    }
+}
+
+fn control_reticle_based_on_inventory(
+    mut reticles: Query<(&Inventory, &mut Reticle)>,
+) {
+    for (inventory, mut reticle) in reticles.iter_mut() {
+        match inventory {
+            Inventory {
+                right: Some(item::Item::Gun),
+                ..
+            } => {
+                reticle.enabled = true;
+            }
+            _ => {
+                reticle.enabled = false;
+            }
+        }
     }
 }
