@@ -108,9 +108,9 @@ fn update_inventory(
     if let Some((inventory, _)) = player_inventory.iter().next() {
         if let Some((mut text, _)) = ui_inventory.iter_mut().next() {
             let items: Vec<TextSection> = inventory
-                .right
+                .hand
                 .iter()
-                .chain(inventory.left.iter())
+                .chain(inventory.belt.iter())
                 .chain(inventory.backpack.iter())
                 .map(|item| {
                     TextSection::new(
