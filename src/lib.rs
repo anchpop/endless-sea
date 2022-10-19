@@ -2,6 +2,7 @@
 #![feature(iter_intersperse)]
 #![feature(let_chains)]
 
+mod assets;
 mod character;
 mod helpers;
 mod item;
@@ -14,7 +15,9 @@ mod ui;
 #[cfg(test)]
 mod tests;
 
+use assets::Assets;
 use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
@@ -42,7 +45,8 @@ pub fn app() -> App {
         bevy::log::info!("Debug mode disabled");
     };
 
-    app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+    app.init_collection::<Assets>()
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(PolylinePlugin)
         .add_plugin(object::Plugin)
         .add_plugin(character::Plugin)
@@ -87,13 +91,17 @@ fn setup_graphics(mut commands: Commands) {
         .insert(Name::new("Point Light"));
 }
 
-fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
+fn setup_physics(
+    mut commands: Commands,
+    asset_server: Res<AssetServer>,
+    assets: Res<Assets>,
+) {
     /* Create the ground. */
     commands
         .spawn()
         .insert(Collider::cuboid(100.0, 0.1, 100.0))
         .insert_bundle(SceneBundle {
-            scene: asset_server.load("floor/floor.gltf#Scene0"),
+            scene: assets.floor.clone(),
             ..default()
         })
         .insert_bundle(SpatialBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
@@ -103,7 +111,7 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn()
         .insert_bundle(SceneBundle {
-            scene: asset_server.load("capsule/capsule.gltf#Scene0"),
+            scene: assets.character.clone(),
             ..default()
         })
         .insert_bundle(character::Bundle::default())
@@ -121,7 +129,7 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn()
         .insert_bundle(SceneBundle {
-            scene: asset_server.load("capsule/capsule.gltf#Scene0"),
+            scene: assets.character.clone(),
             transform: Transform::from_xyz(5.0, 0.0, 5.0),
             ..default()
         })
@@ -152,7 +160,7 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .insert(Collider::cuboid(0.5, 0.5, 0.5))
                 .insert_bundle(object::Bundle::default())
                 .insert_bundle(SceneBundle {
-                    scene: asset_server.load("cube/cube.gltf#Scene4"),
+                    scene: assets.cube.clone(),
                     transform: Transform::from_xyz(
                         2.0 + x as f32,
                         0.5,
@@ -180,7 +188,7 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn()
         .with_children(|parent| {
             parent.spawn_bundle(SceneBundle {
-                scene: asset_server.load("sword/sword.gltf#Scene0"),
+                scene: assets.sword.clone(),
                 transform: Transform::from_xyz(-0.6, 0.0, 0.0),
                 ..default()
             });
@@ -201,7 +209,7 @@ fn setup_physics(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn()
         .with_children(|parent| {
             parent.spawn_bundle(SceneBundle {
-                scene: asset_server.load("gun/gun.gltf#Scene0"),
+                scene: assets.gun.clone(),
                 transform: Transform::from_xyz(-0.6, 0.0, 0.0),
                 ..default()
             });
