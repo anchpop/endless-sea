@@ -44,7 +44,6 @@ pub struct Bundle {
     pub reticle: Reticle,
 }
 
-
 // Resources
 // =========
 
