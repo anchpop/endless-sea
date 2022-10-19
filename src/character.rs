@@ -79,8 +79,8 @@ pub struct JumpImpulse(pub Vec3);
 
 #[derive(Component, Clone, Default, Debug)]
 pub struct Inventory {
-    pub right: Option<item::Item>,
-    pub left: Option<item::Item>,
+    pub hand: Option<item::Item>,
+    pub belt: Option<item::Item>,
     pub backpack: Vec<item::Item>,
 }
 
@@ -273,7 +273,7 @@ fn attack(
     )>,
 ) {
     for (entity, input, transform, inventory) in characters.iter_mut() {
-        match (&inventory.right, &input.attack) {
+        match (&inventory.hand, &input.attack) {
             (_, None) => {}
             (None, _) => {}
             (Some(item::Item::Gun), Some(AttackState::Primary)) => {
@@ -432,19 +432,19 @@ fn pick_up_items(
             if intersecting {
                 if let Ok(item) = item.get(item_entity) {
                     match *inventory {
-                        Inventory { right: None, .. } => {
-                            inventory.right = Some(item.clone());
+                        Inventory { hand: None, .. } => {
+                            inventory.hand = Some(item.clone());
                         }
                         Inventory {
-                            right: Some(_),
-                            left: None,
+                            hand: Some(_),
+                            belt: None,
                             ..
                         } => {
-                            inventory.left = Some(item.clone());
+                            inventory.belt = Some(item.clone());
                         }
                         Inventory {
-                            right: Some(_),
-                            left: Some(_),
+                            hand: Some(_),
+                            belt: Some(_),
                             backpack: _,
                         } => inventory.backpack.push(item.clone()),
                     }
@@ -469,7 +469,7 @@ fn control_reticle_based_on_inventory(
     for (inventory, mut reticle) in reticles.iter_mut() {
         match inventory {
             Inventory {
-                right: Some(item::Item::Gun),
+                hand: Some(item::Item::Gun),
                 ..
             } => {
                 reticle.enabled = true;
@@ -484,10 +484,10 @@ fn control_reticle_based_on_inventory(
 fn switch_hands(mut characters: Query<(&Input, &mut Inventory)>) {
     for (input, mut inventory) in characters.iter_mut() {
         if input.switch_hands {
-            let left = inventory.left.clone();
-            let right = inventory.right.clone();
-            inventory.left = right;
-            inventory.right = left;
+            let left = inventory.belt.clone();
+            let right = inventory.hand.clone();
+            inventory.belt = right;
+            inventory.hand = left;
         }
     }
 }
