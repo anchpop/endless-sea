@@ -37,22 +37,13 @@ pub struct Reticle {
 // Bundle
 // ======
 
-#[derive(Bundle)]
+#[derive(Bundle, Default)]
 pub struct Bundle {
     pub polyline_material: Handle<PolylineMaterial>,
     pub polyline: Handle<Polyline>,
     pub reticle: Reticle,
 }
 
-impl Default for Bundle {
-    fn default() -> Self {
-        Self {
-            polyline_material: Handle::<PolylineMaterial>::default(),
-            polyline: Handle::<Polyline>::default(),
-            reticle: Reticle::default(),
-        }
-    }
-}
 
 // Resources
 // =========
