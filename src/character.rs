@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{collections::HashSet, time::Duration};
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
@@ -279,7 +279,7 @@ fn attack(
             (Some(item::Item::Gun), Some(AttackState::Primary)) => {
                 if let Some((entity, _toi)) = rapier_context.cast_ray(
                     transform.translation(),
-                    input.looking_direction,
+                    input.looking_direction.normalize_or_zero(),
                     1000.0,
                     true,
                     QueryFilter {
@@ -300,7 +300,41 @@ fn attack(
                 }
             }
             (Some(item::Item::Gun), Some(AttackState::Secondary)) => {}
-            (Some(item::Item::Sword), Some(AttackState::Primary)) => {}
+            (Some(item::Item::Sword), Some(AttackState::Primary)) => {
+                let attack_distance = 2.5;
+                let attempts = 30;
+                let angle = 40.0;
+                let hit_entities = (0..=attempts)
+                    .filter_map(|attempt| {
+                        rapier_context.cast_ray(
+                            transform.translation(),
+                            Quat::from_rotation_y(
+                                angle * (attempt as f32 / attempts as f32)
+                                    - (attempts as f32) / 2.0,
+                            ) * input.looking_direction.normalize_or_zero(),
+                            attack_distance,
+                            true,
+                            QueryFilter {
+                                exclude_collider: Some(entity),
+                                ..default()
+                            },
+                        )
+                    })
+                    .map(|(entity, _toi)| entity)
+                    .collect::<HashSet<_>>();
+                for entity in hit_entities {
+                    if let Ok((mut health, mut impulse)) =
+                        character_q.get_mut(entity)
+                    {
+                        health.current -= 0.5;
+                        impulse.0 = input
+                            .looking_direction
+                            .try_normalize()
+                            .unwrap_or(Vec3::ZERO)
+                            * 10.0;
+                    }
+                }
+            }
             (Some(item::Item::Sword), Some(AttackState::Secondary)) => {}
         }
     }
