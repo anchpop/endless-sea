@@ -29,7 +29,7 @@ bevy-inspector-egui = "*"
 bevy_rapier3d = { version = "*", features = ["simd-stable"] }
 image = "0.24.4"
 winit = "0.26.1"
-leafwing-input-manager = "0.6.0"
+leafwing-input-manager = "0.6.1"
 bevy_polyline = "0.3"
 bevy_asset_loader = "0.12.1"
 
