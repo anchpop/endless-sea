@@ -8,6 +8,7 @@ use bevy_rapier3d::prelude::*;
 #[derive(Component, Clone, Default)]
 pub struct Lifetime {
     pub time: Timer,
+    pub shrink_away: bool,
 }
 
 #[derive(Inspectable, Component, Clone, Default)]
@@ -32,6 +33,7 @@ impl Default for Health {
 #[derive(Component, Default, Clone)]
 pub struct ExplodeIntoPieces {
     pub pieces: Vec<(Handle<Scene>, Collider)>,
+    pub shrink_away: bool,
 }
 
 #[derive(Inspectable, Component, Default, Clone)]
@@ -55,7 +57,8 @@ impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_system(death)
             .add_system(set_external_impulse)
-            .add_system(count_down_lifetime);
+            .add_system(count_down_lifetime)
+            .add_system(shrink_away);
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Health>()
@@ -77,7 +80,11 @@ fn death(
         if health.current <= 0.0 {
             commands.entity(entity).despawn_recursive();
 
-            if let Some(ExplodeIntoPieces { pieces }) = pieces {
+            if let Some(ExplodeIntoPieces {
+                pieces,
+                shrink_away,
+            }) = pieces
+            {
                 for (scene, collider) in pieces.iter().cloned() {
                     commands
                         .spawn()
@@ -93,6 +100,7 @@ fn death(
                         .insert(Name::new("Gib"))
                         .insert(Lifetime {
                             time: Timer::from_seconds(10.0, false),
+                            shrink_away: shrink_away.clone(),
                         });
                 }
             }
@@ -124,6 +132,20 @@ fn count_down_lifetime(
         lifetime.time.tick(time.delta());
         if lifetime.time.finished() {
             commands.entity(entity).despawn_recursive();
+        }
+    }
+}
+
+fn shrink_away(mut objects: Query<(&Lifetime, &mut Transform)>) {
+    for (lifetime, mut transform) in objects.iter_mut() {
+        if lifetime.shrink_away {
+            let max = lifetime.time.duration().as_millis() as f32;
+            let time_remaining =
+                max - lifetime.time.elapsed().as_millis() as f32;
+            if time_remaining > 0.0 {
+                let scale = (time_remaining / max).powf(0.5);
+                transform.scale = Vec3::splat(scale);
+            }
         }
     }
 }

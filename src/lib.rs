@@ -180,6 +180,7 @@ fn setup_physics(
                             )
                         })
                         .collect(),
+                    shrink_away: true,
                 });
         }
     }
