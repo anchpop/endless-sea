@@ -70,6 +70,7 @@ impl Default for Bundle {
                 .insert(GamepadButtonType::South, Action::Jump)
                 .insert(KeyCode::Space, Action::Jump)
                 .insert(KeyCode::F, Action::SwitchWeapon)
+                .insert(GamepadButtonType::West, Action::SwitchWeapon)
                 .build(),
             can_pick_up_items: CanPickUpItems {},
         }
