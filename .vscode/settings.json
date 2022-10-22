@@ -9,6 +9,7 @@
         "Inspectable",
         "knockback",
         "leafwing",
+        "lerp",
         "linvel",
         "npcs",
         "oncontextmenu",
