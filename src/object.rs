@@ -100,7 +100,7 @@ fn death(
                         .insert(Name::new("Gib"))
                         .insert(Lifetime {
                             time: Timer::from_seconds(10.0, false),
-                            shrink_away: shrink_away.clone(),
+                            shrink_away: *shrink_away,
                         });
                 }
             }
