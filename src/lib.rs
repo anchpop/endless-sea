@@ -93,7 +93,6 @@ fn setup_graphics(mut commands: Commands) {
 
 fn setup_physics(
     mut commands: Commands,
-    asset_server: Res<AssetServer>,
     assets: Res<Assets>,
 ) {
     /* Create the ground. */
@@ -169,19 +168,7 @@ fn setup_physics(
                     ..default()
                 })
                 .insert(reticle::ReticleReceiveType::Object)
-                .insert(Name::new("Obstacle"))
-                .insert(object::ExplodeIntoPieces {
-                    pieces: (0..4)
-                        .map(|i| {
-                            (
-                                asset_server
-                                    .load(&format!("cube/cube.gltf#Scene{i}")),
-                                Collider::cuboid(0.1, 0.1, 0.1),
-                            )
-                        })
-                        .collect(),
-                    shrink_away: true,
-                });
+                .insert(Name::new("Obstacle"));
         }
     }
     /* Create a pickup. */
