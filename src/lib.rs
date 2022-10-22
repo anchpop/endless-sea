@@ -78,11 +78,28 @@ fn setup_graphics(mut commands: Commands) {
         .insert(Name::new("Camera"))
         .insert(player::PlayerCamera {});
 
+    commands.spawn_bundle(DirectionalLightBundle {
+        transform: Transform::from_xyz(0.0, 10.0, 0.0)
+            .looking_at(Vec3::ZERO + Vec3::Z, Vec3::Z),
+        directional_light: DirectionalLight {
+            illuminance: 32_000.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        ..Default::default()
+    });
+
+    // ambient light
+    commands.insert_resource(AmbientLight {
+        color: Color::ORANGE_RED,
+        brightness: 0.02,
+    });
+
     commands
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
                 intensity: 1500.0,
-                shadows_enabled: true,
+                shadows_enabled: false,
                 ..default()
             },
             transform: Transform::from_xyz(4.0, 8.0, 4.0),
