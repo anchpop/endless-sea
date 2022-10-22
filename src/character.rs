@@ -4,7 +4,7 @@ use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
-use crate::{helpers::*, item, object, reticle::Reticle};
+use crate::{helpers::{*, self}, item, object, reticle::Reticle};
 
 // Bundle
 // ======
@@ -303,15 +303,16 @@ fn attack(
             (Some(item::Item::Sword), Some(AttackState::Primary)) => {
                 let attack_distance = 2.5;
                 let attempts = 30;
-                let angle = 40.0;
+                let angle = 0.25 * std::f32::consts::PI;
                 let hit_entities = (0..=attempts)
                     .filter_map(|attempt| {
                         rapier_context.cast_ray(
                             transform.translation(),
-                            Quat::from_rotation_y(
-                                angle * (attempt as f32 / attempts as f32)
-                                    - (attempts as f32) / 2.0,
-                            ) * input.looking_direction.normalize_or_zero(),
+                            Quat::from_rotation_y(helpers::lerp(
+                                -angle,
+                                angle,
+                                attempt as f32 / attempts as f32,
+                            )) * input.looking_direction.normalize_or_zero(),
                             attack_distance,
                             true,
                             QueryFilter {
