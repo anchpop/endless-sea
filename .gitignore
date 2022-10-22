@@ -13,3 +13,4 @@
 **/*.rs.bk
 
 **/*.blend1
+**/backup/*.hipnc
