@@ -4,7 +4,11 @@ use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
-use crate::{helpers::{*, self}, item, object, reticle::Reticle};
+use crate::{
+    helpers::{self, *},
+    item, object,
+    reticle::Reticle,
+};
 
 // Bundle
 // ======
