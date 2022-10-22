@@ -91,10 +91,7 @@ fn setup_graphics(mut commands: Commands) {
         .insert(Name::new("Point Light"));
 }
 
-fn setup_physics(
-    mut commands: Commands,
-    assets: Res<Assets>,
-) {
+fn setup_physics(mut commands: Commands, assets: Res<Assets>) {
     /* Create the ground. */
     commands
         .spawn()
@@ -161,9 +158,9 @@ fn setup_physics(
                 .insert_bundle(SceneBundle {
                     scene: assets.cube.clone(),
                     transform: Transform::from_xyz(
-                        2.0 + x as f32,
+                        2.0 + (x * 2) as f32,
                         0.5,
-                        0.0 + z as f32,
+                        0.0 + (z * 2) as f32,
                     ),
                     ..default()
                 })
