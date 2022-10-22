@@ -3,7 +3,7 @@ use bevy_asset_loader::prelude::*;
 
 #[derive(AssetCollection, Clone)]
 pub struct Assets {
-    #[asset(path = "floor/floor.gltf#Scene0")]
+    #[asset(path = "floor/floor.glb#Scene0")]
     pub floor: Handle<Scene>,
     #[asset(path = "capsule/capsule.glb#Scene0")]
     pub character: Handle<Scene>,
