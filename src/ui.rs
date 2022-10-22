@@ -107,31 +107,31 @@ fn update_inventory(
 ) {
     if let Some((inventory, _)) = player_inventory.iter().next() {
         if let Some((mut text, _)) = ui_inventory.iter_mut().next() {
-        let items: Vec<TextSection> = inventory
-            .hand
-            .iter()
-            .chain(inventory.belt.iter())
-            .chain(inventory.backpack.iter())
-            .map(|item| {
-                TextSection::new(
-                    item,
+            let items: Vec<TextSection> = inventory
+                .hand
+                .iter()
+                .chain(inventory.belt.iter())
+                .chain(inventory.backpack.iter())
+                .map(|item| {
+                    TextSection::new(
+                        item,
+                        TextStyle {
+                            font: asset_server
+                                .load("fonts/FiraCode-Regular.ttf"),
+                            font_size: 20.0,
+                            color: Color::WHITE,
+                        },
+                    )
+                })
+                .intersperse(TextSection::new(
+                    "\n",
                     TextStyle {
-                        font: asset_server
-                            .load("fonts/FiraCode-Regular.ttf"),
+                        font: asset_server.load("fonts/FiraCode-Regular.ttf"),
                         font_size: 20.0,
                         color: Color::WHITE,
                     },
-                )
-            })
-            .intersperse(TextSection::new(
-                "\n",
-                TextStyle {
-                    font: asset_server.load("fonts/FiraCode-Regular.ttf"),
-                    font_size: 20.0,
-                    color: Color::WHITE,
-                },
-            ))
-            .collect();
+                ))
+                .collect();
             *text = Text::from_sections(items);
         }
     }
