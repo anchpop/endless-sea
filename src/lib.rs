@@ -2,6 +2,7 @@
 #![feature(iter_intersperse)]
 #![feature(let_chains)]
 
+mod animations;
 mod assets;
 mod character;
 mod helpers;
@@ -55,6 +56,7 @@ pub fn app() -> App {
         .add_plugin(reticle::Plugin)
         .add_plugin(item::Plugin)
         .add_plugin(ui::Plugin)
+        .add_plugin(animations::Plugin)
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics);
 

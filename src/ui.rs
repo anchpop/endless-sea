@@ -29,7 +29,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
         .spawn_bundle(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
-                justify_content: JustifyContent::SpaceBetween,
+                justify_content: JustifyContent::FlexEnd,
                 align_items: AlignItems::Center,
                 ..default()
             },
