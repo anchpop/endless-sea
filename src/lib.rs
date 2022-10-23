@@ -16,7 +16,7 @@ mod ui;
 #[cfg(test)]
 mod tests;
 
-use assets::Assets;
+use assets::AssetHolder;
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
@@ -46,7 +46,7 @@ pub fn app() -> App {
         bevy::log::info!("Debug mode disabled");
     };
 
-    app.init_collection::<Assets>()
+    app.init_collection::<AssetHolder>()
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(PolylinePlugin)
         .add_plugin(object::Plugin)
