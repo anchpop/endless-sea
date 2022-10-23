@@ -14,7 +14,7 @@ pub struct Lifetime {
 #[derive(Inspectable, Component, Clone, Default)]
 pub struct Object;
 
-#[derive(Inspectable, Reflect, Component, Clone)]
+#[derive(Inspectable, Reflect, Component, Clone, Debug)]
 #[reflect(Component)]
 pub struct Health {
     pub max: f64,

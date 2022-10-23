@@ -2,7 +2,7 @@ use std::thread;
 
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
-use bevy_rapier3d::render::RapierDebugRenderPlugin;
+use bevy_rapier3d::prelude::*;
 
 pub fn on_main_thread() -> bool {
     matches!(thread::current().name(), Some("main"))
@@ -16,17 +16,24 @@ pub struct Test<A> {
 }
 
 pub fn default_setup_graphics(app: &mut App) {
-    app.world.spawn().insert_bundle(Camera3dBundle {
-        projection: OrthographicProjection {
-            scale: 3.0,
-            scaling_mode: ScalingMode::FixedVertical(5.0),
-            ..default()
-        }
-        .into(),
-        transform: Transform::from_xyz(0.0, 9.0, -6.0)
-            .looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    });
+    use crate::{player, ui};
+
+    app.add_plugin(ui::Plugin).add_plugin(player::Plugin);
+
+    app.world
+        .spawn()
+        .insert_bundle(Camera3dBundle {
+            projection: OrthographicProjection {
+                scale: 3.0,
+                scaling_mode: ScalingMode::FixedVertical(5.0),
+                ..default()
+            }
+            .into(),
+            transform: Transform::from_xyz(0.0, 9.0, -6.0)
+                .looking_at(Vec3::ZERO, Vec3::Y),
+            ..Default::default()
+        })
+        .insert(player::PlayerCamera {});
 
     app.world
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)));
@@ -54,13 +61,15 @@ fn app() -> (App, bool) {
 
     if on_main_thread {
         app.add_plugins(DefaultPlugins)
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
             .add_plugin(RapierDebugRenderPlugin::default());
     } else {
         app.insert_resource(bevy::render::settings::WgpuSettings {
             backends: None,
             ..default()
         })
-        .add_plugins(TestPlugins);
+        .add_plugins(TestPlugins)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
     app.add_plugin(WorldInspectorPlugin::new());
 
