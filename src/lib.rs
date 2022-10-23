@@ -117,7 +117,9 @@ fn setup_physics(mut commands: Commands, assets: Res<Assets>) {
             scene: assets.floor.clone(),
             ..default()
         })
-        .insert_bundle(SpatialBundle::from(Transform::from_xyz(0.0, -2.0, 0.0)))
+        .insert_bundle(SpatialBundle::from(
+            Transform::from_xyz(0.0, -2.0, 0.0).with_scale(Vec3::ONE * 0.3),
+        ))
         .insert(Name::new("Floor"));
 
     /* Create the player. */
