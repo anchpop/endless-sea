@@ -1,8 +1,11 @@
 use std::thread;
 
 use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
+
+use crate::assets::AssetHolder;
 
 pub fn on_main_thread() -> bool {
     matches!(thread::current().name(), Some("main"))
@@ -16,9 +19,12 @@ pub struct Test<A> {
 }
 
 pub fn default_setup_graphics(app: &mut App) {
-    use crate::{player, ui};
+    use crate::{animations, player, ui};
 
-    app.add_plugin(ui::Plugin).add_plugin(player::Plugin);
+    app.init_collection::<AssetHolder>()
+        .add_plugin(ui::Plugin)
+        .add_plugin(player::Plugin)
+        .add_plugin(animations::Plugin);
 
     app.world
         .spawn()
