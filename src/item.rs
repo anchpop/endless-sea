@@ -54,7 +54,21 @@ impl HeldItem {
 
 impl ToString for HeldItem {
     fn to_string(&self) -> String {
-        self.item.to_string()
+        let cooldown_timer =
+            if let Some(time_since_last_use) = &self.time_since_last_use {
+                if time_since_last_use.elapsed() < self.item.cooldown() {
+                    format!(
+                        " ({:.2}s)",
+                        (self.item.cooldown() - time_since_last_use.elapsed())
+                            .as_secs_f32()
+                    )
+                } else {
+                    "".to_string()
+                }
+            } else {
+                "".to_string()
+            };
+        format!("{}{}", self.item.to_string(), cooldown_timer)
     }
 }
 
