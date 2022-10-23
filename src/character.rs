@@ -91,6 +91,18 @@ pub struct Inventory {
 #[derive(Inspectable, Component, Clone, Default)]
 pub struct CanPickUpItems {}
 
+#[derive(Inspectable, Component, Clone, PartialEq, Eq, Hash, Debug)]
+pub enum AnimationState {
+    Idle,
+    Walk,
+}
+
+impl Default for AnimationState {
+    fn default() -> Self {
+        Self::Idle
+    }
+}
+
 // Bundle
 // ======
 
@@ -117,6 +129,9 @@ pub struct Bundle {
     pub inventory: Inventory,
     pub knockback_impulse: object::KnockbackImpulse,
     pub health: object::Health,
+
+    // animation
+    pub animation_state: AnimationState,
 }
 
 impl Default for Bundle {
@@ -147,6 +162,7 @@ impl Default for Bundle {
             inventory: Inventory::default(),
             knockback_impulse: object::KnockbackImpulse::default(),
             health: object::Health::default(),
+            animation_state: AnimationState::default(),
         }
     }
 }
@@ -174,7 +190,8 @@ impl bevy::app::Plugin for Plugin {
             .add_system(pick_up_items)
             .add_system(control_reticle_based_on_inventory)
             .add_system(switch_hands)
-            .add_system(increment_cooldown_timers);
+            .add_system(increment_cooldown_timers)
+            .add_system(update_character_animation_state);
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Character>()
@@ -569,6 +586,23 @@ fn increment_cooldown_timers(
             {
                 time_since_last_use.tick(time.delta());
             }
+        }
+    }
+}
+
+fn update_character_animation_state(
+    mut characters: Query<(&Input, &mut AnimationState)>,
+) {
+    for (input, mut animation_state) in characters.iter_mut() {
+        let mut upsert = |new_state: AnimationState| {
+            if animation_state.as_ref() != &new_state {
+                *animation_state = new_state;
+            }
+        };
+        if input.movement_direction.length() > 0.1 {
+            upsert(AnimationState::Walk);
+        } else {
+            upsert(AnimationState::Idle);
         }
     }
 }

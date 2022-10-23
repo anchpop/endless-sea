@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
-use crate::{assets, character, npc, player};
+use crate::{
+    asset_holder,
+    character::{self, AnimationState},
+    npc, player,
+};
 
 // Plugin
 // ======
@@ -16,22 +20,26 @@ impl bevy::app::Plugin for Plugin {
 }
 
 fn animate(
-    assets: Res<assets::AssetHolder>,
-    characters: Query<(&Children, With<character::Character>)>,
+    assets: Res<asset_holder::AssetHolder>,
+    characters: Query<
+        (&AnimationState, &Children, With<character::Character>),
+        Or<(Changed<AnimationState>, Added<AnimationState>)>,
+    >,
     children: Query<(&Children, Without<character::Character>)>,
     mut animations: Query<&mut AnimationPlayer>,
-    mut playing: Local<bool>,
 ) {
-    if !*playing {
-        *playing = true;
-        for child in characters
+    for (animation_state, character_children, _) in characters.iter() {
+        for child in character_children
             .iter()
-            .flat_map(|(character_children, _)| character_children.iter())
             .filter_map(|child| children.get(*child).ok())
             .flat_map(|(children, _)| children.iter())
         {
             if let Ok(mut animation_player) = animations.get_mut(*child) {
-                animation_player.play(assets.character_run.clone()).repeat();
+                let animation = match animation_state {
+                    AnimationState::Idle => assets.character_idle.clone(),
+                    AnimationState::Walk => assets.character_run.clone(),
+                };
+                animation_player.play(animation).repeat();
             }
         }
     }
@@ -39,24 +47,20 @@ fn animate(
 
 fn add_player_model(
     mut commands: Commands,
-    assets: Res<assets::AssetHolder>,
-    players: Query<(Entity, Added<player::Player>)>,
+    assets: Res<asset_holder::AssetHolder>,
+    players: Query<Entity, Added<player::Player>>,
 ) {
-    for (player, added) in players.iter() {
-        if added {
-            commands.entity(player).insert(assets.character.clone());
-        }
+    for player in players.iter() {
+        commands.entity(player).insert(assets.character.clone());
     }
 }
 
 fn add_npc_model(
     mut commands: Commands,
-    assets: Res<assets::AssetHolder>,
-    npcs: Query<(Entity, Added<npc::Npc>)>,
+    assets: Res<asset_holder::AssetHolder>,
+    npcs: Query<Entity, Added<npc::Npc>>,
 ) {
-    for (npc, added) in npcs.iter() {
-        if added {
-            commands.entity(npc).insert(assets.character.clone());
-        }
+    for npc in npcs.iter() {
+        commands.entity(npc).insert(assets.character.clone());
     }
 }
