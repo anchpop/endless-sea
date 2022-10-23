@@ -23,7 +23,7 @@ fn animate(
     assets: Res<asset_holder::AssetHolder>,
     characters: Query<
         (&AnimationState, &Children, With<character::Character>),
-        Or<(Changed<AnimationState>, Added<AnimationState>)>,
+        Changed<AnimationState>,
     >,
     children: Query<(&Children, Without<character::Character>)>,
     mut animations: Query<&mut AnimationPlayer>,
