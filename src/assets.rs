@@ -5,8 +5,12 @@ use bevy_asset_loader::prelude::*;
 pub struct Assets {
     #[asset(path = "floor/floor.glb#Scene0")]
     pub floor: Handle<Scene>,
-    #[asset(path = "capsule/capsule.glb#Scene0")]
+
+    #[asset(path = "character/casual_male.glb#Scene0")]
     pub character: Handle<Scene>,
+    #[asset(path = "character/casual_male.glb#Animation8")]
+    pub character_run: Handle<AnimationClip>,
+
     #[asset(path = "cube/cube.glb#Scene0")]
     pub cube: Handle<Scene>,
     #[asset(path = "sword/sword.glb#Scene0")]
