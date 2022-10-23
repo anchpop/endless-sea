@@ -5,7 +5,7 @@ use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
 
-use crate::assets::AssetHolder;
+use crate::asset_holder::AssetHolder;
 
 pub fn on_main_thread() -> bool {
     matches!(thread::current().name(), Some("main"))

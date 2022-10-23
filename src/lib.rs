@@ -3,7 +3,7 @@
 #![feature(let_chains)]
 
 mod animations;
-mod assets;
+mod asset_holder;
 mod character;
 mod helpers;
 mod item;
@@ -16,7 +16,7 @@ mod ui;
 #[cfg(test)]
 mod tests;
 
-use assets::AssetHolder;
+use asset_holder::AssetHolder;
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;

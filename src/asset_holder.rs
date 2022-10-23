@@ -8,8 +8,10 @@ pub struct AssetHolder {
 
     #[asset(path = "character/casual_male.glb#Scene0")]
     pub character: Handle<Scene>,
-    #[asset(path = "character/casual_male.glb#Animation8")]
+    #[asset(path = "character/casual_male.glb#Animation9")]
     pub character_run: Handle<AnimationClip>,
+    #[asset(path = "character/casual_male.glb#Animation14")]
+    pub character_idle: Handle<AnimationClip>,
 
     #[asset(path = "cube/cube.glb#Scene0")]
     pub cube: Handle<Scene>,
