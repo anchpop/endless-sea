@@ -56,7 +56,11 @@ fn app() -> (App, bool) {
         app.add_plugins(DefaultPlugins)
             .add_plugin(RapierDebugRenderPlugin::default());
     } else {
-        app.add_plugins(DefaultPlugins::for_testing());
+        app.insert_resource(bevy::render::settings::WgpuSettings {
+            backends: None,
+            ..default()
+        })
+        .add_plugins(TestPlugins);
     }
     app.add_plugin(WorldInspectorPlugin::new());
 
@@ -80,5 +84,28 @@ impl<A> Test<A> {
             }
             (self.check)(&app, res)
         }
+    }
+}
+
+struct TestPlugins;
+
+impl PluginGroup for TestPlugins {
+    fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
+        group.add(bevy::core::CorePlugin::default());
+        group.add(bevy::time::TimePlugin::default());
+        group.add(bevy::app::ScheduleRunnerPlugin::default());
+        group.add(bevy::window::WindowPlugin);
+        group.add(bevy::transform::TransformPlugin);
+        group.add(bevy::hierarchy::HierarchyPlugin);
+        group.add(bevy::diagnostic::DiagnosticsPlugin);
+        group.add(bevy::input::InputPlugin);
+
+        group.add(bevy::asset::AssetPlugin::default());
+
+        group.add(bevy::scene::ScenePlugin::default());
+
+        group.add(bevy::gilrs::GilrsPlugin::default());
+
+        group.add(bevy::render::RenderPlugin::default());
     }
 }
