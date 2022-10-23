@@ -110,7 +110,7 @@ fn setup_graphics(mut commands: Commands) {
         .insert(Name::new("Point Light"));
 }
 
-fn setup_physics(mut commands: Commands, assets: Res<Assets>) {
+fn setup_physics(mut commands: Commands, assets: Res<AssetHolder>) {
     /* Create the ground. */
     commands
         .spawn()
@@ -127,10 +127,9 @@ fn setup_physics(mut commands: Commands, assets: Res<Assets>) {
     /* Create the player. */
     commands
         .spawn()
-        .insert_bundle(SceneBundle {
-            scene: assets.character.clone(),
-            ..default()
-        })
+        .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
+            0.0, 0.0, 0.0,
+        )))
         .insert_bundle(character::Bundle::default())
         .insert_bundle(player::Bundle::default())
         .insert_bundle(reticle::Bundle {
@@ -145,11 +144,9 @@ fn setup_physics(mut commands: Commands, assets: Res<Assets>) {
     /* Create an NPC. */
     commands
         .spawn()
-        .insert_bundle(SceneBundle {
-            scene: assets.character.clone(),
-            transform: Transform::from_xyz(5.0, 0.0, 5.0),
-            ..default()
-        })
+        .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
+            5.0, 0.0, 5.0,
+        )))
         .insert_bundle(character::Bundle {
             movement_properties: character::MovementProperties {
                 max_speed: 3.0,
