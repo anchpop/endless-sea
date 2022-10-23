@@ -171,7 +171,7 @@ mod test {
         }
         .run()
     }
-    
+
     #[test]
     fn sword_attack() {
         Test {
