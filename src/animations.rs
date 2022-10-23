@@ -14,7 +14,7 @@ impl bevy::app::Plugin for Plugin {
 }
 
 fn animate(
-    assets: Res<assets::Assets>,
+    assets: Res<assets::AssetHolder>,
     characters: Query<(&Children, With<character::Character>)>,
     children: Query<(&Children, Without<character::Character>)>,
     mut animations: Query<&mut AnimationPlayer>,

@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 
 #[derive(AssetCollection, Clone)]
-pub struct Assets {
+pub struct AssetHolder {
     #[asset(path = "floor/floor.glb#Scene0")]
     pub floor: Handle<Scene>,
 
