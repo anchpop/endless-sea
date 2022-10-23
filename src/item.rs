@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use std::time::Duration;
+
+use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 
@@ -22,6 +24,42 @@ impl ToString for Item {
 
 impl From<&Item> for String {
     fn from(i: &Item) -> String {
+        i.to_string()
+    }
+}
+
+impl Item {
+    pub fn cooldown(&self) -> Duration {
+        match self {
+            Item::Sword => Duration::from_millis(200),
+            Item::Gun => Duration::from_millis(1000),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct HeldItem {
+    pub item: Item,
+    pub time_since_last_use: Option<Stopwatch>,
+}
+
+impl HeldItem {
+    pub fn new(item: Item) -> Self {
+        Self {
+            item,
+            time_since_last_use: None,
+        }
+    }
+}
+
+impl ToString for HeldItem {
+    fn to_string(&self) -> String {
+        self.item.to_string()
+    }
+}
+
+impl From<&HeldItem> for String {
+    fn from(i: &HeldItem) -> String {
         i.to_string()
     }
 }

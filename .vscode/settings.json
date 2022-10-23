@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "Actionlike",
+        "cooldown",
         "despawn",
         "egui",
         "Fira",
@@ -11,6 +12,7 @@
         "leafwing",
         "lerp",
         "linvel",
+        "nocapture",
         "npcs",
         "oncontextmenu",
         "polyline",

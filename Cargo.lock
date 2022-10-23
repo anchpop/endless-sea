@@ -1586,6 +1586,7 @@ dependencies = [
  "bevy_rapier3d",
  "image 0.24.4",
  "leafwing-input-manager",
+ "leafwing_abilities",
  "more-asserts",
  "pretty_assertions",
  "winit",
@@ -2400,6 +2401,30 @@ dependencies = [
  "leafwing_input_manager_macros",
  "petitset",
  "serde",
+]
+
+[[package]]
+name = "leafwing_abilities"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e02c8744531d326447c7602c99de7cd6ca4db5249428500bfb94fd48446d5b8c"
+dependencies = [
+ "bevy",
+ "leafwing-input-manager",
+ "leafwing_abilities_macros",
+ "serde",
+]
+
+[[package]]
+name = "leafwing_abilities_macros"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0f3a328f61afbb6bb9221d0d8f78e9906f0f70ae3238be1a8b4871a534532204"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

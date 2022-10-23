@@ -83,9 +83,9 @@ pub struct JumpImpulse(pub Vec3);
 
 #[derive(Component, Clone, Default, Debug)]
 pub struct Inventory {
-    pub hand: Option<item::Item>,
-    pub belt: Option<item::Item>,
-    pub backpack: Vec<item::Item>,
+    pub hand: Option<item::HeldItem>,
+    pub belt: Option<item::HeldItem>,
+    pub backpack: Vec<item::HeldItem>,
 }
 
 #[derive(Inspectable, Component, Clone, Default)]
@@ -173,7 +173,8 @@ impl bevy::app::Plugin for Plugin {
             .add_system(check_no_character_and_object)
             .add_system(pick_up_items)
             .add_system(control_reticle_based_on_inventory)
-            .add_system(switch_hands);
+            .add_system(switch_hands)
+            .add_system(increment_cooldown_timers);
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Character>()
@@ -270,77 +271,81 @@ fn force_movement(
 
 fn attack(
     rapier_context: Res<RapierContext>,
-    mut characters: Query<(Entity, &Input, &GlobalTransform, &Inventory)>,
+    mut characters: Query<(Entity, &Input, &GlobalTransform, &mut Inventory)>,
     mut character_q: Query<(
         &mut object::Health,
         &mut object::KnockbackImpulse,
     )>,
 ) {
-    for (entity, input, transform, inventory) in characters.iter_mut() {
-        match (&inventory.hand, &input.attack) {
-            (_, None) => {}
-            (None, _) => {}
-            (Some(item::Item::Gun), Some(AttackState::Primary)) => {
-                if let Some((entity, _toi)) = rapier_context.cast_ray(
-                    transform.translation(),
-                    input.looking_direction.normalize_or_zero(),
-                    1000.0,
-                    true,
-                    QueryFilter {
-                        exclude_collider: Some(entity),
-                        ..default()
-                    },
-                ) {
-                    if let Ok((mut health, mut impulse)) =
-                        character_q.get_mut(entity)
-                    {
-                        health.current -= 0.5;
-                        impulse.0 = input
-                            .looking_direction
-                            .try_normalize()
-                            .unwrap_or(Vec3::ZERO)
-                            * 10.0;
-                    }
-                }
-            }
-            (Some(item::Item::Gun), Some(AttackState::Secondary)) => {}
-            (Some(item::Item::Sword), Some(AttackState::Primary)) => {
-                let attack_distance = 2.5;
-                let attempts = 30;
-                let angle = 0.25 * std::f32::consts::PI;
-                let hit_entities = (0..=attempts)
-                    .filter_map(|attempt| {
-                        rapier_context.cast_ray(
+    for (entity, input, transform, mut inventory) in characters.iter_mut() {
+        if let Some(held_item) = &mut inventory.hand && let Some(attack) = &input.attack {
+            let item = &held_item.item;
+            let can_use = match &held_item.time_since_last_use {
+                Some(time) => time.elapsed() > item.cooldown(),
+                None => true,
+            };
+            if can_use {
+                held_item.time_since_last_use = Some(Stopwatch::new());
+
+                match (item, attack) {
+                    (item::Item::Gun, AttackState::Primary) => {
+                        if let Some((entity, _toi)) = rapier_context.cast_ray(
                             transform.translation(),
-                            Quat::from_rotation_y(helpers::lerp(
-                                -angle,
-                                angle,
-                                attempt as f32 / attempts as f32,
-                            )) * input.looking_direction.normalize_or_zero(),
-                            attack_distance,
+                            input.looking_direction.normalize_or_zero(),
+                            1000.0,
                             true,
                             QueryFilter {
                                 exclude_collider: Some(entity),
                                 ..default()
                             },
-                        )
-                    })
-                    .map(|(entity, _toi)| entity)
-                    .collect::<HashSet<_>>();
-                for entity in hit_entities {
-                    if let Ok((mut health, mut impulse)) =
-                        character_q.get_mut(entity)
-                    {
-                        health.current -= 0.5;
-                        impulse.0 = input
-                            .looking_direction
-                            .try_normalize()
-                            .unwrap_or(Vec3::ZERO)
-                            * 10.0;
+                        ) {
+                            if let Ok((mut health, mut impulse)) =
+                                character_q.get_mut(entity)
+                            {
+                                health.current -= 0.5;
+                                impulse.0 =
+                                    input.looking_direction.normalize_or_zero() * 10.0;
+                            }
+                        }
                     }
+                    (item::Item::Gun, AttackState::Secondary) => {}
+                    (item::Item::Sword, AttackState::Primary) => {
+                        let attack_distance = 2.5;
+                        let attempts = 30;
+                        let angle = 0.25 * std::f32::consts::PI;
+                        let hit_entities = (0..=attempts)
+                            .filter_map(|attempt| {
+                                rapier_context.cast_ray(
+                                    transform.translation(),
+                                    Quat::from_rotation_y(helpers::lerp(
+                                        -angle,
+                                        angle,
+                                        attempt as f32 / attempts as f32,
+                                    )) * input.looking_direction.normalize_or_zero(),
+                                    attack_distance,
+                                    true,
+                                    QueryFilter {
+                                        exclude_collider: Some(entity),
+                                        ..default()
+                                    },
+                                )
+                            })
+                            .map(|(entity, _toi)| entity)
+                            .collect::<HashSet<_>>();
+                        for entity in hit_entities {
+                            if let Ok((mut health, mut impulse)) =
+                                character_q.get_mut(entity)
+                            {
+                                health.current -= 0.5;
+                                impulse.0 =
+                                    input.looking_direction.normalize_or_zero() * 10.0;
+                            }
+                        }
+                    }
+                    (item::Item::Sword, AttackState::Secondary) => {}
                 }
             }
-            (Some(item::Item::Sword), Some(AttackState::Secondary)) => {}
+
         }
     }
 }
@@ -472,20 +477,24 @@ fn pick_up_items(
                 if let Ok(item) = item.get(item_entity) {
                     match *inventory {
                         Inventory { hand: None, .. } => {
-                            inventory.hand = Some(item.clone());
+                            inventory.hand =
+                                Some(item::HeldItem::new(item.clone()));
                         }
                         Inventory {
                             hand: Some(_),
                             belt: None,
                             ..
                         } => {
-                            inventory.belt = Some(item.clone());
+                            inventory.belt =
+                                Some(item::HeldItem::new(item.clone()));
                         }
                         Inventory {
                             hand: Some(_),
                             belt: Some(_),
                             backpack: _,
-                        } => inventory.backpack.push(item.clone()),
+                        } => inventory
+                            .backpack
+                            .push(item::HeldItem::new(item.clone())),
                     }
                     commands.entity(item_entity).despawn_recursive();
                 }
@@ -508,7 +517,11 @@ fn control_reticle_based_on_inventory(
     for (inventory, mut reticle) in reticles.iter_mut() {
         match inventory {
             Inventory {
-                hand: Some(item::Item::Gun),
+                hand:
+                    Some(item::HeldItem {
+                        item: item::Item::Gun,
+                        ..
+                    }),
                 ..
             } => {
                 reticle.enabled = true;
@@ -527,6 +540,35 @@ fn switch_hands(mut characters: Query<(&Input, &mut Inventory)>) {
             let right = inventory.hand.clone();
             inventory.belt = right;
             inventory.hand = left;
+        }
+    }
+}
+
+fn increment_cooldown_timers(
+    time: Res<Time>,
+    mut inventories: Query<(&mut Inventory,)>,
+) {
+    for (mut inventory,) in inventories.iter_mut() {
+        if let Some(time_since) = &mut inventory
+            .hand
+            .as_mut()
+            .and_then(|item| item.time_since_last_use.as_mut())
+        {
+            time_since.tick(time.delta());
+        }
+        if let Some(time_since) = &mut inventory
+            .belt
+            .as_mut()
+            .and_then(|item| item.time_since_last_use.as_mut())
+        {
+            time_since.tick(time.delta());
+        }
+        for held_item in inventory.backpack.iter_mut() {
+            if let Some(time_since_last_use) =
+                &mut held_item.time_since_last_use
+            {
+                time_since_last_use.tick(time.delta());
+            }
         }
     }
 }
