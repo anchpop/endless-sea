@@ -118,8 +118,8 @@ fn setup_physics(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let variations = [
-        (0.75, 0.0, 5.0, 128, 80.0, 164.0, 180.0, 1.0, false),
-        (0.1, 3.0, 1.5, 128, 20.0, 60.0, 20.0, 0.0, true),
+        (0.75, 0.0, 5.0, 150, 80.0, 164.0, 180.0, 1.0, false),
+        (0.1, 1.2, 2.0, 128, 20.0, 60.0, 20.0, 0.0, true),
     ];
 
     for var in variations {
@@ -141,13 +141,31 @@ fn setup_physics(
             OpenSimplexNoise::new(Some(883_279_212_983_182_319)); // if not provided, default seed is equal to 0
         for x in 0..floor_size {
             for z in 0..floor_size {
-                let y = (noise_generator
-                    .eval_2d(x as f64 * scale, z as f64 * scale)
-                    as f32
-                    * steps)
-                    .floor()
-                    * steepness
-                    / steps;
+                let mut y = 0.0;
+                if has_collider {
+                    y = (((noise_generator
+                        .eval_2d(x as f64 * scale, z as f64 * scale)
+                        as f32
+                        * steps)
+                        + (-(((x as f64) / (floor_size as f64).sqrt())
+                            - (floor_size as f64).sqrt().sqrt())
+                        .powf(2.0)
+                            - (((z as f64) / (floor_size as f64).sqrt())
+                                - (floor_size as f64).sqrt().sqrt())
+                            .powf(2.0)) as f32
+                        + ((floor_size as f64).sqrt()) as f32)
+                        .floor()
+                        * steepness
+                        / steps);
+                } else {
+                    y = (noise_generator
+                        .eval_2d(x as f64 * scale, z as f64 * scale)
+                        as f32
+                        * steps)
+                        .floor()
+                        * steepness
+                        / steps;
+                }
                 let p = Vec3::new(x as f32, y, z as f32);
                 let adjacents: [(i32, i32); 5] = [
                     (1, 0),
@@ -163,25 +181,41 @@ fn setup_physics(
                     let p1 = {
                         let x = x + window[0].0;
                         let z = z + window[0].1;
-                        let y = (noise_generator
+                        let y = (((noise_generator
                             .eval_2d(x as f64 * scale, z as f64 * scale)
                             as f32
                             * steps)
+                            + (-(((x as f64) / (floor_size as f64).sqrt())
+                                - (floor_size as f64).sqrt().sqrt())
+                            .powf(2.0)
+                                - (((z as f64) / (floor_size as f64).sqrt())
+                                    - (floor_size as f64).sqrt().sqrt())
+                                .powf(2.0))
+                                as f32
+                            + ((floor_size as f64).sqrt()) as f32)
                             .floor()
                             * steepness
-                            / steps;
+                            / steps);
                         Vec3::new(x as f32, y as f32, z as f32)
                     };
                     let p2 = {
                         let x = x + window[1].0;
                         let z = z + window[1].1;
-                        let y = (noise_generator
+                        let y = (((noise_generator
                             .eval_2d(x as f64 * scale, z as f64 * scale)
                             as f32
                             * steps)
+                            + (-(((x as f64) / (floor_size as f64).sqrt())
+                                - (floor_size as f64).sqrt().sqrt())
+                            .powf(2.0)
+                                - (((z as f64) / (floor_size as f64).sqrt())
+                                    - (floor_size as f64).sqrt().sqrt())
+                                .powf(2.0))
+                                as f32
+                            + ((floor_size as f64).sqrt()) as f32)
                             .floor()
                             * steepness
-                            / steps;
+                            / steps);
                         Vec3::new(x as f32, y as f32, z as f32)
                     };
                     let e1 = p - p1;
