@@ -111,6 +111,16 @@ fn setup_graphics(mut commands: Commands) {
         .insert(Name::new("Point Light"));
 }
 
+struct WorldGenParameters {
+    scale: f32,
+    steepness: f32,
+    steps: f32,
+    floor_size: u32,
+    color: Color,
+    depth: f32,
+    has_collider: bool,
+}
+
 fn setup_physics(
     mut commands: Commands,
     assets: Res<asset_holder::AssetHolder>,
@@ -118,20 +128,36 @@ fn setup_physics(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let variations = [
-        (0.75, 0.0, 5.0, 150, 80.0, 164.0, 180.0, 1.0, false),
-        (0.1, 1.2, 2.0, 128, 20.0, 60.0, 20.0, 0.0, true),
+        WorldGenParameters {
+            scale: 0.75,
+            steepness: 0.0,
+            steps: 5.0,
+            floor_size: 150,
+            color: Color::BLUE,
+            depth: 1.0,
+            has_collider: false,
+        },
+        WorldGenParameters {
+            scale: 0.1,
+            steepness: 1.2,
+            steps: 2.0,
+            floor_size: 128,
+            color: Color::GREEN,
+            depth: 0.0,
+            has_collider: true,
+        },
     ];
 
     for var in variations {
-        let scale = var.0;
-        let steepness = var.1;
-        let steps = var.2;
-        let floor_size = var.3;
-        let r = var.4;
-        let g = var.5;
-        let b = var.6;
-        let depth = var.7;
-        let has_collider = var.8;
+        let WorldGenParameters {
+            scale,
+            steepness,
+            steps,
+            floor_size,
+            color,
+            depth,
+            has_collider,
+        } = var;
         /* Create the ground. */
         let mut vertices = vec![];
         let mut indices = vec![];
@@ -141,11 +167,11 @@ fn setup_physics(
             OpenSimplexNoise::new(Some(883_279_212_983_182_319)); // if not provided, default seed is equal to 0
         for x in 0..floor_size {
             for z in 0..floor_size {
-                let mut y = 0.0;
-                if has_collider {
-                    y = (((noise_generator
-                        .eval_2d(x as f64 * scale, z as f64 * scale)
-                        as f32
+                let y = if has_collider {
+                    (((noise_generator.eval_2d(
+                        x as f64 * scale as f64,
+                        z as f64 * scale as f64,
+                    ) as f32
                         * steps)
                         + (-(((x as f64) / (floor_size as f64).sqrt())
                             - (floor_size as f64).sqrt().sqrt())
@@ -156,16 +182,17 @@ fn setup_physics(
                         + ((floor_size as f64).sqrt()) as f32)
                         .floor()
                         * steepness
-                        / steps);
+                        / steps)
                 } else {
-                    y = (noise_generator
-                        .eval_2d(x as f64 * scale, z as f64 * scale)
-                        as f32
+                    (noise_generator.eval_2d(
+                        x as f64 * scale as f64,
+                        z as f64 * scale as f64,
+                    ) as f32
                         * steps)
                         .floor()
                         * steepness
-                        / steps;
-                }
+                        / steps
+                };
                 let p = Vec3::new(x as f32, y, z as f32);
                 let adjacents: [(i32, i32); 5] = [
                     (1, 0),
@@ -179,10 +206,10 @@ fn setup_physics(
                 let mut point_normal = Vec3::ZERO;
                 for window in adjacents.windows(2) {
                     let p1 = {
-                        let x = x + window[0].0;
-                        let z = z + window[0].1;
+                        let x = (x as i32 + window[0].0) as f32;
+                        let z = (z as i32 + window[0].1) as f32;
                         let y = (((noise_generator
-                            .eval_2d(x as f64 * scale, z as f64 * scale)
+                            .eval_2d((x * scale) as f64, (z * scale) as f64)
                             as f32
                             * steps)
                             + (-(((x as f64) / (floor_size as f64).sqrt())
@@ -192,17 +219,17 @@ fn setup_physics(
                                     - (floor_size as f64).sqrt().sqrt())
                                 .powf(2.0))
                                 as f32
-                            + ((floor_size as f64).sqrt()) as f32)
-                            .floor()
+                            + ((floor_size as f32).sqrt()))
+                        .floor()
                             * steepness
                             / steps);
-                        Vec3::new(x as f32, y as f32, z as f32)
+                        Vec3::new(x, y, z)
                     };
                     let p2 = {
-                        let x = x + window[1].0;
-                        let z = z + window[1].1;
+                        let x = (x as i32 + window[1].0) as f32;
+                        let z = (z as i32 + window[1].1) as f32;
                         let y = (((noise_generator
-                            .eval_2d(x as f64 * scale, z as f64 * scale)
+                            .eval_2d((x * scale) as f64, (z * scale) as f64)
                             as f32
                             * steps)
                             + (-(((x as f64) / (floor_size as f64).sqrt())
@@ -212,11 +239,11 @@ fn setup_physics(
                                     - (floor_size as f64).sqrt().sqrt())
                                 .powf(2.0))
                                 as f32
-                            + ((floor_size as f64).sqrt()) as f32)
-                            .floor()
+                            + ((floor_size as f32).sqrt()))
+                        .floor()
                             * steepness
                             / steps);
-                        Vec3::new(x as f32, y as f32, z as f32)
+                        Vec3::new(x, y, z)
                     };
                     let e1 = p - p1;
                     let e2 = p - p2;
@@ -231,7 +258,7 @@ fn setup_physics(
                 vertices.push((
                     [p.x, p.y, p.z],
                     [point_normal.x, point_normal.y, point_normal.z],
-                    [r / 255.0, g / 255.0, b / 255.0, 1.0],
+                    [color.r(), color.g(), color.b(), 1.0],
                     [1.0, 1.0],
                 ));
                 if x != 0 && z < (floor_size - 1) {
@@ -283,9 +310,9 @@ fn setup_physics(
                     mesh: meshes.add(mesh),
                     material: materials.add(StandardMaterial::default()),
                     transform: Transform::from_xyz(
-                        (-floor_size / 2) as f32,
+                        (-(floor_size as f32) / 2.0),
                         -1.5 - depth,
-                        (-floor_size / 2) as f32,
+                        (-(floor_size as f32) / 2.0),
                     ),
                     ..Default::default()
                 })
@@ -299,9 +326,9 @@ fn setup_physics(
                     mesh: meshes.add(mesh),
                     material: materials.add(StandardMaterial::default()),
                     transform: Transform::from_xyz(
-                        (-floor_size / 2) as f32,
+                        (-(floor_size as i32) / 2) as f32,
                         -1.5 - depth,
-                        (-floor_size / 2) as f32,
+                        (-(floor_size as i32) / 2) as f32,
                     ),
                     ..Default::default()
                 })
