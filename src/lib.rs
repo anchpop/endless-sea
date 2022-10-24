@@ -120,7 +120,9 @@ fn setup_physics(
     /* Create the ground. */
     let mut vertices = vec![];
     let mut indices = vec![];
-    let floor_size = 32;
+    let mut indices_vec = Vec::new();
+    let mut positions_vec = Vec::new();
+    let floor_size = 128;
     let noise_generator = OpenSimplexNoise::new(Some(883_279_212_983_182_319)); // if not provided, default seed is equal to 0
     let scale = 0.12;
     for x in 0..floor_size {
@@ -181,6 +183,11 @@ fn setup_physics(
                 indices.push(((x) * floor_size) + z - 1);
                 indices.push(((x - 1) * floor_size) + z);
                 indices.push(((x) * floor_size) + z);
+                indices_vec.push([
+                    (((x) * floor_size) + z - 1),
+                    (((x) * floor_size) + z),
+                    (((x - 1) * floor_size) + z),
+                ])
             }
         }
     }
@@ -192,6 +199,7 @@ fn setup_physics(
     let mut uvs = Vec::new();
     for (position, normal, uv) in vertices.iter() {
         positions.push(*position);
+        positions_vec.push((*position).into());
         normals.push(*normal);
         uvs.push(*uv);
     }
@@ -212,6 +220,7 @@ fn setup_physics(
             transform: Transform::from_xyz(0.0, -1.5, 0.0),
             ..Default::default()
         })
+        .insert(Collider::trimesh(positions_vec, indices_vec))
         .insert(Name::new("Bumpy Floor"));
 
     /* Floor */
