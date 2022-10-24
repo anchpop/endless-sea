@@ -161,7 +161,7 @@ fn setup_physics(
                 let normal = e2.cross(e1).normalize_or_zero();
                 point_normal += normal;
             }
-            point_normal = point_normal / 4.0;
+            point_normal /= 4.0;
 
             let x = x as u32;
             let z = z as u32;
