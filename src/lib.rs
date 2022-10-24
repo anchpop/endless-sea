@@ -123,28 +123,64 @@ fn setup_physics(
     let floor_size = 32;
     let noise_generator = OpenSimplexNoise::new(Some(883_279_212_983_182_319)); // if not provided, default seed is equal to 0
     let scale = 0.12;
-    for i in 0..floor_size {
-        for j in 0..floor_size {
+    for z in 0..floor_size {
+        for x in 0..floor_size {
+            let y = noise_generator.eval_2d(z as f64 * scale, x as f64 * scale)
+                as f32
+                * 3.0;
+            let p = Vec3::new(x as f32, y, z as f32);
+            let adjacents: [(i32, i32); 5] = [
+                (1, 0),
+                (0, 1),
+                (-1, 0),
+                (0, -1),
+                (1, 0),
+                // repeating the first one so when we get the windows it wraps
+                // around
+            ];
+            let mut point_normal = Vec3::ZERO;
+            for window in adjacents.windows(2) {
+                let p1 = {
+                    let x = x + window[0].0;
+                    let z = z + window[0].1;
+                    let y = noise_generator
+                        .eval_2d(z as f64 * scale, x as f64 * scale)
+                        * 3.0;
+                    Vec3::new(x as f32, y as f32, z as f32)
+                };
+                let p2 = {
+                    let x = x + window[1].0;
+                    let z = z + window[1].1;
+                    let y = noise_generator
+                        .eval_2d(z as f64 * scale, x as f64 * scale)
+                        * 3.0;
+                    Vec3::new(x as f32, y as f32, z as f32)
+                };
+                let e1 = p - p1;
+                let e2 = p - p2;
+                let normal = e2.cross(e1).normalize_or_zero();
+                point_normal += normal;
+            }
+            point_normal = point_normal / 4.0;
+
+            let z = z as u32;
+            let x = x as u32;
+            let floor_size = floor_size as u32;
             vertices.push((
-                [
-                    j as f32,
-                    noise_generator.eval_2d(j as f64 * scale, i as f64 * scale)
-                        as f32,
-                    i as f32,
-                ],
-                [0.0, 1.0, 0.0],
+                [p.x, p.y, p.z],
+                [point_normal.x, point_normal.y, point_normal.z],
                 [1.0, 1.0],
             ));
-            if i != 0 && j < (floor_size - 1) {
-                indices.push(((i - 1) * floor_size) + j);
-                indices.push(((i) * floor_size) + j);
-                indices.push(((i - 1) * floor_size) + j + 1);
+            if z != 0 && x < (floor_size - 1) {
+                indices.push(((z - 1) * floor_size) + x);
+                indices.push(((z) * floor_size) + x);
+                indices.push(((z - 1) * floor_size) + x + 1);
             }
 
-            if j != 0 && i != 0 {
-                indices.push(((i) * floor_size) + j - 1);
-                indices.push(((i) * floor_size) + j);
-                indices.push(((i - 1) * floor_size) + j);
+            if x != 0 && z != 0 {
+                indices.push(((z) * floor_size) + x - 1);
+                indices.push(((z) * floor_size) + x);
+                indices.push(((z - 1) * floor_size) + x);
             }
         }
     }
