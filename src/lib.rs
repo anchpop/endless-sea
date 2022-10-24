@@ -123,9 +123,9 @@ fn setup_physics(
     let floor_size = 32;
     let noise_generator = OpenSimplexNoise::new(Some(883_279_212_983_182_319)); // if not provided, default seed is equal to 0
     let scale = 0.12;
-    for z in 0..floor_size {
-        for x in 0..floor_size {
-            let y = noise_generator.eval_2d(z as f64 * scale, x as f64 * scale)
+    for x in 0..floor_size {
+        for z in 0..floor_size {
+            let y = noise_generator.eval_2d(x as f64 * scale, z as f64 * scale)
                 as f32
                 * 3.0;
             let p = Vec3::new(x as f32, y, z as f32);
@@ -144,7 +144,7 @@ fn setup_physics(
                     let x = x + window[0].0;
                     let z = z + window[0].1;
                     let y = noise_generator
-                        .eval_2d(z as f64 * scale, x as f64 * scale)
+                        .eval_2d(x as f64 * scale, z as f64 * scale)
                         * 3.0;
                     Vec3::new(x as f32, y as f32, z as f32)
                 };
@@ -152,7 +152,7 @@ fn setup_physics(
                     let x = x + window[1].0;
                     let z = z + window[1].1;
                     let y = noise_generator
-                        .eval_2d(z as f64 * scale, x as f64 * scale)
+                        .eval_2d(x as f64 * scale, z as f64 * scale)
                         * 3.0;
                     Vec3::new(x as f32, y as f32, z as f32)
                 };
@@ -163,24 +163,24 @@ fn setup_physics(
             }
             point_normal = point_normal / 4.0;
 
-            let z = z as u32;
             let x = x as u32;
+            let z = z as u32;
             let floor_size = floor_size as u32;
             vertices.push((
                 [p.x, p.y, p.z],
                 [point_normal.x, point_normal.y, point_normal.z],
                 [1.0, 1.0],
             ));
-            if z != 0 && x < (floor_size - 1) {
-                indices.push(((z - 1) * floor_size) + x);
-                indices.push(((z) * floor_size) + x);
-                indices.push(((z - 1) * floor_size) + x + 1);
+            if x != 0 && z < (floor_size - 1) {
+                indices.push(((x - 1) * floor_size) + z);
+                indices.push(((x - 1) * floor_size) + z + 1);
+                indices.push(((x) * floor_size) + z);
             }
 
-            if x != 0 && z != 0 {
-                indices.push(((z) * floor_size) + x - 1);
-                indices.push(((z) * floor_size) + x);
-                indices.push(((z - 1) * floor_size) + x);
+            if z != 0 && x != 0 {
+                indices.push(((x) * floor_size) + z - 1);
+                indices.push(((x - 1) * floor_size) + z);
+                indices.push(((x) * floor_size) + z);
             }
         }
     }
