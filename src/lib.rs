@@ -171,6 +171,7 @@ fn setup_physics(
             vertices.push((
                 [p.x, p.y, p.z],
                 [point_normal.x, point_normal.y, point_normal.z],
+                [221.0 / 255.0, 245.0 / 255.0, 66.0 / 255.0, 1.0],
                 [1.0, 1.0],
             ));
             if x != 0 && z < (floor_size - 1) {
@@ -196,11 +197,13 @@ fn setup_physics(
 
     let mut positions = Vec::new();
     let mut normals = Vec::new();
+    let mut colors = Vec::new();
     let mut uvs = Vec::new();
-    for (position, normal, uv) in vertices.iter() {
+    for (position, normal, color, uv) in vertices.iter() {
         positions.push(*position);
         positions_vec.push((*position).into());
         normals.push(*normal);
+        colors.push(*color);
         uvs.push(*uv);
     }
 
@@ -209,6 +212,7 @@ fn setup_physics(
     mesh.set_indices(Some(indices));
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
     mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
 
     commands
@@ -216,7 +220,7 @@ fn setup_physics(
         .spawn()
         .insert_bundle(PbrBundle {
             mesh: meshes.add(mesh),
-            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            material: materials.add(StandardMaterial::default()),
             transform: Transform::from_xyz(0.0, -1.5, 0.0),
             ..Default::default()
         })
