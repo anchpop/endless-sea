@@ -1588,6 +1588,7 @@ dependencies = [
  "leafwing-input-manager",
  "leafwing_abilities",
  "more-asserts",
+ "opensimplex_noise_rs",
  "pretty_assertions",
  "winit",
 ]
@@ -3054,6 +3055,12 @@ name = "once_cell"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e82dad04139b71a90c080c8463fe0dc7902db5192d939bd0950f074d014339e1"
+
+[[package]]
+name = "opensimplex_noise_rs"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba77c545f2291bb66897afe90c8583c4fdc427fae9cb552db032e74d7526e8b5"
 
 [[package]]
 name = "optional"

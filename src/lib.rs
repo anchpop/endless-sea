@@ -22,6 +22,7 @@ use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
+use opensimplex_noise_rs::OpenSimplexNoise;
 use reticle::ReticleBrightness;
 
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
@@ -110,8 +111,74 @@ fn setup_graphics(mut commands: Commands) {
         .insert(Name::new("Point Light"));
 }
 
-fn setup_physics(mut commands: Commands, assets: Res<AssetHolder>) {
+fn setup_physics(
+    mut commands: Commands,
+    assets: Res<asset_holder::AssetHolder>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     /* Create the ground. */
+    let mut vertices = vec![];
+    let mut indices = vec![];
+    let floor_size = 32;
+    let noise_generator = OpenSimplexNoise::new(Some(883_279_212_983_182_319)); // if not provided, default seed is equal to 0
+    let scale = 0.12;
+    for i in 0..floor_size {
+        for j in 0..floor_size {
+            vertices.push((
+                [
+                    j as f32,
+                    noise_generator.eval_2d(j as f64 * scale, i as f64 * scale)
+                        as f32,
+                    i as f32,
+                ],
+                [0.0, 1.0, 0.0],
+                [1.0, 1.0],
+            ));
+            if i != 0 && j < (floor_size - 1) {
+                indices.push(((i - 1) * floor_size) + j);
+                indices.push(((i) * floor_size) + j);
+                indices.push(((i - 1) * floor_size) + j + 1);
+            }
+
+            if j != 0 && i != 0 {
+                indices.push(((i) * floor_size) + j - 1);
+                indices.push(((i) * floor_size) + j);
+                indices.push(((i - 1) * floor_size) + j);
+            }
+        }
+    }
+
+    let indices = bevy::render::mesh::Indices::U32(indices);
+
+    let mut positions = Vec::new();
+    let mut normals = Vec::new();
+    let mut uvs = Vec::new();
+    for (position, normal, uv) in vertices.iter() {
+        positions.push(*position);
+        normals.push(*normal);
+        uvs.push(*uv);
+    }
+
+    let mut mesh =
+        Mesh::new(bevy::render::mesh::PrimitiveTopology::TriangleList);
+    mesh.set_indices(Some(indices));
+    mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+    mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
+
+    commands
+        // plane
+        .spawn()
+        .insert_bundle(PbrBundle {
+            mesh: meshes.add(mesh),
+            material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
+            transform: Transform::from_xyz(0.0, -1.5, 0.0),
+            ..Default::default()
+        })
+        .insert(Name::new("Bumpy Floor"));
+
+    /* Floor */
     commands
         .spawn()
         .insert(Collider::cuboid(100.0, 0.1, 100.0))
