@@ -1,4 +1,4 @@
-use std::thread;
+use std::{thread, time::Duration};
 
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_asset_loader::prelude::*;
@@ -6,6 +6,8 @@ use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
 
 use crate::asset_holder::AssetHolder;
+
+pub const TEST_FPS: f32 = 144.0;
 
 pub fn on_main_thread() -> bool {
     matches!(thread::current().name(), Some("main"))
@@ -69,17 +71,19 @@ fn app() -> (App, bool) {
         app.add_plugins(DefaultPlugins)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
             .insert_resource(TimestepMode::Fixed {
-                dt: 1.0 / 144.0,
+                dt: 1.0 / TEST_FPS,
                 substeps: 1,
             })
             .add_plugin(RapierDebugRenderPlugin::default());
     } else {
-        app.insert_resource(bevy::render::settings::WgpuSettings {
-            backends: None,
-            ..default()
-        })
-        .add_plugins(TestPlugins)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+        let time = Time::default();
+        app.insert_resource(time)
+            .insert_resource(bevy::render::settings::WgpuSettings {
+                backends: None,
+                ..default()
+            })
+            .add_plugins(TestPlugins)
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
     app.add_plugin(WorldInspectorPlugin::new());
 
@@ -99,6 +103,17 @@ impl<A> Test<A> {
             app.run();
         } else {
             for _ in 0..self.frames {
+                // Update time manually for consistent time.delta()
+                let mut time = app.world.resource_mut::<Time>();
+                if let Some(last_update) = time.last_update() {
+                    time.update_with_instant(
+                        last_update
+                            + Duration::from_secs_f32((1.0 / TEST_FPS) as f32),
+                    );
+                } else {
+                    time.update();
+                }
+                // Run systems
                 app.update();
             }
             (self.check)(&app, res)
@@ -111,7 +126,6 @@ struct TestPlugins;
 impl PluginGroup for TestPlugins {
     fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
         group.add(bevy::core::CorePlugin::default());
-        group.add(bevy::time::TimePlugin::default());
         group.add(bevy::app::ScheduleRunnerPlugin::default());
         group.add(bevy::window::WindowPlugin);
         group.add(bevy::transform::TransformPlugin);
