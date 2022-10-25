@@ -288,13 +288,21 @@ fn force_movement(
 
 fn attack(
     rapier_context: Res<RapierContext>,
-    mut characters: Query<(Entity, &Input, &GlobalTransform, &mut Inventory)>,
+    mut characters: Query<(
+        Entity,
+        &Input,
+        &GlobalTransform,
+        &Transform,
+        &mut Inventory,
+    )>,
     mut character_q: Query<(
         &mut object::Health,
         &mut object::KnockbackImpulse,
     )>,
 ) {
-    for (entity, input, transform, mut inventory) in characters.iter_mut() {
+    for (entity, input, transform, transform_local, mut inventory) in
+        characters.iter_mut()
+    {
         if let Some(held_item) = &mut inventory.hand && let Some(attack) = &input.attack {
             let item = &held_item.item;
             let can_use = match &held_item.time_since_last_use {
@@ -328,17 +336,27 @@ fn attack(
                     (item::Item::Gun, AttackState::Secondary) => {}
                     (item::Item::Sword, AttackState::Primary) => {
                         let attack_distance = 2.5;
-                        let attempts = 30;
-                        let angle = 0.25 * std::f32::consts::PI;
-                        let hit_entities = (0..=attempts)
+                        let attempts = (31, 3);
+                        let angle = (0.25 * std::f32::consts::PI, 0.1 * std::f32::consts::PI);
+                        let hit_entities =
+                            (0..attempts.0)
+                            .flat_map(|attempt_x| (0..attempts.1).map(
+                                move |attempt_y| (attempt_x, attempt_y))
+                            )
                             .filter_map(|attempt| {
+                                // GlobalTransform::up() gives the global up transform, so we use the local transform to get the local up vector.
+                                let ray_dir = Quat::from_axis_angle(transform_local.up(), helpers::lerp(
+                                    -angle.0,
+                                    angle.0,
+                                    attempt.0 as f32 / (attempts.0 - 1) as f32,
+                                )) * Quat::from_axis_angle(transform_local.right(), helpers::lerp(
+                                    -angle.1,
+                                    angle.1,
+                                    attempt.1 as f32 / (attempts.1 - 1) as f32,
+                                )) * input.looking_direction.normalize_or_zero();
                                 rapier_context.cast_ray(
                                     transform.translation(),
-                                    Quat::from_rotation_y(helpers::lerp(
-                                        -angle,
-                                        angle,
-                                        attempt as f32 / attempts as f32,
-                                    )) * input.looking_direction.normalize_or_zero(),
+                                    ray_dir,
                                     attack_distance,
                                     true,
                                     QueryFilter {
