@@ -68,6 +68,10 @@ fn app() -> (App, bool) {
     if on_main_thread {
         app.add_plugins(DefaultPlugins)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+            .insert_resource(TimestepMode::Fixed {
+                dt: 1.0 / 144.0,
+                substeps: 1,
+            })
             .add_plugin(RapierDebugRenderPlugin::default());
     } else {
         app.insert_resource(bevy::render::settings::WgpuSettings {
