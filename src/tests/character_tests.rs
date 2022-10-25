@@ -54,7 +54,9 @@ mod test {
                 character_id
             },
             setup_graphics: default_setup_graphics,
-            frames: 10,
+            // Rapier does nothing the first frame, so we have to use 2 frames
+            // here
+            frames: 2,
             check: |app, character_id| {
                 let character =
                     app.world.get::<Transform>(character_id).unwrap();
@@ -93,7 +95,7 @@ mod test {
                 (character_id, initial_character_translation)
             },
             setup_graphics: default_setup_graphics,
-            frames: 100,
+            frames: 1,
             check: |app, (character_id, initial_character_translation)| {
                 let character =
                     app.world.get::<Transform>(character_id).unwrap();
@@ -126,7 +128,7 @@ mod test {
                 (character_id, initial_character_translation)
             },
             setup_graphics: default_setup_graphics,
-            frames: 100,
+            frames: 1,
             check: |app, (character_id, initial_character_translation)| {
                 let character =
                     app.world.get::<Transform>(character_id).unwrap();
@@ -161,7 +163,7 @@ mod test {
                 character_id
             },
             setup_graphics: default_setup_graphics,
-            frames: 10,
+            frames: 1,
             check: |app, character_id| {
                 assert!(
                     app.world.get::<Transform>(character_id).is_none(),
@@ -205,7 +207,7 @@ mod test {
                     .insert(Collider::cuboid(0.5, 0.5, 0.5))
                     .insert_bundle(object::Bundle::default())
                     .insert_bundle(SpatialBundle {
-                        transform: Transform::from_xyz(2.0, 0.001, 0.0),
+                        transform: Transform::from_xyz(1.5, 0.001, 0.0),
                         ..default()
                     })
                     .insert(Name::new("Obstacle"))
@@ -215,7 +217,12 @@ mod test {
                 object_id
             },
             setup_graphics: default_setup_graphics,
-            frames: 1000,
+            // Rapier raycasts do nothing the first frame, so we have to wait
+            // enough frames for the cooldown to expire so we attempt to hit
+            // again.
+            frames: (item::Item::Sword.cooldown().as_secs_f32() * TEST_FPS)
+                .ceil() as u64
+                + 1,
             check: |app, object_id| {
                 app.world
                     .get::<Transform>(object_id)
@@ -225,7 +232,7 @@ mod test {
                 assert_lt!(
                     health.current,
                     health.max,
-                    "Character should have taken damage"
+                    "object should have taken damage"
                 );
             },
         }
