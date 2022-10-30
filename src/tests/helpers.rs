@@ -142,3 +142,20 @@ impl PluginGroup for TestPlugins {
         group.add(bevy::render::RenderPlugin::default());
     }
 }
+
+pub fn spawn_floor_beneath_capsule(app: &mut App, capsule_id: Entity) {
+    let transform = *app.world.get::<Transform>(capsule_id).unwrap();
+    let collider = app.world.get::<Collider>(capsule_id).unwrap().clone();
+    let capsule = collider.as_capsule().unwrap();
+    app.world
+        .spawn()
+        .insert(Collider::cuboid(0.5, 0.5, 0.5))
+        .insert_bundle(TransformBundle::from(Transform {
+            translation: Vec3::ZERO
+                - transform.translation
+                - Vec3::Y * capsule.height(),
+            scale: Vec3::new(100.0, 1.0, 100.0),
+            ..Default::default()
+        }))
+        .insert(Name::new("floor"));
+}
