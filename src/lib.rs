@@ -11,6 +11,7 @@ mod npc;
 mod object;
 mod player;
 mod reticle;
+mod terrain_generation;
 mod ui;
 
 #[cfg(test)]
