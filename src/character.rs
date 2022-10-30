@@ -1,6 +1,6 @@
 use std::{collections::HashSet, time::Duration};
 
-use bevy::{prelude::*, time::Stopwatch};
+use bevy::{prelude::*, time::Stopwatch, utils::Instant};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
@@ -67,8 +67,9 @@ pub struct Input {
 }
 
 #[derive(Component, Default, Clone)]
-pub struct JumpCharge {
+pub struct JumpInfo {
     charge: Option<Stopwatch>,
+    time_since_last_jump: Option<Stopwatch>,
 }
 
 #[derive(Component, Default, Clone)]
@@ -119,7 +120,7 @@ pub struct Bundle {
     pub character: Character,
     pub movement_properties: MovementProperties,
     pub input: Input,
-    pub jump_charge: JumpCharge,
+    pub jump_charge: JumpInfo,
     pub external_force: ExternalForce,
     pub external_impulse: ExternalImpulse,
     pub friction: Friction,
@@ -150,7 +151,7 @@ impl Default for Bundle {
             character: Character::default(),
             movement_properties: default(),
             input: Input::default(),
-            jump_charge: JumpCharge::default(),
+            jump_charge: JumpInfo::default(),
             external_force: ExternalForce::default(),
             external_impulse: ExternalImpulse::default(),
             friction: Friction {
@@ -204,10 +205,16 @@ impl bevy::app::Plugin for Plugin {
 }
 
 fn update_jump_state(
-    mut query: Query<(&Input, &mut JumpCharge)>,
+    mut query: Query<(&Input, &mut JumpInfo)>,
     time: Res<Time>,
 ) {
     for (input, mut jump_charge) in query.iter_mut() {
+        jump_charge
+            .time_since_last_jump
+            .as_mut()
+            .map(|time_since_last_jump| {
+                time_since_last_jump.tick(time.delta())
+            });
         let charge = &mut jump_charge.charge;
         match input.jump {
             Some(JumpState::Charging) => match charge {
@@ -216,6 +223,7 @@ fn update_jump_state(
                 }
                 None => {
                     *charge = Some(Stopwatch::new());
+                    jump_charge.time_since_last_jump = Some(Stopwatch::new());
                 }
             },
             Some(JumpState::JumpPressed) => {}
@@ -245,6 +253,7 @@ fn walk_movement(
         mut walk_impulse,
     ) in characters.iter_mut()
     {
+        dbg!(velocity.linvel.y);
         let input_direction = {
             let projected =
                 project_onto_plane(input.movement_direction, Vec3::Y);
@@ -274,7 +283,7 @@ fn jump_movement(
     mut characters: Query<(
         &Character,
         &Input,
-        &JumpCharge,
+        &JumpInfo,
         &MovementProperties,
         &mut JumpImpulse,
     )>,
@@ -304,33 +313,42 @@ fn jump_movement(
 }
 
 fn update_grounded(
+    time: Res<Time>,
     rapier_context: Res<RapierContext>,
     mut player_character: Query<(
         Entity,
         &mut Character,
+        &MovementProperties,
         &Transform,
         &Collider,
     )>,
     velocity: Query<&Velocity>,
 ) {
-    for (entity, mut character, transform, collider) in
+    for (entity, mut character, movement_properties, transform, collider) in
         player_character.iter_mut()
     {
+        // TODO: This is a hack to make sure the ray doesn't start inside the
+        // ground if the collider is slightly underground, but will cause rare
+        // false positives when the player's head hits the ceiling.
+        let vertical_offset = Vec3::Y * 0.05;
+
+        let jump_dist =
+            time.delta_seconds() * movement_properties.min_jump_impulse;
+        let vertical_noise = time.delta_seconds() * 8.0;
+        let dist_from_ground_to_check = jump_dist + vertical_noise;
+
         if let Some((entity, _toi)) = rapier_context.cast_shape(
-            // TODO: This is a hack to make sure the ray doesn't start inside
-            // the ground if the collider is slightly underground,
-            // bus will cause rare false positives when the player'
-            // s head hits the ceiling.
-            transform.translation + Vec3::Y * 0.05,
+            transform.translation + vertical_offset,
             transform.rotation,
             Vec3::NEG_Y,
             collider,
-            0.2,
+            jump_dist + vertical_noise,
             QueryFilter {
                 exclude_collider: Some(entity),
                 ..default()
             },
         ) {
+            println!("Character grounded");
             // Todo: if object is rotating (eg it is a boat), we should also
             // incorporate the object's angular velocity here.
             if let Ok(velocity) = velocity.get(entity) {
@@ -339,6 +357,7 @@ fn update_grounded(
                 character.ground_velocity = Some(Vec3::ZERO);
             }
         } else {
+            println!("Character ungrounded");
             character.ground_velocity = None;
         }
     }
