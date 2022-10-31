@@ -1,4 +1,6 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, sprite::Rect};
+
+use crate::helpers::*;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Island {
@@ -22,7 +24,7 @@ pub enum Island {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Generation {
     /// The number of generated points per unit
-    point_density: f32,
+    pub point_density: f32,
 }
 
 impl Default for Generation {
@@ -51,21 +53,22 @@ impl Island {
     pub fn generate(
         self,
         generation_type: &Generation,
-        width: f32,
-        height: f32,
+        rect: Rect,
     ) -> (Vec<Point>, Vec<[u32; 3]>) {
         let color = Color::GREEN;
         let num_points = (
-            (width * generation_type.point_density).round() as u32 + 1,
-            (height * generation_type.point_density).round() as u32 + 1,
+            (rect.width() * generation_type.point_density).round() as u32 + 1,
+            (rect.height() * generation_type.point_density).round() as u32 + 1,
         );
         let mut points = Vec::new();
         let mut indices = Vec::new();
         for x in 0..num_points.0 {
             for z in 0..num_points.1 {
                 let p = {
-                    let x = x as f32 / generation_type.point_density;
-                    let z = z as f32 / generation_type.point_density as f32;
+                    let x_frac = x as f32 / num_points.0 as f32;
+                    let z_frac = z as f32 / num_points.1 as f32;
+                    let x = lerp(rect.min.x, rect.max.x, x_frac);
+                    let z = lerp(rect.min.y, rect.max.y, z_frac);
                     let y = self.height_at_point(x, z);
                     Vec3::new(x as f32, y, z as f32)
                 };
