@@ -22,13 +22,20 @@ pub enum Island {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Generation {
     /// The number of generated points per unit
-    resolution: f32,
+    point_density: f32,
 }
 
+impl Default for Generation {
+    fn default() -> Self {
+        Self { point_density: 1.0 }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub struct Point {
     pub position: Vec3,
     pub normal: Vec3,
-    pub color: Vec3,
+    pub color: Color,
 }
 
 impl Island {
@@ -48,6 +55,43 @@ impl Island {
         height: f32,
     ) -> (Vec<Point>, Vec<[u32; 3]>) {
         let color = Color::GREEN;
-        todo!()
+        let num_points = (
+            (width * generation_type.point_density).round() as u32 + 1,
+            (height * generation_type.point_density).round() as u32 + 1,
+        );
+        let mut points = Vec::new();
+        let mut indices = Vec::new();
+        for x in 0..num_points.0 {
+            for z in 0..num_points.1 {
+                let p = {
+                    let x = x as f32 / generation_type.point_density;
+                    let z = z as f32 / generation_type.point_density as f32;
+                    let y = self.height_at_point(x, z);
+                    Vec3::new(x as f32, y, z as f32)
+                };
+
+                points.push(Point {
+                    position: p,
+                    normal: Vec3::Y,
+                    color,
+                });
+                if x != 0 && z < (num_points.1 - 1) {
+                    indices.push([
+                        ((x - 1) * num_points.0) + z,
+                        ((x - 1) * num_points.0) + z + 1,
+                        ((x) * num_points.0) + z,
+                    ]);
+                }
+
+                if z != 0 && x != 0 {
+                    indices.push([
+                        ((x) * num_points.0) + z - 1,
+                        ((x - 1) * num_points.0) + z,
+                        ((x) * num_points.0) + z,
+                    ]);
+                }
+            }
+        }
+        (points, indices)
     }
 }
