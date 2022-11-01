@@ -156,7 +156,7 @@ mod test {
 
         let mesh = {
             let indices = bevy::render::mesh::Indices::U32(
-                indices.iter().cloned().flat_map(|i| i).collect(),
+                indices.iter().cloned().flatten().collect(),
             );
             let positions = points
                 .iter()
