@@ -59,7 +59,7 @@ impl Island {
                 island.height_at_point(x, z) * scale.y
             }
             Terrace(terrace, island) => {
-                (island.height_at_point(x, z) * *terrace).round() / *terrace
+                (island.height_at_point(x, z) / *terrace).round() * *terrace
             }
             Add(a, b) => a.height_at_point(x, z) + b.height_at_point(x, z),
             Min(a, b) => a.height_at_point(x, z).min(b.height_at_point(x, z)),

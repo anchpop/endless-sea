@@ -118,19 +118,19 @@ mod test {
                         1.0,
                         Box::new(Add(
                             Box::new(Scale(
-                                Vec3::new(2.0, 1.0, 2.0),
+                                Vec3::new(2.0, 0.5, 2.0),
                                 Box::new(Lump),
                             )),
                             Box::new(Scale(
-                                Vec3::new(2.0, 1.0, 2.0),
+                                Vec3::new(3.0, 1.0, 3.0),
                                 Box::new(Simplex(0)),
                             )),
                         )),
                     ),
                     Generation {
-                        vertex_density: 3.0,
+                        vertex_density: 2.0,
                     },
-                    20.0,
+                    30.0,
                 );
             },
             setup_graphics: default_setup_graphics,
