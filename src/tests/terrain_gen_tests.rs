@@ -15,7 +15,29 @@ mod test {
                 show(
                     app,
                     Island::Flat,
-                    Generation { point_density: 1.0 },
+                    Generation {
+                        vertex_density: 1.0,
+                    },
+                    10.0,
+                );
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 1,
+            check: |_app, ()| {},
+        }
+        .run()
+    }
+
+    #[test]
+    fn simplex_gen() {
+        Test {
+            setup: |app| {
+                show(
+                    app,
+                    Island::Simplex(0),
+                    Generation {
+                        vertex_density: 1.0,
+                    },
                     10.0,
                 );
             },
