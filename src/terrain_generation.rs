@@ -58,6 +58,11 @@ impl Island {
                 let z = z / scale.z;
                 island.height_at_point(x, z) * scale.y
             }
+            Translate(translation, island) => {
+                let x = x - translation.x;
+                let z = z - translation.z;
+                island.height_at_point(x, z) + translation.y
+            }
             Terrace(terrace, island) => {
                 (island.height_at_point(x, z) / *terrace).round() * *terrace
             }
@@ -157,5 +162,29 @@ impl Island {
             }
         }
         (points, indices)
+    }
+
+    pub fn scale(self, scale: Vec3) -> Self {
+        Island::Scale(scale, Box::new(self))
+    }
+
+    pub fn translate(self, translation: Vec3) -> Self {
+        Island::Translate(translation, Box::new(self))
+    }
+
+    pub fn terrace(self, terrace: f32) -> Self {
+        Island::Terrace(terrace, Box::new(self))
+    }
+
+    pub fn add(self, other: Self) -> Self {
+        Island::Add(Box::new(self), Box::new(other))
+    }
+
+    pub fn min(self, other: Self) -> Self {
+        Island::Min(Box::new(self), Box::new(other))
+    }
+
+    pub fn max(self, other: Self) -> Self {
+        Island::Max(Box::new(self), Box::new(other))
     }
 }

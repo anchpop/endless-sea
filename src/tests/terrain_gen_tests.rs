@@ -128,9 +128,9 @@ mod test {
                         )),
                     ),
                     Generation {
-                        vertex_density: 2.0,
+                        vertex_density: 0.5,
                     },
-                    30.0,
+                    20.0,
                 );
             },
             setup_graphics: default_setup_graphics,
@@ -195,10 +195,10 @@ mod test {
                         transform: Transform::from_xyz(0.0, 0.0, 0.0),
                         ..Default::default()
                     })
-                    .insert(Collider::trimesh(
+                   /* .insert(Collider::trimesh(
                         points.iter().map(|p| p.position).collect(),
                         indices,
-                    ))
+                    )) */
                     .insert(Name::new("generated mesh"));
             }
         }

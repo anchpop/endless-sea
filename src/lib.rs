@@ -18,13 +18,14 @@ mod ui;
 mod tests;
 
 use asset_holder::AssetHolder;
-use bevy::{prelude::*, render::camera::ScalingMode};
+use bevy::{prelude::*, render::camera::ScalingMode, sprite::Rect};
 use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
 use opensimplex_noise_rs::OpenSimplexNoise;
 use reticle::ReticleBrightness;
+use terrain_generation::{Generation, Island};
 
 pub const LAUNCHER_TITLE: &str = "Endless Sea";
 
@@ -41,8 +42,10 @@ pub fn app() -> App {
     .add_plugins(DefaultPlugins);
 
     if cfg!(debug_assertions) {
-        app.add_plugin(WorldInspectorPlugin::new())
-            .add_plugin(RapierDebugRenderPlugin::default());
+        app.add_plugin(WorldInspectorPlugin::new());
+        // Commenting out because the mesh draws too many lines
+        // and it gets too slow :(
+        // .add_plugin(RapierDebugRenderPlugin::default());
         bevy::log::info!("Debug mode enabled");
     } else {
         bevy::log::info!("Debug mode disabled");
@@ -75,8 +78,10 @@ fn setup_graphics(mut commands: Commands) {
                 ..default()
             }
             .into(),
-            transform: Transform::from_xyz(0.0, 9.0, -6.0)
-                .looking_at(Vec3::ZERO, Vec3::Y),
+            transform: Transform::from_translation(
+                Vec3::new(0.0, 9.0, -6.0) * 3.0,
+            )
+            .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
         .insert(Name::new("Camera"))
@@ -112,14 +117,64 @@ fn setup_graphics(mut commands: Commands) {
         .insert(Name::new("Point Light"));
 }
 
-struct WorldGenParameters {
-    scale: f32,
-    steepness: f32,
-    steps: f32,
-    floor_size: u32,
-    color: Color,
-    depth: f32,
-    has_collider: bool,
+fn add_terrain_mesh(
+    commands: &mut Commands,
+    meshes: &mut ResMut<Assets<Mesh>>,
+    materials: &mut ResMut<Assets<StandardMaterial>>,
+    island: Island,
+    generation_type: Generation,
+    size: f32,
+) {
+    let (points, indices) = island.generate(
+        &generation_type,
+        Rect {
+            min: Vec2::new(-size / 2.0, -size / 2.0),
+            max: Vec2::new(size / 2.0, size / 2.0),
+        },
+    );
+
+    let mesh = {
+        let indices = bevy::render::mesh::Indices::U32(
+            indices.iter().cloned().flat_map(|i| i).collect(),
+        );
+        let positions = points
+            .iter()
+            .map(|p| [p.position.x, p.position.y, p.position.z])
+            .collect::<Vec<_>>();
+        let normals = points
+            .iter()
+            .map(|p| [p.normal.x, p.normal.y, p.normal.z])
+            .collect::<Vec<_>>();
+        let colors = points
+            .iter()
+            .map(|p| [p.color.r(), p.color.g(), p.color.b(), p.color.a()])
+            .collect::<Vec<_>>();
+
+        let mut mesh =
+            Mesh::new(bevy::render::mesh::PrimitiveTopology::TriangleList);
+        mesh.set_indices(Some(indices));
+        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+        mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
+        mesh
+    };
+
+    let mesh = meshes.add(mesh);
+    let material = materials.add(StandardMaterial::default());
+
+    commands
+        .spawn()
+        .insert_bundle(PbrBundle {
+            mesh,
+            material,
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..Default::default()
+        })
+        .insert(Collider::trimesh(
+            points.iter().map(|p| p.position).collect(),
+            indices,
+        ))
+        .insert(Name::new("generated mesh"));
 }
 
 fn setup_physics(
@@ -128,213 +183,28 @@ fn setup_physics(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let variations = [
-        WorldGenParameters {
-            scale: 0.75,
-            steepness: 0.0,
-            steps: 5.0,
-            floor_size: 150,
-            color: Color::BLUE,
-            depth: 1.0,
-            has_collider: false,
+    use Island::*;
+    let islands = [(
+        Lump.scale(Vec3::new(2.0, 0.5, 2.0))
+            .add(Simplex(0).scale(Vec3::new(3.0, 1.0, 3.0)))
+            .translate(Vec3::Y * -2.0)
+            .terrace(2.0),
+        Generation {
+            vertex_density: 1.0,
         },
-        WorldGenParameters {
-            scale: 0.1,
-            steepness: 1.2,
-            steps: 2.0,
-            floor_size: 128,
-            color: Color::GREEN,
-            depth: 0.0,
-            has_collider: true,
-        },
-    ];
+        80.0,
+    )];
 
-    for var in variations {
-        let WorldGenParameters {
-            scale,
-            steepness,
-            steps,
-            floor_size,
-            color,
-            depth,
-            has_collider,
-        } = var;
-        /* Create the ground. */
-        let mut vertices = vec![];
-        let mut indices = vec![];
-        let mut indices_vec = Vec::new();
-        let mut positions_vec = Vec::new();
-        let noise_generator =
-            OpenSimplexNoise::new(Some(883_279_212_983_182_319)); 
-        for x in 0..floor_size {
-            for z in 0..floor_size {
-                let y = if has_collider {
-                    ((noise_generator.eval_2d(
-                        x as f64 * scale as f64,
-                        z as f64 * scale as f64,
-                    ) as f32
-                        * steps)
-                        + (-(((x as f64) / (floor_size as f64).sqrt())
-                            - (floor_size as f64).sqrt().sqrt())
-                        .powf(2.0)
-                            - (((z as f64) / (floor_size as f64).sqrt())
-                                - (floor_size as f64).sqrt().sqrt())
-                            .powf(2.0)) as f32
-                        + ((floor_size as f64).sqrt()) as f32)
-                        .floor()
-                        * steepness
-                        / steps
-                } else {
-                    (noise_generator.eval_2d(
-                        x as f64 * scale as f64,
-                        z as f64 * scale as f64,
-                    ) as f32
-                        * steps)
-                        .floor()
-                        * steepness
-                        / steps
-                };
-                let p = Vec3::new(x as f32, y, z as f32);
-                let adjacents: [(i32, i32); 5] = [
-                    (1, 0),
-                    (0, 1),
-                    (-1, 0),
-                    (0, -1),
-                    (1, 0),
-                    // repeating the first one so when we get the windows it
-                    // wraps around
-                ];
-                let mut point_normal = Vec3::ZERO;
-                for window in adjacents.windows(2) {
-                    let p1 = {
-                        let x = (x as i32 + window[0].0) as f32;
-                        let z = (z as i32 + window[0].1) as f32;
-                        let y = ((noise_generator
-                            .eval_2d((x * scale) as f64, (z * scale) as f64)
-                            as f32
-                            * steps)
-                            + (-(((x as f64) / (floor_size as f64).sqrt())
-                                - (floor_size as f64).sqrt().sqrt())
-                            .powf(2.0)
-                                - (((z as f64) / (floor_size as f64).sqrt())
-                                    - (floor_size as f64).sqrt().sqrt())
-                                .powf(2.0))
-                                as f32
-                            + ((floor_size as f32).sqrt()))
-                        .floor()
-                            * steepness
-                            / steps;
-                        Vec3::new(x, y, z)
-                    };
-                    let p2 = {
-                        let x = (x as i32 + window[1].0) as f32;
-                        let z = (z as i32 + window[1].1) as f32;
-                        let y = ((noise_generator
-                            .eval_2d((x * scale) as f64, (z * scale) as f64)
-                            as f32
-                            * steps)
-                            + (-(((x as f64) / (floor_size as f64).sqrt())
-                                - (floor_size as f64).sqrt().sqrt())
-                            .powf(2.0)
-                                - (((z as f64) / (floor_size as f64).sqrt())
-                                    - (floor_size as f64).sqrt().sqrt())
-                                .powf(2.0))
-                                as f32
-                            + ((floor_size as f32).sqrt()))
-                        .floor()
-                            * steepness
-                            / steps;
-                        Vec3::new(x, y, z)
-                    };
-                    let e1 = p - p1;
-                    let e2 = p - p2;
-                    let normal = e2.cross(e1).normalize_or_zero();
-                    point_normal += normal;
-                }
-                point_normal /= 4.0;
-
-                let x = x as u32;
-                let z = z as u32;
-                let floor_size = floor_size as u32;
-                vertices.push((
-                    [p.x, p.y, p.z],
-                    [point_normal.x, point_normal.y, point_normal.z],
-                    [color.r(), color.g(), color.b(), 1.0],
-                    [1.0, 1.0],
-                ));
-                if x != 0 && z < (floor_size - 1) {
-                    indices.push(((x - 1) * floor_size) + z);
-                    indices.push(((x - 1) * floor_size) + z + 1);
-                    indices.push(((x) * floor_size) + z);
-                }
-
-                if z != 0 && x != 0 {
-                    indices.push(((x) * floor_size) + z - 1);
-                    indices.push(((x - 1) * floor_size) + z);
-                    indices.push(((x) * floor_size) + z);
-                    indices_vec.push([
-                        (((x) * floor_size) + z - 1),
-                        (((x) * floor_size) + z),
-                        (((x - 1) * floor_size) + z),
-                    ])
-                }
-            }
-        }
-
-        let indices = bevy::render::mesh::Indices::U32(indices);
-
-        let mut positions = Vec::new();
-        let mut normals = Vec::new();
-        let mut colors = Vec::new();
-        let mut uvs = Vec::new();
-        for (position, normal, color, uv) in vertices.iter() {
-            positions.push(*position);
-            positions_vec.push((*position).into());
-            normals.push(*normal);
-            colors.push(*color);
-            uvs.push(*uv);
-        }
-
-        let mut mesh =
-            Mesh::new(bevy::render::mesh::PrimitiveTopology::TriangleList);
-        mesh.set_indices(Some(indices));
-        mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, positions);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
-        mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, uvs);
-
-        if has_collider {
-            commands
-                // plane
-                .spawn()
-                .insert_bundle(PbrBundle {
-                    mesh: meshes.add(mesh),
-                    material: materials.add(StandardMaterial::default()),
-                    transform: Transform::from_xyz(
-                        -(floor_size as f32) / 2.0,
-                        -1.5 - depth,
-                        -(floor_size as f32) / 2.0,
-                    ),
-                    ..Default::default()
-                })
-                .insert(Collider::trimesh(positions_vec, indices_vec))
-                .insert(Name::new("Bumpy Floor"));
-        } else {
-            commands
-                // plane
-                .spawn()
-                .insert_bundle(PbrBundle {
-                    mesh: meshes.add(mesh),
-                    material: materials.add(StandardMaterial::default()),
-                    transform: Transform::from_xyz(
-                        (-(floor_size as i32) / 2) as f32,
-                        -1.5 - depth,
-                        (-(floor_size as i32) / 2) as f32,
-                    ),
-                    ..Default::default()
-                })
-                .insert(Name::new("Bumpy Floor"));
-        }
+    for island in islands {
+        let (island, generation_type, size) = island;
+        add_terrain_mesh(
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+            island,
+            generation_type,
+            size,
+        )
     }
 
     /* Create the player. */
