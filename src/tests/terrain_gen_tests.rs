@@ -4,7 +4,7 @@ mod test {
     use bevy_rapier3d::prelude::*;
 
     use crate::{
-        terrain_generation::{Generation, Island},
+        terrain_generation::{Generation, Island, Island::*},
         tests::helpers::*,
     };
 
@@ -14,7 +14,7 @@ mod test {
             setup: |app| {
                 show(
                     app,
-                    Island::Flat,
+                    Flat,
                     Generation {
                         vertex_density: 1.0,
                     },
@@ -34,11 +34,103 @@ mod test {
             setup: |app| {
                 show(
                     app,
-                    Island::Simplex(0),
+                    Simplex(0),
                     Generation {
-                        vertex_density: 1.0,
+                        vertex_density: 2.0,
                     },
                     10.0,
+                );
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 1,
+            check: |_app, ()| {},
+        }
+        .run()
+    }
+
+    #[test]
+    fn scale_gen() {
+        Test {
+            setup: |app| {
+                show(
+                    app,
+                    Scale(Vec3::new(2.0, 0.5, 2.0), Box::new(Simplex(0))),
+                    Generation {
+                        vertex_density: 2.0,
+                    },
+                    10.0,
+                );
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 1,
+            check: |_app, ()| {},
+        }
+        .run()
+    }
+
+    #[test]
+    fn lump_gen() {
+        Test {
+            setup: |app| {
+                show(
+                    app,
+                    Lump,
+                    Generation {
+                        vertex_density: 3.0,
+                    },
+                    10.0,
+                );
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 1,
+            check: |_app, ()| {},
+        }
+        .run()
+    }
+
+    #[test]
+    fn terrace_gen() {
+        Test {
+            setup: |app| {
+                show(
+                    app,
+                    Terrace(1.0, Box::new(Lump)),
+                    Generation {
+                        vertex_density: 3.0,
+                    },
+                    10.0,
+                );
+            },
+            setup_graphics: default_setup_graphics,
+            frames: 1,
+            check: |_app, ()| {},
+        }
+        .run()
+    }
+
+    #[test]
+    fn complex_gen() {
+        Test {
+            setup: |app| {
+                show(
+                    app,
+                    Terrace(
+                        1.0,
+                        Box::new(Add(
+                            Box::new(Scale(
+                                Vec3::new(2.0, 1.0, 2.0),
+                                Box::new(Lump),
+                            )),
+                            Box::new(Scale(
+                                Vec3::new(2.0, 1.0, 2.0),
+                                Box::new(Simplex(0)),
+                            )),
+                        )),
+                    ),
+                    Generation {
+                        vertex_density: 3.0,
+                    },
+                    20.0,
                 );
             },
             setup_graphics: default_setup_graphics,

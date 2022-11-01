@@ -45,12 +45,25 @@ pub struct Point {
 
 impl Island {
     pub fn height_at_point(&self, x: f32, z: f32) -> f32 {
+        use Island::*;
         match self {
-            Island::Flat => 0.0,
-            Island::Simplex(seed) => {
+            Flat => 0.0,
+            Simplex(seed) => {
                 let noise_generator = OpenSimplexNoise::new(Some(*seed));
                 noise_generator.eval_2d(x as f64, z as f64) as f32
             }
+            Lump => -(x.powf(2.0) + z.powf(2.0)).sqrt(),
+            Scale(scale, island) => {
+                let x = x / scale.x;
+                let z = z / scale.z;
+                island.height_at_point(x, z) * scale.y
+            }
+            Terrace(terrace, island) => {
+                (island.height_at_point(x, z) * *terrace).round() / *terrace
+            }
+            Add(a, b) => a.height_at_point(x, z) + b.height_at_point(x, z),
+            Min(a, b) => a.height_at_point(x, z).min(b.height_at_point(x, z)),
+            Max(a, b) => a.height_at_point(x, z).max(b.height_at_point(x, z)),
             _ => {
                 todo!()
             }
@@ -59,12 +72,12 @@ impl Island {
 
     fn normal_at_point(&self, x: f32, z: f32, dist: f32) -> Vec3 {
         let p = Vec3::new(x, self.height_at_point(x, z), z);
-        let adjacents: [(i32, i32); 5] = [
-            (1, 0),
-            (0, 1),
-            (-1, 0),
-            (0, -1),
-            (1, 0),
+        let adjacents: [(f32, f32); 5] = [
+            (dist, 0.0),
+            (0.0, dist),
+            (-dist, 0.0),
+            (0.0, -dist),
+            (dist, 0.0),
             // repeating the first one so when we get the windows it
             // wraps around
         ];
@@ -72,14 +85,14 @@ impl Island {
             .windows(2)
             .map(|window| {
                 let p1 = {
-                    let x = (x as i32 + window[0].0) as f32;
-                    let z = (z as i32 + window[0].1) as f32;
+                    let x = x + window[0].0;
+                    let z = z + window[0].1;
                     let y = self.height_at_point(x, z);
                     Vec3::new(x, y, z)
                 };
                 let p2 = {
-                    let x = (x as i32 + window[1].0) as f32;
-                    let z = (z as i32 + window[1].1) as f32;
+                    let x = x + window[1].0;
+                    let z = z + window[1].1;
                     let y = self.height_at_point(x, z);
                     Vec3::new(x, y, z)
                 };
@@ -116,7 +129,7 @@ impl Island {
                     let normal = self.normal_at_point(
                         x,
                         z,
-                        generation_type.vertex_density,
+                        1.0 / generation_type.vertex_density,
                     );
                     (position, normal)
                 };
