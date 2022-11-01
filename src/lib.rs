@@ -23,7 +23,6 @@ use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
-use opensimplex_noise_rs::OpenSimplexNoise;
 use reticle::ReticleBrightness;
 use terrain_generation::{Generation, Island};
 
@@ -135,7 +134,7 @@ fn add_terrain_mesh(
 
     let mesh = {
         let indices = bevy::render::mesh::Indices::U32(
-            indices.iter().cloned().flat_map(|i| i).collect(),
+            indices.iter().cloned().flatten().collect(),
         );
         let positions = points
             .iter()
