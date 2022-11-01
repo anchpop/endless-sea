@@ -195,10 +195,10 @@ mod test {
                         transform: Transform::from_xyz(0.0, 0.0, 0.0),
                         ..Default::default()
                     })
-                   /* .insert(Collider::trimesh(
+                    .insert(Collider::trimesh(
                         points.iter().map(|p| p.position).collect(),
                         indices,
-                    )) */
+                    ))
                     .insert(Name::new("generated mesh"));
             }
         }
