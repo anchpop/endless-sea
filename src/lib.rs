@@ -165,7 +165,7 @@ fn setup_physics(
         let mut indices_vec = Vec::new();
         let mut positions_vec = Vec::new();
         let noise_generator =
-            OpenSimplexNoise::new(Some(883_279_212_983_182_319)); // if not provided, default seed is equal to 0
+            OpenSimplexNoise::new(Some(883_279_212_983_182_319)); 
         for x in 0..floor_size {
             for z in 0..floor_size {
                 let y = if has_collider {

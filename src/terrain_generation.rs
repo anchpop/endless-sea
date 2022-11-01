@@ -1,4 +1,5 @@
 use bevy::{prelude::*, sprite::Rect};
+use opensimplex_noise_rs::OpenSimplexNoise;
 
 use crate::helpers::*;
 
@@ -24,12 +25,14 @@ pub enum Island {
 #[derive(Clone, Debug, PartialEq)]
 pub struct Generation {
     /// The number of generated points per unit
-    pub point_density: f32,
+    pub vertex_density: f32,
 }
 
 impl Default for Generation {
     fn default() -> Self {
-        Self { point_density: 1.0 }
+        Self {
+            vertex_density: 1.0,
+        }
     }
 }
 
@@ -44,10 +47,49 @@ impl Island {
     pub fn height_at_point(&self, x: f32, z: f32) -> f32 {
         match self {
             Island::Flat => 0.0,
+            Island::Simplex(seed) => {
+                let noise_generator = OpenSimplexNoise::new(Some(*seed));
+                noise_generator.eval_2d(x as f64, z as f64) as f32
+            }
             _ => {
                 todo!()
             }
         }
+    }
+
+    fn normal_at_point(&self, x: f32, z: f32, dist: f32) -> Vec3 {
+        let p = Vec3::new(x, self.height_at_point(x, z), z);
+        let adjacents: [(i32, i32); 5] = [
+            (1, 0),
+            (0, 1),
+            (-1, 0),
+            (0, -1),
+            (1, 0),
+            // repeating the first one so when we get the windows it
+            // wraps around
+        ];
+        let normal = adjacents
+            .windows(2)
+            .map(|window| {
+                let p1 = {
+                    let x = (x as i32 + window[0].0) as f32;
+                    let z = (z as i32 + window[0].1) as f32;
+                    let y = self.height_at_point(x, z);
+                    Vec3::new(x, y, z)
+                };
+                let p2 = {
+                    let x = (x as i32 + window[1].0) as f32;
+                    let z = (z as i32 + window[1].1) as f32;
+                    let y = self.height_at_point(x, z);
+                    Vec3::new(x, y, z)
+                };
+                let e1 = p - p1;
+                let e2 = p - p2;
+                let normal = e2.cross(e1).normalize_or_zero();
+                normal
+            })
+            .fold(Vec3::ZERO, |acc, normal| acc + normal);
+        normal / 4.0
     }
 
     pub fn generate(
@@ -57,25 +99,31 @@ impl Island {
     ) -> (Vec<Point>, Vec<[u32; 3]>) {
         let color = Color::GREEN;
         let num_points = (
-            (rect.width() * generation_type.point_density).round() as u32 + 1,
-            (rect.height() * generation_type.point_density).round() as u32 + 1,
+            (rect.width() * generation_type.vertex_density).round() as u32 + 1,
+            (rect.height() * generation_type.vertex_density).round() as u32 + 1,
         );
         let mut points = Vec::new();
         let mut indices = Vec::new();
         for x in 0..num_points.0 {
             for z in 0..num_points.1 {
-                let p = {
+                let (position, normal) = {
                     let x_frac = x as f32 / num_points.0 as f32;
                     let z_frac = z as f32 / num_points.1 as f32;
                     let x = lerp(rect.min.x, rect.max.x, x_frac);
                     let z = lerp(rect.min.y, rect.max.y, z_frac);
                     let y = self.height_at_point(x, z);
-                    Vec3::new(x as f32, y, z as f32)
+                    let position = Vec3::new(x as f32, y, z as f32);
+                    let normal = self.normal_at_point(
+                        x,
+                        z,
+                        generation_type.vertex_density,
+                    );
+                    (position, normal)
                 };
 
                 points.push(Point {
-                    position: p,
-                    normal: Vec3::Y,
+                    position,
+                    normal,
                     color,
                 });
                 if x != 0 && z < (num_points.1 - 1) {
