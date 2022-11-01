@@ -3,6 +3,7 @@ use opensimplex_noise_rs::OpenSimplexNoise;
 
 use crate::helpers::*;
 
+#[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
 pub enum Island {
     /// Creates a flat island.
@@ -69,9 +70,6 @@ impl Island {
             Add(a, b) => a.height_at_point(x, z) + b.height_at_point(x, z),
             Min(a, b) => a.height_at_point(x, z).min(b.height_at_point(x, z)),
             Max(a, b) => a.height_at_point(x, z).max(b.height_at_point(x, z)),
-            _ => {
-                todo!()
-            }
         }
     }
 
@@ -103,8 +101,7 @@ impl Island {
                 };
                 let e1 = p - p1;
                 let e2 = p - p2;
-                let normal = e2.cross(e1).normalize_or_zero();
-                normal
+                e2.cross(e1).normalize_or_zero()
             })
             .fold(Vec3::ZERO, |acc, normal| acc + normal);
         normal / 4.0
@@ -178,13 +175,5 @@ impl Island {
 
     pub fn add(self, other: Self) -> Self {
         Island::Add(Box::new(self), Box::new(other))
-    }
-
-    pub fn min(self, other: Self) -> Self {
-        Island::Min(Box::new(self), Box::new(other))
-    }
-
-    pub fn max(self, other: Self) -> Self {
-        Island::Max(Box::new(self), Box::new(other))
     }
 }
