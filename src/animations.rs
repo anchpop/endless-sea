@@ -28,7 +28,7 @@ fn animate(
     children: Query<(&Children, Without<character::Character>)>,
     mut animations: Query<&mut AnimationPlayer>,
 ) {
-    for (animation_state, character_children, _) in characters.iter() {
+    for (animation_state, character_children, _) in &characters {
         for child in character_children
             .iter()
             .filter_map(|child| children.get(*child).ok())
@@ -50,7 +50,7 @@ fn add_player_model(
     assets: Res<asset_holder::AssetHolder>,
     players: Query<Entity, Added<player::Player>>,
 ) {
-    for player in players.iter() {
+    for player in &players {
         commands.entity(player).insert(assets.character.clone());
     }
 }
@@ -60,7 +60,7 @@ fn add_npc_model(
     assets: Res<asset_holder::AssetHolder>,
     npcs: Query<Entity, Added<npc::Npc>>,
 ) {
-    for npc in npcs.iter() {
+    for npc in &npcs {
         commands.entity(npc).insert(assets.character.clone());
     }
 }
