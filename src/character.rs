@@ -541,7 +541,7 @@ fn pick_up_items(
 fn check_no_character_and_object(
     characters_with_objects: Query<(With<Character>, With<object::Object>)>,
 ) {
-    for _ in characters_with_objects.iter() {
+    for _ in &characters_with_objects {
         panic!("Character and Object components cannot be on the same entity");
     }
 }
