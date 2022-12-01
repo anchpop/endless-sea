@@ -24,7 +24,7 @@ opt-level = 'z'
 lto = true
 
 [dependencies]
-bevy = { version = "0.8.1" }
+bevy = { version = "0.9.1" }
 bevy-inspector-egui = "*"
 bevy_rapier3d = { version = "*", features = ["simd-stable"] }
 image = "0.24.5"
