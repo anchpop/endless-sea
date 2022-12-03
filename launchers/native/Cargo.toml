@@ -6,6 +6,6 @@ workspace = "../.."
 
 [dependencies]
 endless-sea = { package = "endless-sea", path = "../.." }
-bevy = "0.8"
-image = "0.24.5"
-winit = "0.26.1"
+bevy = { version = "0.9.1" }
+image = "0.24.4"
+winit = "*"

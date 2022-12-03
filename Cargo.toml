@@ -24,14 +24,13 @@ opt-level = 'z'
 lto = true
 
 [dependencies]
-bevy = { version = "0.8.1" }
-bevy-inspector-egui = "0.13.0"
-bevy_rapier3d = { version = "0.16.2", features = ["simd-stable"] }
-image = "0.24.5"
-winit = "0.26.1"
-leafwing-input-manager = "0.6.1"
-leafwing_abilities = "0.1.1"
-bevy_polyline = "0.3"
+bevy = { version = "0.9.1" }
+bevy-inspector-egui = "0.14"
+bevy_rapier3d = { version = "0.19", features = ["simd-stable"] }
+image = "0.24.4"
+winit = "*"
+leafwing-input-manager = "0.7"
+bevy_polyline = "0.4"
 opensimplex_noise_rs = "0.3.0"
 
 [dev-dependencies]

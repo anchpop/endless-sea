@@ -1,4 +1,4 @@
-use bevy::{prelude::*, sprite::Rect};
+use bevy::prelude::*;
 use opensimplex_noise_rs::OpenSimplexNoise;
 
 use crate::helpers::*;

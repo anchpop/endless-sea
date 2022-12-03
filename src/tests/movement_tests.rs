@@ -17,9 +17,8 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn()
-                    .insert_bundle(SpatialBundle::default())
-                    .insert_bundle(character::Bundle {
+                    .spawn(SpatialBundle::default())
+                    .insert(character::Bundle {
                         input: character::Input {
                             movement_direction: Vec3::X,
                             ..character::Input::default()
@@ -52,9 +51,8 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn()
-                    .insert_bundle(SpatialBundle::default())
-                    .insert_bundle(character::Bundle {
+                    .spawn(SpatialBundle::default())
+                    .insert(character::Bundle {
                         input: character::Input {
                             movement_direction: Vec3::Y,
                             ..character::Input::default()

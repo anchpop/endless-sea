@@ -29,8 +29,7 @@ pub fn default_setup_graphics(app: &mut App) {
         .add_plugin(animations::Plugin);
 
     app.world
-        .spawn()
-        .insert_bundle(Camera3dBundle {
+        .spawn(Camera3dBundle {
             projection: OrthographicProjection {
                 scale: 3.0,
                 scaling_mode: ScalingMode::FixedVertical(5.0),
@@ -46,7 +45,7 @@ pub fn default_setup_graphics(app: &mut App) {
     app.world
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)));
 
-    app.world.spawn().insert_bundle(PointLightBundle {
+    app.world.spawn(PointLightBundle {
         point_light: PointLight {
             intensity: 1500.0,
             shadows_enabled: true,
@@ -148,9 +147,8 @@ pub fn spawn_floor_beneath_capsule(app: &mut App, capsule_id: Entity) {
     let collider = app.world.get::<Collider>(capsule_id).unwrap().clone();
     let capsule = collider.as_capsule().unwrap();
     app.world
-        .spawn()
-        .insert(Collider::cuboid(0.5, 0.5, 0.5))
-        .insert_bundle(TransformBundle::from(Transform {
+        .spawn(Collider::cuboid(0.5, 0.5, 0.5))
+        .insert(TransformBundle::from(Transform {
             translation: Vec3::ZERO
                 - transform.translation
                 - Vec3::Y * capsule.height(),

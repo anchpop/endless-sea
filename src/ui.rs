@@ -26,20 +26,20 @@ impl bevy::app::Plugin for Plugin {
 
 fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
-        .spawn_bundle(NodeBundle {
+        .spawn(NodeBundle {
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                 justify_content: JustifyContent::FlexEnd,
                 align_items: AlignItems::Center,
                 ..default()
             },
-            color: Color::NONE.into(),
+            background_color: Color::NONE.into(),
             ..default()
         })
         .with_children(|parent| {
             // inventory
             parent
-                .spawn_bundle(NodeBundle {
+                .spawn(NodeBundle {
                     style: Style {
                         size: Size::new(Val::Px(200.0), Val::Percent(30.0)),
                         border: UiRect::all(Val::Px(2.0)),
@@ -49,11 +49,11 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         align_items: AlignItems::Center,
                         ..default()
                     },
-                    color: Color::rgba(0.1, 0.1, 0.1, 0.5).into(),
+                    background_color: Color::rgba(0.1, 0.1, 0.1, 0.5).into(),
                     ..default()
                 })
                 .with_children(|parent| {
-                    parent.spawn_bundle(
+                    parent.spawn(
                         TextBundle::from_section(
                             "Inventory",
                             TextStyle {
@@ -66,7 +66,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         .with_style(Style { ..default() }),
                     );
                     parent
-                        .spawn_bundle(TextBundle::from_sections([
+                        .spawn(TextBundle::from_sections([
                             TextSection::new(
                                 "Items go here",
                                 TextStyle {

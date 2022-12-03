@@ -47,6 +47,7 @@ pub struct Bundle {
 // Resources
 // =========
 
+#[derive(Resource)]
 struct ReticleMaterials {
     player: Handle<PolylineMaterial>,
     enemy: Handle<PolylineMaterial>,

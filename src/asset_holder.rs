@@ -2,6 +2,7 @@ use bevy::prelude::*;
 
 pub static LOAD_ASSETS_STAGE: &str = "load_assets";
 
+#[derive(Resource)]
 pub struct AssetHolder {
     pub floor: Handle<Scene>,
 
