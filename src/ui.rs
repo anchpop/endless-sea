@@ -44,7 +44,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         size: Size::new(Val::Px(200.0), Val::Percent(30.0)),
                         border: UiRect::all(Val::Px(2.0)),
 
-                        flex_direction: FlexDirection::ColumnReverse,
+                        flex_direction: FlexDirection::Column,
                         justify_content: JustifyContent::FlexStart,
                         align_items: AlignItems::Center,
                         ..default()
