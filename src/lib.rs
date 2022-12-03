@@ -17,7 +17,7 @@ mod ui;
 #[cfg(test)]
 mod tests;
 
-use bevy::{prelude::*, render::camera::ScalingMode, sprite::Rect};
+use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
@@ -30,13 +30,15 @@ pub fn app() -> App {
     let mut app = App::new();
 
     // Basic setup
-    app.insert_resource(WindowDescriptor {
-        title: LAUNCHER_TITLE.to_string(),
-        canvas: Some("#bevy".to_string()),
-        fit_canvas_to_parent: true,
-        ..Default::default()
-    })
-    .add_plugins(DefaultPlugins);
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        window: WindowDescriptor {
+            title: LAUNCHER_TITLE.to_string(),
+            canvas: Some("#bevy".to_string()),
+            fit_canvas_to_parent: true,
+            ..Default::default()
+        },
+        ..default()
+    }));
 
     if cfg!(debug_assertions) {
         app.add_plugin(WorldInspectorPlugin::new());
@@ -75,7 +77,7 @@ pub fn app() -> App {
 fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
     commands
-        .spawn_bundle(Camera3dBundle {
+        .spawn(Camera3dBundle {
             projection: OrthographicProjection {
                 scale: 3.0,
                 scaling_mode: ScalingMode::FixedVertical(5.0),
@@ -91,7 +93,7 @@ fn setup_graphics(mut commands: Commands) {
         .insert(Name::new("Camera"))
         .insert(player::PlayerCamera {});
 
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         transform: Transform::from_xyz(0.0, 10.0, 0.0)
             .looking_at(Vec3::ZERO + Vec3::Z, Vec3::Z),
         directional_light: DirectionalLight {
@@ -109,7 +111,7 @@ fn setup_graphics(mut commands: Commands) {
     });
 
     commands
-        .spawn_bundle(PointLightBundle {
+        .spawn(PointLightBundle {
             point_light: PointLight {
                 intensity: 1500.0,
                 shadows_enabled: false,
@@ -167,8 +169,7 @@ fn add_terrain_mesh(
     let material = materials.add(StandardMaterial::default());
 
     commands
-        .spawn()
-        .insert_bundle(PbrBundle {
+        .spawn(PbrBundle {
             mesh,
             material,
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
@@ -213,13 +214,12 @@ fn setup_physics(
 
     /* Create the player. */
     commands
-        .spawn()
-        .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
+        .spawn(SpatialBundle::from_transform(Transform::from_xyz(
             0.0, 0.0, 0.0,
         )))
-        .insert_bundle(character::Bundle::default())
-        .insert_bundle(player::Bundle::default())
-        .insert_bundle(reticle::Bundle {
+        .insert(character::Bundle::default())
+        .insert(player::Bundle::default())
+        .insert(reticle::Bundle {
             reticle: reticle::Reticle {
                 brightness: ReticleBrightness::Full,
                 enabled: true,
@@ -230,11 +230,10 @@ fn setup_physics(
 
     /* Create an NPC. */
     commands
-        .spawn()
-        .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
+        .spawn(SpatialBundle::from_transform(Transform::from_xyz(
             5.0, 0.0, 5.0,
         )))
-        .insert_bundle(character::Bundle {
+        .insert(character::Bundle {
             movement_properties: character::MovementProperties {
                 max_speed: 3.0,
                 ..Default::default()
@@ -242,7 +241,7 @@ fn setup_physics(
             ..character::Bundle::default()
         })
         .insert(npc::Npc { peaceful: true })
-        .insert_bundle(reticle::Bundle {
+        .insert(reticle::Bundle {
             reticle: reticle::Reticle {
                 enabled: true,
                 ..default()
@@ -256,11 +255,10 @@ fn setup_physics(
     for x in 0..=1 {
         for z in 0..=1 {
             commands
-                .spawn()
-                .insert(RigidBody::Dynamic)
+                .spawn(RigidBody::Dynamic)
                 .insert(Collider::cuboid(0.5, 0.5, 0.5))
-                .insert_bundle(object::Bundle::default())
-                .insert_bundle(SceneBundle {
+                .insert(object::Bundle::default())
+                .insert(SceneBundle {
                     scene: assets.cube.clone(),
                     transform: Transform::from_xyz(
                         2.0 + (x * 2) as f32,
@@ -275,43 +273,41 @@ fn setup_physics(
     }
     /* Create a pickup. */
     commands
-        .spawn()
-        .with_children(|parent| {
-            parent.spawn_bundle(SceneBundle {
-                scene: assets.sword.clone(),
-                transform: Transform::from_xyz(-0.6, 0.0, 0.0),
-                ..default()
-            });
-            parent.spawn().insert(Collider::cuboid(1.0, 0.3, 0.3));
-        })
-        .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
+        .spawn(SpatialBundle::from_transform(Transform::from_xyz(
             5.0, 0.0, 5.0,
         )))
-        .insert_bundle(item::Bundle {
+        .insert(item::Bundle {
             collider: Collider::cuboid(1.2, 0.5, 0.5),
             ..item::Bundle::sword()
         })
         .insert(RigidBody::Dynamic)
+        .with_children(|parent| {
+            parent.spawn(SceneBundle {
+                scene: assets.sword.clone(),
+                transform: Transform::from_xyz(-0.6, 0.0, 0.0),
+                ..default()
+            });
+            parent.spawn(Collider::cuboid(1.0, 0.3, 0.3));
+        })
         .insert(Name::new("Sword"));
 
     /* Create a pickup. */
     commands
-        .spawn()
-        .with_children(|parent| {
-            parent.spawn_bundle(SceneBundle {
-                scene: assets.gun.clone(),
-                transform: Transform::from_xyz(-0.6, 0.0, 0.0),
-                ..default()
-            });
-            parent.spawn().insert(Collider::cuboid(1.0, 0.3, 0.3));
-        })
-        .insert_bundle(SpatialBundle::from_transform(Transform::from_xyz(
+        .spawn(SpatialBundle::from_transform(Transform::from_xyz(
             8.0, 0.0, 5.0,
         )))
-        .insert_bundle(item::Bundle {
+        .insert(item::Bundle {
             collider: Collider::cuboid(1.2, 0.5, 0.5),
             ..item::Bundle::gun()
         })
         .insert(RigidBody::Dynamic)
+        .with_children(|parent| {
+            parent.spawn(SceneBundle {
+                scene: assets.gun.clone(),
+                transform: Transform::from_xyz(-0.6, 0.0, 0.0),
+                ..default()
+            });
+            parent.spawn(Collider::cuboid(1.0, 0.3, 0.3));
+        })
         .insert(Name::new("Gun"));
 }

@@ -188,8 +188,7 @@ mod test {
                 let material = materials.add(StandardMaterial::default());
 
                 app.world
-                    .spawn()
-                    .insert_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh,
                         material,
                         transform: Transform::from_xyz(0.0, 0.0, 0.0),

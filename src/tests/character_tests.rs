@@ -21,8 +21,7 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn()
-                    .insert_bundle(SpatialBundle::default())
+                    .spawn(SpatialBundle::default())
                     .insert(Name::new("character"))
                     .id();
                 let initial_character_translation = app
@@ -54,9 +53,8 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn()
-                    .insert_bundle(SpatialBundle::default())
-                    .insert_bundle(character::Bundle {
+                    .spawn(SpatialBundle::default())
+                    .insert(character::Bundle {
                         health: object::Health {
                             current: 0.0,
                             ..object::Health::default()
@@ -88,9 +86,8 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn()
-                    .insert_bundle(SpatialBundle::default())
-                    .insert_bundle(character::Bundle {
+                    .spawn(SpatialBundle::default())
+                    .insert(character::Bundle {
                         inventory: character::Inventory {
                             hand: Some(HeldItem::new(item::Item::Sword)),
                             ..character::Inventory::default()
@@ -102,16 +99,15 @@ mod test {
                         },
                         ..character::Bundle::default()
                     })
-                    .insert_bundle(player::Bundle::default())
+                    .insert(player::Bundle::default())
                     .id();
 
                 let object_id = app
                     .world
-                    .spawn()
-                    .insert(RigidBody::Dynamic)
+                    .spawn(RigidBody::Dynamic)
                     .insert(Collider::cuboid(0.5, 0.5, 0.5))
-                    .insert_bundle(object::Bundle::default())
-                    .insert_bundle(SpatialBundle {
+                    .insert(object::Bundle::default())
+                    .insert(SpatialBundle {
                         transform: Transform::from_xyz(1.5, 0.001, 0.0),
                         ..default()
                     })
