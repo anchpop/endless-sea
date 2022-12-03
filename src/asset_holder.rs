@@ -1,22 +1,44 @@
 use bevy::prelude::*;
-use bevy_asset_loader::prelude::*;
 
-#[derive(AssetCollection, Clone)]
+pub static LOAD_ASSETS_STAGE: &str = "load_assets";
+
 pub struct AssetHolder {
-    #[asset(path = "floor/floor.glb#Scene0")]
     pub floor: Handle<Scene>,
 
-    #[asset(path = "character/casual_male.glb#Scene0")]
     pub character: Handle<Scene>,
-    #[asset(path = "character/casual_male.glb#Animation9")]
     pub character_run: Handle<AnimationClip>,
-    #[asset(path = "character/casual_male.glb#Animation14")]
     pub character_idle: Handle<AnimationClip>,
 
-    #[asset(path = "cube/cube.glb#Scene0")]
     pub cube: Handle<Scene>,
-    #[asset(path = "sword/sword.glb#Scene0")]
     pub sword: Handle<Scene>,
-    #[asset(path = "gun/gun.glb#Scene0")]
     pub gun: Handle<Scene>,
+}
+
+pub fn load_assets(mut commands: Commands, asset_server: ResMut<AssetServer>) {
+    let assets = AssetHolder {
+        floor: asset_server.load("floor/floor.glb#Scene0"),
+        character: asset_server.load("character/casual_male.glb#Scene0"),
+        character_run: asset_server
+            .load("character/casual_male.glb#Animation9"),
+        character_idle: asset_server
+            .load("character/casual_male.glb#Animation14"),
+        cube: asset_server.load("cube/cube.glb#Scene0"),
+        sword: asset_server.load("sword/sword.glb#Scene0"),
+        gun: asset_server.load("gun/gun.glb#Scene0"),
+    };
+    commands.insert_resource(assets);
+}
+
+// Plugin
+// ======
+
+pub struct Plugin;
+
+impl bevy::app::Plugin for Plugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_stage(
+            LOAD_ASSETS_STAGE,
+            SystemStage::single(load_assets),
+        );
+    }
 }
