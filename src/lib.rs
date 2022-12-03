@@ -17,9 +17,7 @@ mod ui;
 #[cfg(test)]
 mod tests;
 
-use asset_holder::AssetHolder;
 use bevy::{prelude::*, render::camera::ScalingMode, sprite::Rect};
-use bevy_asset_loader::prelude::*;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
@@ -50,9 +48,11 @@ pub fn app() -> App {
         bevy::log::info!("Debug mode disabled");
     };
 
-    app.init_collection::<AssetHolder>()
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+    static GAME_SETUP_STAGE: &str = "game_setup";
+
+    app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(PolylinePlugin)
+        .add_plugin(asset_holder::Plugin)
         .add_plugin(object::Plugin)
         .add_plugin(character::Plugin)
         .add_plugin(npc::Plugin)
@@ -61,8 +61,13 @@ pub fn app() -> App {
         .add_plugin(item::Plugin)
         .add_plugin(ui::Plugin)
         .add_plugin(animations::Plugin)
-        .add_startup_system(setup_graphics)
-        .add_startup_system(setup_physics);
+        .add_startup_stage_after(
+            asset_holder::LOAD_ASSETS_STAGE,
+            GAME_SETUP_STAGE,
+            SystemStage::parallel(),
+        )
+        .add_startup_system_to_stage(GAME_SETUP_STAGE, setup_graphics)
+        .add_startup_system_to_stage(GAME_SETUP_STAGE, setup_physics);
 
     app
 }
