@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod test {
-    use bevy::{prelude::*, sprite::Rect};
+    use bevy::prelude::*;
     use bevy_rapier3d::prelude::*;
 
     use crate::{

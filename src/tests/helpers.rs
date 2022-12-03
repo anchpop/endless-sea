@@ -1,11 +1,10 @@
 use std::{thread, time::Duration};
 
-use bevy::{prelude::*, render::camera::ScalingMode};
-use bevy_asset_loader::prelude::*;
+use bevy::{app::PluginGroupBuilder, prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
 
-use crate::asset_holder::AssetHolder;
+use crate::asset_holder;
 
 pub const TEST_FPS: f32 = 144.0;
 
@@ -23,7 +22,7 @@ pub struct Test<A> {
 pub fn default_setup_graphics(app: &mut App) {
     use crate::{animations, player, ui};
 
-    app.init_collection::<AssetHolder>()
+    app.add_plugin(asset_holder::Plugin)
         .add_plugin(ui::Plugin)
         .add_plugin(player::Plugin)
         .add_plugin(animations::Plugin);
@@ -70,9 +69,12 @@ fn app() -> (App, bool) {
     if on_main_thread {
         app.add_plugins(DefaultPlugins)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-            .insert_resource(TimestepMode::Fixed {
-                dt: 1.0 / TEST_FPS,
-                substeps: 1,
+            .insert_resource(RapierConfiguration {
+                timestep_mode: TimestepMode::Fixed {
+                    dt: 1.0 / TEST_FPS,
+                    substeps: 1,
+                },
+                ..default()
             })
             .add_plugin(RapierDebugRenderPlugin::default());
     } else {
@@ -124,22 +126,19 @@ impl<A> Test<A> {
 struct TestPlugins;
 
 impl PluginGroup for TestPlugins {
-    fn build(&mut self, group: &mut bevy::app::PluginGroupBuilder) {
-        group.add(bevy::core::CorePlugin::default());
-        group.add(bevy::app::ScheduleRunnerPlugin::default());
-        group.add(bevy::window::WindowPlugin);
-        group.add(bevy::transform::TransformPlugin);
-        group.add(bevy::hierarchy::HierarchyPlugin);
-        group.add(bevy::diagnostic::DiagnosticsPlugin);
-        group.add(bevy::input::InputPlugin);
-
-        group.add(bevy::asset::AssetPlugin::default());
-
-        group.add(bevy::scene::ScenePlugin::default());
-
-        group.add(bevy::gilrs::GilrsPlugin::default());
-
-        group.add(bevy::render::RenderPlugin::default());
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
+            .add(bevy::core::CorePlugin::default())
+            .add(bevy::app::ScheduleRunnerPlugin::default())
+            .add(bevy::window::WindowPlugin::default())
+            .add(bevy::transform::TransformPlugin)
+            .add(bevy::hierarchy::HierarchyPlugin)
+            .add(bevy::diagnostic::DiagnosticsPlugin)
+            .add(bevy::input::InputPlugin)
+            .add(bevy::asset::AssetPlugin::default())
+            .add(bevy::scene::ScenePlugin::default())
+            .add(bevy::gilrs::GilrsPlugin::default())
+            .add(bevy::render::RenderPlugin::default())
     }
 }
 
