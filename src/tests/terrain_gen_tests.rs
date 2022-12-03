@@ -187,18 +187,19 @@ mod test {
             {
                 let material = materials.add(StandardMaterial::default());
 
-                app.world
-                    .spawn(PbrBundle {
+                app.world.spawn((
+                    PbrBundle {
                         mesh,
                         material,
                         transform: Transform::from_xyz(0.0, 0.0, 0.0),
                         ..Default::default()
-                    })
-                    .insert(Collider::trimesh(
+                    },
+                    Collider::trimesh(
                         points.iter().map(|p| p.position).collect(),
                         indices,
-                    ))
-                    .insert(Name::new("generated mesh"));
+                    ),
+                    Name::new("generated mesh"),
+                ));
             }
         }
     }

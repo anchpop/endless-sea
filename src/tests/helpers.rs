@@ -28,8 +28,8 @@ pub fn default_setup_graphics(app: &mut App) {
         .add_plugin(player::Plugin)
         .add_plugin(animations::Plugin);
 
-    app.world
-        .spawn(Camera3dBundle {
+    app.world.spawn((
+        Camera3dBundle {
             projection: OrthographicProjection {
                 scale: 3.0,
                 scaling_mode: ScalingMode::FixedVertical(5.0),
@@ -39,8 +39,9 @@ pub fn default_setup_graphics(app: &mut App) {
             transform: Transform::from_xyz(0.0, 9.0, -6.0)
                 .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
-        })
-        .insert(player::PlayerCamera {});
+        },
+        player::PlayerCamera {},
+    ));
 
     app.world
         .insert_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)));
@@ -146,14 +147,14 @@ pub fn spawn_floor_beneath_capsule(app: &mut App, capsule_id: Entity) {
     let transform = *app.world.get::<Transform>(capsule_id).unwrap();
     let collider = app.world.get::<Collider>(capsule_id).unwrap().clone();
     let capsule = collider.as_capsule().unwrap();
-    app.world
-        .spawn(Collider::cuboid(0.5, 0.5, 0.5))
-        .insert(TransformBundle::from(Transform {
+    app.world.spawn(Collider::cuboid(0.5, 0.5, 0.5)).insert((
+        TransformBundle::from(Transform {
             translation: Vec3::ZERO
                 - transform.translation
                 - Vec3::Y * capsule.height(),
             scale: Vec3::new(100.0, 1.0, 100.0),
             ..Default::default()
-        }))
-        .insert(Name::new("floor"));
+        }),
+        Name::new("floor"),
+    ));
 }

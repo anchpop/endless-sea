@@ -86,21 +86,22 @@ fn death(
             }) = pieces
             {
                 for (scene, collider) in pieces.iter().cloned() {
-                    commands
-                        .spawn(RigidBody::Dynamic)
-                        .insert(collider)
-                        .insert(Dominance::group(-1)) // prevents them from influencing main physics behavior
-                        .insert(Friction::coefficient(10.0))
-                        .insert(SceneBundle {
+                    commands.spawn((
+                        SceneBundle {
                             scene,
                             transform: transform.compute_transform(),
                             ..default()
-                        })
-                        .insert(Name::new("Gib"))
-                        .insert(Lifetime {
+                        },
+                        RigidBody::Dynamic,
+                        collider,
+                        Dominance::group(-1),
+                        Friction::coefficient(10.0),
+                        Name::new("Gib"),
+                        Lifetime {
                             time: Timer::from_seconds(10.0, TimerMode::Once),
                             shrink_away: *shrink_away,
-                        });
+                        },
+                    ));
                 }
             }
         }

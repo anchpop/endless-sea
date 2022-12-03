@@ -17,14 +17,16 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn(SpatialBundle::default())
-                    .insert(character::Bundle {
-                        input: character::Input {
-                            movement_direction: Vec3::X,
-                            ..character::Input::default()
+                    .spawn((
+                        SpatialBundle::default(),
+                        character::Bundle {
+                            input: character::Input {
+                                movement_direction: Vec3::X,
+                                ..character::Input::default()
+                            },
+                            ..character::Bundle::default()
                         },
-                        ..character::Bundle::default()
-                    })
+                    ))
                     .id();
                 spawn_floor_beneath_capsule(app, character_id);
                 character_id
@@ -51,15 +53,17 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn(SpatialBundle::default())
-                    .insert(character::Bundle {
-                        input: character::Input {
-                            movement_direction: Vec3::Y,
-                            ..character::Input::default()
+                    .spawn((
+                        SpatialBundle::default(),
+                        character::Bundle {
+                            input: character::Input {
+                                movement_direction: Vec3::Y,
+                                ..character::Input::default()
+                            },
+                            ..character::Bundle::default()
                         },
-                        ..character::Bundle::default()
-                    })
-                    .insert(Name::new("character"))
+                        Name::new("character"),
+                    ))
                     .id();
                 let initial_character_translation = app
                     .world
