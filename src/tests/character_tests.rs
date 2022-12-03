@@ -21,8 +21,7 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn(SpatialBundle::default())
-                    .insert(Name::new("character"))
+                    .spawn((SpatialBundle::default(), Name::new("character")))
                     .id();
                 let initial_character_translation = app
                     .world
@@ -53,14 +52,16 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn(SpatialBundle::default())
-                    .insert(character::Bundle {
-                        health: object::Health {
-                            current: 0.0,
-                            ..object::Health::default()
+                    .spawn((
+                        SpatialBundle::default(),
+                        character::Bundle {
+                            health: object::Health {
+                                current: 0.0,
+                                ..object::Health::default()
+                            },
+                            ..character::Bundle::default()
                         },
-                        ..character::Bundle::default()
-                    })
+                    ))
                     .id();
                 spawn_floor_beneath_capsule(app, character_id);
                 character_id
@@ -86,32 +87,36 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn(SpatialBundle::default())
-                    .insert(character::Bundle {
-                        inventory: character::Inventory {
-                            hand: Some(HeldItem::new(item::Item::Sword)),
-                            ..character::Inventory::default()
+                    .spawn((
+                        SpatialBundle::default(),
+                        character::Bundle {
+                            inventory: character::Inventory {
+                                hand: Some(HeldItem::new(item::Item::Sword)),
+                                ..character::Inventory::default()
+                            },
+                            input: character::Input {
+                                looking_direction: Vec3::X,
+                                attack: Some(character::AttackState::Primary),
+                                ..character::Input::default()
+                            },
+                            ..character::Bundle::default()
                         },
-                        input: character::Input {
-                            looking_direction: Vec3::X,
-                            attack: Some(character::AttackState::Primary),
-                            ..character::Input::default()
-                        },
-                        ..character::Bundle::default()
-                    })
-                    .insert(player::Bundle::default())
+                        player::Bundle::default(),
+                    ))
                     .id();
 
                 let object_id = app
                     .world
-                    .spawn(RigidBody::Dynamic)
-                    .insert(Collider::cuboid(0.5, 0.5, 0.5))
-                    .insert(object::Bundle::default())
-                    .insert(SpatialBundle {
-                        transform: Transform::from_xyz(1.5, 0.001, 0.0),
-                        ..default()
-                    })
-                    .insert(Name::new("Obstacle"))
+                    .spawn((
+                        RigidBody::Dynamic,
+                        Collider::cuboid(0.5, 0.5, 0.5),
+                        object::Bundle::default(),
+                        SpatialBundle {
+                            transform: Transform::from_xyz(1.5, 0.001, 0.0),
+                            ..default()
+                        },
+                        Name::new("Obstacle"),
+                    ))
                     .id();
 
                 spawn_floor_beneath_capsule(app, character_id);

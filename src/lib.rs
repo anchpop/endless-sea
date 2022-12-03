@@ -76,8 +76,8 @@ pub fn app() -> App {
 
 fn setup_graphics(mut commands: Commands) {
     // Add a camera so we can see the debug-render.
-    commands
-        .spawn(Camera3dBundle {
+    commands.spawn((
+        Camera3dBundle {
             projection: OrthographicProjection {
                 scale: 3.0,
                 scaling_mode: ScalingMode::FixedVertical(5.0),
@@ -89,9 +89,10 @@ fn setup_graphics(mut commands: Commands) {
             )
             .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
-        })
-        .insert(Name::new("Camera"))
-        .insert(player::PlayerCamera {});
+        },
+        player::PlayerCamera {},
+        Name::new("Camera"),
+    ));
 
     commands.spawn(DirectionalLightBundle {
         transform: Transform::from_xyz(0.0, 10.0, 0.0)
@@ -110,8 +111,8 @@ fn setup_graphics(mut commands: Commands) {
         brightness: 0.02,
     });
 
-    commands
-        .spawn(PointLightBundle {
+    commands.spawn((
+        PointLightBundle {
             point_light: PointLight {
                 intensity: 1500.0,
                 shadows_enabled: false,
@@ -119,8 +120,9 @@ fn setup_graphics(mut commands: Commands) {
             },
             transform: Transform::from_xyz(4.0, 8.0, 4.0),
             ..default()
-        })
-        .insert(Name::new("Point Light"));
+        },
+        Name::new("Point Light"),
+    ));
 }
 
 fn add_terrain_mesh(
@@ -168,18 +170,16 @@ fn add_terrain_mesh(
     let mesh = meshes.add(mesh);
     let material = materials.add(StandardMaterial::default());
 
-    commands
-        .spawn(PbrBundle {
+    commands.spawn((
+        PbrBundle {
             mesh,
             material,
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
             ..Default::default()
-        })
-        .insert(Collider::trimesh(
-            points.iter().map(|p| p.position).collect(),
-            indices,
-        ))
-        .insert(Name::new("generated mesh"));
+        },
+        Collider::trimesh(points.iter().map(|p| p.position).collect(), indices),
+        Name::new("generated mesh"),
+    ));
 }
 
 fn setup_physics(
@@ -213,52 +213,50 @@ fn setup_physics(
     }
 
     /* Create the player. */
-    commands
-        .spawn(SpatialBundle::from_transform(Transform::from_xyz(
-            0.0, 0.0, 0.0,
-        )))
-        .insert(character::Bundle::default())
-        .insert(player::Bundle::default())
-        .insert(reticle::Bundle {
+    commands.spawn((
+        SpatialBundle::from_transform(Transform::from_xyz(0.0, 0.0, 0.0)),
+        character::Bundle::default(),
+        player::Bundle::default(),
+        reticle::Bundle {
             reticle: reticle::Reticle {
                 brightness: ReticleBrightness::Full,
                 enabled: true,
             },
             ..default()
-        })
-        .insert(Name::new("Player"));
+        },
+        Name::new("Player"),
+    ));
 
     /* Create an NPC. */
-    commands
-        .spawn(SpatialBundle::from_transform(Transform::from_xyz(
-            5.0, 0.0, 5.0,
-        )))
-        .insert(character::Bundle {
+    commands.spawn((
+        SpatialBundle::from_transform(Transform::from_xyz(5.0, 0.0, 5.0)),
+        character::Bundle {
             movement_properties: character::MovementProperties {
                 max_speed: 3.0,
                 ..Default::default()
             },
             ..character::Bundle::default()
-        })
-        .insert(npc::Npc { peaceful: true })
-        .insert(reticle::Bundle {
+        },
+        npc::Npc { peaceful: true },
+        reticle::Bundle {
             reticle: reticle::Reticle {
                 enabled: true,
                 ..default()
             },
             ..reticle::Bundle::default()
-        })
-        .insert(reticle::ReticleReceiveType::Enemy)
-        .insert(Name::new("Friendly"));
+        },
+        reticle::ReticleReceiveType::Enemy,
+        Name::new("Friendly"),
+    ));
 
     /* Create an obstacle. */
     for x in 0..=1 {
         for z in 0..=1 {
-            commands
-                .spawn(RigidBody::Dynamic)
-                .insert(Collider::cuboid(0.5, 0.5, 0.5))
-                .insert(object::Bundle::default())
-                .insert(SceneBundle {
+            commands.spawn((
+                object::Bundle::default(),
+                RigidBody::Dynamic,
+                Collider::cuboid(0.5, 0.5, 0.5),
+                SceneBundle {
                     scene: assets.cube.clone(),
                     transform: Transform::from_xyz(
                         2.0 + (x * 2) as f32,
@@ -266,21 +264,23 @@ fn setup_physics(
                         0.0 + (z * 2) as f32,
                     ),
                     ..default()
-                })
-                .insert(reticle::ReticleReceiveType::Object)
-                .insert(Name::new("Obstacle"));
+                },
+                reticle::ReticleReceiveType::Object,
+                Name::new("Obstacle"),
+            ));
         }
     }
     /* Create a pickup. */
     commands
-        .spawn(SpatialBundle::from_transform(Transform::from_xyz(
-            5.0, 0.0, 5.0,
-        )))
-        .insert(item::Bundle {
-            collider: Collider::cuboid(1.2, 0.5, 0.5),
-            ..item::Bundle::sword()
-        })
-        .insert(RigidBody::Dynamic)
+        .spawn((
+            SpatialBundle::from_transform(Transform::from_xyz(5.0, 0.0, 5.0)),
+            item::Bundle {
+                collider: Collider::cuboid(1.2, 0.5, 0.5),
+                ..item::Bundle::sword()
+            },
+            RigidBody::Dynamic,
+            Name::new("Sword"),
+        ))
         .with_children(|parent| {
             parent.spawn(SceneBundle {
                 scene: assets.sword.clone(),
@@ -288,19 +288,19 @@ fn setup_physics(
                 ..default()
             });
             parent.spawn(Collider::cuboid(1.0, 0.3, 0.3));
-        })
-        .insert(Name::new("Sword"));
+        });
 
     /* Create a pickup. */
     commands
-        .spawn(SpatialBundle::from_transform(Transform::from_xyz(
-            8.0, 0.0, 5.0,
-        )))
-        .insert(item::Bundle {
-            collider: Collider::cuboid(1.2, 0.5, 0.5),
-            ..item::Bundle::gun()
-        })
-        .insert(RigidBody::Dynamic)
+        .spawn((
+            SpatialBundle::from_transform(Transform::from_xyz(8.0, 0.0, 5.0)),
+            item::Bundle {
+                collider: Collider::cuboid(1.2, 0.5, 0.5),
+                ..item::Bundle::gun()
+            },
+            RigidBody::Dynamic,
+            Name::new("Gun"),
+        ))
         .with_children(|parent| {
             parent.spawn(SceneBundle {
                 scene: assets.gun.clone(),
@@ -308,6 +308,5 @@ fn setup_physics(
                 ..default()
             });
             parent.spawn(Collider::cuboid(1.0, 0.3, 0.3));
-        })
-        .insert(Name::new("Gun"));
+        });
 }

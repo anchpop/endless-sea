@@ -65,8 +65,8 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                         )
                         .with_style(Style { ..default() }),
                     );
-                    parent
-                        .spawn(TextBundle::from_sections([
+                    parent.spawn((
+                        TextBundle::from_sections([
                             TextSection::new(
                                 "Items go here",
                                 TextStyle {
@@ -94,8 +94,9 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                                     color: Color::WHITE,
                                 },
                             ),
-                        ]))
-                        .insert(InventoryUI);
+                        ]),
+                        InventoryUI,
+                    ));
                 });
         });
 }
