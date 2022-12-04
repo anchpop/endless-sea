@@ -128,7 +128,7 @@ mod test {
             // again.
             frames: (item::Item::Sword.cooldown().as_secs_f32() * TEST_FPS)
                 .ceil() as u64
-                + 1,
+                + 5,
             check: |app, object_id| {
                 app.world
                     .get::<Transform>(object_id)
