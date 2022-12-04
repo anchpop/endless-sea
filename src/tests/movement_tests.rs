@@ -7,7 +7,7 @@ mod test {
     use bevy_rapier3d::prelude::*;
     use more_asserts::*;
 
-    use crate::{character, tests::helpers::*};
+    use crate::{character, player, tests::helpers::*};
 
     #[test]
     fn character_moves_horizontally() {
@@ -27,6 +27,7 @@ mod test {
                             },
                             ..character::Bundle::default()
                         },
+                        player::Bundle::default(),
                     ))
                     .id();
                 spawn_floor_beneath_capsule(app, character_id);
@@ -35,7 +36,7 @@ mod test {
             setup_graphics: default_setup_graphics,
             // Rapier does nothing the first frame, so we have to use 2 frames
             // here
-            frames: 2,
+            frames: 3,
             check: |app, character_id| {
                 let character =
                     app.world.get::<Transform>(character_id).unwrap();
@@ -124,7 +125,7 @@ mod test {
             check: |app, character_id| {
                 let velocity = app.world.get::<Velocity>(character_id).unwrap();
                 assert!(
-                    velocity.linvel.length() + 0.05 <= MAX_SPEED,
+                    velocity.linvel.length() - 0.05 <= MAX_SPEED,
                     "Player's speed was {} while the max speed was {MAX_SPEED}",
                     velocity.linvel.length()
                 );

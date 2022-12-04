@@ -1,6 +1,6 @@
 use std::{collections::HashSet, time::Duration};
 
-use bevy::{prelude::*, time::Stopwatch, utils::Instant};
+use bevy::{prelude::*, time::Stopwatch};
 use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
@@ -335,7 +335,7 @@ fn update_grounded(
         let jump_dist =
             time.delta_seconds() * movement_properties.min_jump_impulse;
         let vertical_noise = time.delta_seconds() * 8.0;
-        let dist_from_ground_to_check = jump_dist + vertical_noise;
+        let _dist_from_ground_to_check = jump_dist + vertical_noise;
 
         if let Some((entity, _toi)) = rapier_context.cast_shape(
             transform.translation + vertical_offset,

@@ -140,21 +140,30 @@ impl PluginGroup for TestPlugins {
             .add(bevy::gilrs::GilrsPlugin::default())
             .add(bevy::render::RenderPlugin::default())
             .add(bevy::render::texture::ImagePlugin::default())
+            .add(bevy::pbr::PbrPlugin::default())
+            .add(bevy::gltf::GltfPlugin::default())
+            .add(bevy::animation::AnimationPlugin::default())
     }
 }
 
-pub fn spawn_floor_beneath_capsule(app: &mut App, capsule_id: Entity) {
+pub fn spawn_floor_beneath_capsule(
+    app: &mut App,
+    capsule_id: Entity,
+) -> Entity {
     let transform = *app.world.get::<Transform>(capsule_id).unwrap();
     let collider = app.world.get::<Collider>(capsule_id).unwrap().clone();
     let capsule = collider.as_capsule().unwrap();
-    app.world.spawn(Collider::cuboid(0.5, 0.5, 0.5)).insert((
-        TransformBundle::from(Transform {
-            translation: Vec3::ZERO
-                - transform.translation
-                - Vec3::Y * capsule.height(),
-            scale: Vec3::new(100.0, 1.0, 100.0),
-            ..Default::default()
-        }),
-        Name::new("floor"),
-    ));
+    app.world
+        .spawn(Collider::cuboid(0.5, 0.5, 0.5))
+        .insert((
+            TransformBundle::from(Transform {
+                translation: Vec3::ZERO
+                    - transform.translation
+                    - Vec3::Y * capsule.height(),
+                scale: Vec3::new(100.0, 1.0, 100.0),
+                ..Default::default()
+            }),
+            Name::new("floor"),
+        ))
+        .id()
 }
