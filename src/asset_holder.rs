@@ -1,7 +1,5 @@
 use bevy::prelude::*;
 
-pub static LOAD_ASSETS_STAGE: &str = "load_assets";
-
 #[derive(Resource)]
 pub struct AssetHolder {
     pub floor: Handle<Scene>,
@@ -37,9 +35,6 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_stage(
-            LOAD_ASSETS_STAGE,
-            SystemStage::single(load_assets),
-        );
+        app.add_startup_system_to_stage(StartupStage::PreStartup, load_assets);
     }
 }
