@@ -139,6 +139,7 @@ impl PluginGroup for TestPlugins {
             .add(bevy::scene::ScenePlugin::default())
             .add(bevy::gilrs::GilrsPlugin::default())
             .add(bevy::render::RenderPlugin::default())
+            .add(bevy::render::texture::ImagePlugin::default())
     }
 }
 
