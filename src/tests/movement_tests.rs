@@ -4,6 +4,7 @@
 #[cfg(test)]
 mod test {
     use bevy::prelude::*;
+    use bevy_rapier3d::prelude::*;
     use more_asserts::*;
 
     use crate::{character, tests::helpers::*};
@@ -82,6 +83,51 @@ mod test {
                     (character.translation.y - initial_character_translation.y)
                         .abs()
                         < 0.01,
+                );
+            },
+        }
+        .run()
+    }
+
+    #[test]
+    fn character_doesnt_exceed_max_speed() {
+        const MAX_SPEED: f32 = 1.0;
+        Test {
+            setup: |app| {
+                app.add_plugin(character::Plugin);
+
+                // Setup test entities
+                let character_id = app
+                    .world
+                    .spawn((
+                        SpatialBundle::default(),
+                        character::Bundle {
+                            input: character::Input {
+                                movement_direction: Vec3::X,
+                                ..character::Input::default()
+                            },
+                            movement_properties:
+                                character::MovementProperties {
+                                    max_speed: MAX_SPEED,
+                                    acceleration: 100.0,
+                                    ..character::MovementProperties::default()
+                                },
+                            ..character::Bundle::default()
+                        },
+                    ))
+                    .id();
+                spawn_floor_beneath_capsule(app, character_id);
+                character_id
+            },
+            setup_graphics: default_setup_graphics,
+            // wait plenty of frames for the player to pick up speed
+            frames: 30,
+            check: |app, character_id| {
+                let velocity = app.world.get::<Velocity>(character_id).unwrap();
+                assert!(
+                    velocity.linvel.length() + 0.05 <= MAX_SPEED,
+                    "Player's speed was {} while the max speed was {MAX_SPEED}",
+                    velocity.linvel.length()
                 );
             },
         }
