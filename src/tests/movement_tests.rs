@@ -109,7 +109,6 @@ mod test {
                             movement_properties:
                                 character::MovementProperties {
                                     max_speed: MAX_SPEED,
-                                    acceleration: 100.0,
                                     ..character::MovementProperties::default()
                                 },
                             ..character::Bundle::default()

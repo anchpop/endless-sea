@@ -220,7 +220,7 @@ fn setup_physics(
         Name::new("Player"),
     ));
 
-    /* Create an NPC. */
+    /* Create an NPC.
     commands.spawn((
         SpatialBundle::from_transform(Transform::from_xyz(5.0, 0.0, 5.0)),
         character::Bundle {
@@ -241,6 +241,7 @@ fn setup_physics(
         reticle::ReticleReceiveType::Enemy,
         Name::new("Friendly"),
     ));
+    */
 
     /* Create an obstacle. */
     for x in 0..=1 {

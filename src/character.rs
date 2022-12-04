@@ -17,9 +17,7 @@ use crate::{
 #[reflect(Component)]
 pub struct MovementProperties {
     pub stopped_friction: f32,
-    pub acceleration: f32,
     pub air_acceleration: f32,
-    pub damping_factor: f32,
     pub max_speed: f32,
 
     pub max_charge_time: Duration,
@@ -30,10 +28,8 @@ pub struct MovementProperties {
 impl Default for MovementProperties {
     fn default() -> Self {
         Self {
-            stopped_friction: 4.0,
-            acceleration: 20.0,
+            stopped_friction: 8.0,
             air_acceleration: 10.0,
-            damping_factor: 60.0,
             max_speed: 10.0,
 
             max_charge_time: Duration::from_secs_f32(0.75),
@@ -58,7 +54,7 @@ pub enum AttackState {
 #[derive(Component, Reflect, Inspectable, Default, Clone)]
 #[reflect(Component)]
 pub struct Character {
-    pub on_ground: bool,
+    pub ground_velocity: Option<Vec3>,
 }
 
 #[derive(Component, Default, Clone)]
@@ -77,6 +73,9 @@ pub struct JumpCharge {
 
 #[derive(Component, Default, Clone)]
 pub struct WalkForce(pub Vec3);
+
+#[derive(Component, Default, Clone)]
+pub struct WalkImpulse(pub Vec3);
 
 #[derive(Component, Default, Clone)]
 pub struct JumpImpulse(pub Vec3);
@@ -125,6 +124,7 @@ pub struct Bundle {
     pub external_impulse: ExternalImpulse,
     pub friction: Friction,
     pub walk_force: WalkForce,
+    pub walk_impulse: WalkImpulse,
     pub jump_impulse: JumpImpulse,
     pub inventory: Inventory,
     pub knockback_impulse: object::KnockbackImpulse,
@@ -155,9 +155,10 @@ impl Default for Bundle {
             external_impulse: ExternalImpulse::default(),
             friction: Friction {
                 coefficient: 0.0,
-                combine_rule: CoefficientCombineRule::Max,
+                combine_rule: CoefficientCombineRule::Min,
             },
             walk_force: WalkForce::default(),
+            walk_impulse: WalkImpulse::default(),
             jump_impulse: JumpImpulse::default(),
             inventory: Inventory::default(),
             knockback_impulse: object::KnockbackImpulse::default(),
@@ -175,23 +176,25 @@ pub struct Plugin;
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_system(update_jump_state)
-            .add_system(force_movement)
-            .add_system(impulse_movement.before(attack))
+            .add_system(walk_movement)
+            .add_system(jump_movement.before(attack))
             .add_system(
-                update_grounded
-                    .before(impulse_movement)
-                    .before(force_movement),
+                update_grounded.before(jump_movement).before(walk_movement),
             )
             .add_system(attack)
-            .add_system(set_external_force)
-            .add_system(set_external_impulse)
             .add_system(rotate_character)
             .add_system(check_no_character_and_object)
             .add_system(pick_up_items)
             .add_system(control_reticle_based_on_inventory)
             .add_system(switch_hands)
             .add_system(increment_cooldown_timers)
-            .add_system(update_character_animation_state);
+            .add_system(update_character_animation_state)
+            .add_system(set_external_force)
+            .add_system(
+                set_external_impulse
+                    .after(walk_movement)
+                    .after(jump_movement),
+            );
 
         if cfg!(debug_assertions) {
             app.register_inspectable::<Character>()
@@ -223,14 +226,14 @@ fn update_jump_state(
     }
 }
 
-fn force_movement(
+fn walk_movement(
     mut characters: Query<(
         &Character,
         &Input,
         &MovementProperties,
         &Velocity,
         &mut WalkForce,
-        &mut Friction,
+        &mut WalkImpulse,
     )>,
 ) {
     for (
@@ -239,7 +242,7 @@ fn force_movement(
         movement_properties,
         velocity,
         mut walk_force,
-        mut friction,
+        mut walk_impulse,
     ) in characters.iter_mut()
     {
         let input_direction = {
@@ -251,38 +254,133 @@ fn force_movement(
                 projected
             }
         };
-        let velocity_direction_difference = velocity
-            .linvel
-            .try_normalize()
-            .map(|v| input_direction - project_onto_plane(v, Vec3::Y))
-            .unwrap_or(Vec3::ZERO);
-
-        if input_direction != Vec3::ZERO {
-            let under_max_speed =
-                velocity.linvel.project_onto(input_direction).length()
-                    < movement_properties.max_speed;
-            let directional_force = if under_max_speed {
-                let acceleration = if character.on_ground {
-                    movement_properties.acceleration
-                } else {
-                    movement_properties.air_acceleration
-                };
-                input_direction * acceleration
+        if let Some(ground_velocity) = character.ground_velocity {
+            if input_direction != Vec3::ZERO {
+                let goal_speed = ground_velocity
+                    + input_direction * movement_properties.max_speed;
+                let velocity_change =
+                    -project_onto_plane(velocity.linvel, Vec3::Y) + goal_speed;
+                walk_impulse.0 = velocity_change;
             } else {
-                Vec3::ZERO
-            };
-            let damping_force = if character.on_ground {
-                velocity_direction_difference
-                    * movement_properties.damping_factor
-            } else {
-                Vec3::ZERO
-            };
-            walk_force.0 = directional_force + damping_force;
-            friction.coefficient = 0.0;
+                walk_force.0 = (-velocity.linvel + ground_velocity)
+                    * movement_properties.stopped_friction;
+            }
         } else {
-            friction.coefficient = movement_properties.stopped_friction;
-            walk_force.0 = input_direction;
         }
+    }
+}
+
+fn jump_movement(
+    mut characters: Query<(
+        &Character,
+        &Input,
+        &JumpCharge,
+        &MovementProperties,
+        &mut JumpImpulse,
+    )>,
+) {
+    for (
+        character,
+        input,
+        jump_charge,
+        movement_properties,
+        mut external_impulse,
+    ) in characters.iter_mut()
+    {
+        if character.ground_velocity.is_some() && let (Some(JumpState::JumpPressed), Some(watch)) = (input.jump.clone(), jump_charge.charge.clone())
+        {
+            let max_charge_time = movement_properties.max_charge_time.as_secs_f32();
+            let jump_intensity = watch.elapsed_secs().min(max_charge_time) / max_charge_time;
+            let jump_impulse = movement_properties.min_jump_impulse + jump_intensity * (movement_properties.max_jump_impulse - movement_properties.min_jump_impulse);
+            external_impulse.0 = Vec3::new(
+                0.,
+                jump_impulse,
+                0.,
+            );
+        } else {
+            external_impulse.0 = Vec3::ZERO;
+        }
+    }
+}
+
+fn update_grounded(
+    rapier_context: Res<RapierContext>,
+    mut player_character: Query<(
+        Entity,
+        &mut Character,
+        &Transform,
+        &Collider,
+    )>,
+    velocity: Query<&Velocity>,
+) {
+    for (entity, mut character, transform, collider) in
+        player_character.iter_mut()
+    {
+        if let Some((entity, _toi)) = rapier_context.cast_shape(
+            // TODO: This is a hack to make sure the ray doesn't start inside
+            // the ground if the collider is slightly underground,
+            // bus will cause rare false positives when the player'
+            // s head hits the ceiling.
+            transform.translation + Vec3::Y * 0.05,
+            transform.rotation,
+            Vec3::NEG_Y,
+            collider,
+            0.2,
+            QueryFilter {
+                exclude_collider: Some(entity),
+                ..default()
+            },
+        ) {
+            // Todo: if object is rotating (eg it is a boat), we should also
+            // incorporate the object's angular velocity here.
+            if let Ok(velocity) = velocity.get(entity) {
+                character.ground_velocity = Some(velocity.linvel);
+            } else {
+                character.ground_velocity = Some(Vec3::ZERO);
+            }
+        } else {
+            character.ground_velocity = None;
+        }
+    }
+}
+
+// useless rn
+fn set_external_force(
+    mut characters: Query<
+        (&mut ExternalForce, &mut WalkForce),
+        (With<Character>, Without<object::Object>),
+    >,
+) {
+    for (mut external_force, mut walk_force) in characters.iter_mut() {
+        external_force.force = walk_force.0;
+        walk_force.0 = Vec3::ZERO;
+        // set external force appropriately
+    }
+}
+
+fn set_external_impulse(
+    mut characters: Query<
+        (
+            &mut ExternalImpulse,
+            &mut JumpImpulse,
+            &mut WalkImpulse,
+            &mut object::KnockbackImpulse,
+        ),
+        (With<Character>, Without<object::Object>),
+    >,
+) {
+    for (
+        mut external_impulse,
+        mut jump_impulse,
+        mut knockback_impulse,
+        mut walk_impulse,
+    ) in characters.iter_mut()
+    {
+        external_impulse.impulse =
+            jump_impulse.0 + knockback_impulse.0 + walk_impulse.0;
+        jump_impulse.0 = Vec3::ZERO;
+        knockback_impulse.0 = Vec3::ZERO;
+        walk_impulse.0 = Vec3::ZERO;
     }
 }
 
@@ -382,105 +480,6 @@ fn attack(
             }
 
         }
-    }
-}
-
-fn impulse_movement(
-    mut characters: Query<(
-        &Character,
-        &Input,
-        &JumpCharge,
-        &MovementProperties,
-        &mut JumpImpulse,
-    )>,
-) {
-    for (
-        character,
-        input,
-        jump_charge,
-        movement_properties,
-        mut external_impulse,
-    ) in characters.iter_mut()
-    {
-        if character.on_ground && let (Some(JumpState::JumpPressed), Some(watch)) = (input.jump.clone(), jump_charge.charge.clone())
-        {
-            let max_charge_time = movement_properties.max_charge_time.as_secs_f32();
-            let jump_intensity = watch.elapsed_secs().min(max_charge_time) / max_charge_time;
-            let jump_impulse = movement_properties.min_jump_impulse + jump_intensity * (movement_properties.max_jump_impulse - movement_properties.min_jump_impulse);
-            external_impulse.0 = Vec3::new(
-                0.,
-                jump_impulse,
-                0.,
-            );
-        } else {
-            external_impulse.0 = Vec3::ZERO;
-        }
-    }
-}
-
-fn update_grounded(
-    rapier_context: Res<RapierContext>,
-    mut player_character: Query<(
-        Entity,
-        &mut Character,
-        &Transform,
-        &Collider,
-    )>,
-) {
-    for (entity, mut character, transform, collider) in
-        player_character.iter_mut()
-    {
-        if let Some((_entity, _toi)) = rapier_context.cast_shape(
-            // TODO: This is a hack to make sure the ray doesn't start inside
-            // the ground if the collider is slightly underground,
-            // bus will cause rare false positives when the player'
-            // s head hits the ceiling.
-            transform.translation + Vec3::Y * 0.05,
-            transform.rotation,
-            Vec3::NEG_Y,
-            collider,
-            0.2,
-            QueryFilter {
-                exclude_collider: Some(entity),
-                ..default()
-            },
-        ) {
-            character.on_ground = true;
-        } else {
-            character.on_ground = false;
-        }
-    }
-}
-
-fn set_external_force(
-    mut characters: Query<(
-        &mut ExternalForce,
-        &mut WalkForce,
-        With<Character>,
-        Without<object::Object>,
-    )>,
-) {
-    for (mut external_force, mut walk_force, ..) in characters.iter_mut() {
-        external_force.force = walk_force.0;
-        walk_force.0 = Vec3::ZERO;
-    }
-}
-
-fn set_external_impulse(
-    mut characters: Query<(
-        &mut ExternalImpulse,
-        &mut JumpImpulse,
-        &mut object::KnockbackImpulse,
-        With<Character>,
-        Without<object::Object>,
-    )>,
-) {
-    for (mut external_impulse, mut jump_impulse, mut knockback_impulse, ..) in
-        characters.iter_mut()
-    {
-        external_impulse.impulse = jump_impulse.0 + knockback_impulse.0;
-        jump_impulse.0 = Vec3::ZERO;
-        knockback_impulse.0 = Vec3::ZERO;
     }
 }
 
