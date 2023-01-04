@@ -127,7 +127,7 @@ impl Island {
                     let x = lerp(rect.min.x, rect.max.x, x_frac);
                     let z = lerp(rect.min.y, rect.max.y, z_frac);
                     let y = self.height_at_point(x, z);
-                    let position = Vec3::new(x as f32, y, z as f32);
+                    let position = Vec3::new(x, y, z);
                     let normal = self.normal_at_point(
                         x,
                         z,

@@ -109,8 +109,7 @@ impl<A> Test<A> {
                 let mut time = app.world.resource_mut::<Time>();
                 if let Some(last_update) = time.last_update() {
                     time.update_with_instant(
-                        last_update
-                            + Duration::from_secs_f32((1.0 / TEST_FPS) as f32),
+                        last_update + Duration::from_secs_f32(1.0 / TEST_FPS),
                     );
                 } else {
                     time.update();
