@@ -199,7 +199,7 @@ fn player_looking_input(
                 {
                     // get the size of the window
                     let window_size =
-                        Vec2::new(wnd.width() as f32, wnd.height() as f32);
+                        Vec2::new(wnd.width(), wnd.height());
 
                     // Convert screen position [0..resolution] to ndc
                     // [-1..1] (normalized device
