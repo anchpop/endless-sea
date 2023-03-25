@@ -8,4 +8,4 @@ workspace = "../.."
 endless-sea = { package = "endless-sea", path = "../.." }
 bevy = { version = "0.9.1" }
 image = "0.24.6"
-winit = "0.27"
+winit = "0.28"
