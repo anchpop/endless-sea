@@ -16,16 +16,11 @@ pub enum ReticleReceiveType {
     Object,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum ReticleBrightness {
     Full,
+    #[default]
     Faint,
-}
-
-impl Default for ReticleBrightness {
-    fn default() -> Self {
-        ReticleBrightness::Faint
-    }
 }
 
 #[derive(Component, Clone, Debug, Default)]
