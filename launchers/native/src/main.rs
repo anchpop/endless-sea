@@ -1,7 +1,4 @@
-use std::io::Cursor;
-
-use bevy::{prelude::*, window::Window, winit::WinitWindows};
-use winit::window::Icon;
+use bevy::prelude::*;
 
 fn main() {
     let mut app = endless_sea::app();

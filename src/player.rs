@@ -1,5 +1,4 @@
 use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
-use bevy_rapier3d::prelude::*;
 use leafwing_input_manager::{prelude::*, Actionlike};
 
 use crate::character::{self, CanPickUpItems};
@@ -83,13 +82,10 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        static POST_SIMULATION: &str = "post_simulation";
         app.add_plugin(InputManagerPlugin::<Action>::default())
             .add_system(player_input)
             .add_system(player_looking_input)
-            .add_system(camera_movement); // Should be after rapier's
-                                          // "post_simulation" system set I
-                                          // believe
+            .add_system(camera_movement);
     }
 }
 
