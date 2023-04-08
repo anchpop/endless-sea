@@ -1,7 +1,6 @@
 use std::{collections::HashSet, time::Duration};
 
 use bevy::{prelude::*, time::Stopwatch};
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
 use crate::{
@@ -13,7 +12,7 @@ use crate::{
 // Bundle
 // ======
 
-#[derive(Inspectable, Reflect, Component, Clone)]
+#[derive(Reflect, Component, Clone)]
 #[reflect(Component)]
 pub struct MovementProperties {
     pub stopped_friction: f32,
@@ -55,7 +54,7 @@ pub enum AttackState {
     Secondary,
 }
 
-#[derive(Component, Reflect, Inspectable, Default, Clone)]
+#[derive(Component, Reflect, Default, Clone)]
 #[reflect(Component)]
 pub struct Character {
     pub on_ground: bool,
@@ -88,10 +87,10 @@ pub struct Inventory {
     pub backpack: Vec<item::HeldItem>,
 }
 
-#[derive(Inspectable, Component, Clone, Default)]
+#[derive(Component, Clone, Default)]
 pub struct CanPickUpItems {}
 
-#[derive(Inspectable, Component, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Component, Clone, PartialEq, Eq, Hash, Debug)]
 pub enum AnimationState {
     Idle,
     Walk,
@@ -194,8 +193,8 @@ impl bevy::app::Plugin for Plugin {
             .add_system(update_character_animation_state);
 
         if cfg!(debug_assertions) {
-            app.register_inspectable::<Character>()
-                .register_inspectable::<MovementProperties>();
+            app.register_type::<Character>()
+                .register_type::<MovementProperties>();
         }
     }
 }

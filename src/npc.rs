@@ -1,12 +1,11 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::Inspectable;
 
 use crate::{character, player};
 
 // Bundle
 // ======
 
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
 pub struct Npc {
     pub peaceful: bool,

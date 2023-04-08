@@ -1,13 +1,12 @@
 use std::time::Duration;
 
 use bevy::{prelude::*, time::Stopwatch};
-use bevy_inspector_egui::Inspectable;
 use bevy_rapier3d::prelude::*;
 
 // Components
 // ==========
 
-#[derive(Inspectable, Component, Clone, Debug)]
+#[derive(Component, Clone, Debug)]
 pub enum Item {
     Sword,
     Gun,

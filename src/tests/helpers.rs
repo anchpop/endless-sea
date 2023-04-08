@@ -1,7 +1,7 @@
 use std::{thread, time::Duration};
 
 use bevy::{app::PluginGroupBuilder, prelude::*, render::camera::ScalingMode};
-use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
 
 use crate::asset_holder;
@@ -69,23 +69,25 @@ fn app() -> (App, bool) {
     if on_main_thread {
         app.add_plugins(DefaultPlugins)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+            .add_plugin(RapierDebugRenderPlugin::default());
+    } else {
+        let time = Time::default();
+        app.insert_resource(time)
+            .add_plugins(TestPlugins)
+            .add_plugin(bevy::render::RenderPlugin {
+                wgpu_settings: bevy::render::settings::WgpuSettings {
+                    backends: None,
+                    ..default()
+                },
+            })
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
             .insert_resource(RapierConfiguration {
                 timestep_mode: TimestepMode::Fixed {
                     dt: 1.0 / TEST_FPS,
                     substeps: 1,
                 },
                 ..default()
-            })
-            .add_plugin(RapierDebugRenderPlugin::default());
-    } else {
-        let time = Time::default();
-        app.insert_resource(time)
-            .insert_resource(bevy::render::settings::WgpuSettings {
-                backends: None,
-                ..default()
-            })
-            .add_plugins(TestPlugins)
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+            });
     }
     app.add_plugin(WorldInspectorPlugin::new());
 
@@ -127,7 +129,9 @@ struct TestPlugins;
 impl PluginGroup for TestPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
-            .add(bevy::core::CorePlugin::default())
+            .add(bevy::core::TaskPoolPlugin::default())
+            .add(bevy::core::TypeRegistrationPlugin::default())
+            .add(bevy::core::FrameCountPlugin::default())
             .add(bevy::app::ScheduleRunnerPlugin::default())
             .add(bevy::window::WindowPlugin::default())
             .add(bevy::transform::TransformPlugin)
@@ -137,7 +141,6 @@ impl PluginGroup for TestPlugins {
             .add(bevy::asset::AssetPlugin::default())
             .add(bevy::scene::ScenePlugin::default())
             .add(bevy::gilrs::GilrsPlugin::default())
-            .add(bevy::render::RenderPlugin::default())
             .add(bevy::render::texture::ImagePlugin::default())
     }
 }

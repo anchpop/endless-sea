@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_inspector_egui::{Inspectable, RegisterInspectable};
 use bevy_rapier3d::prelude::*;
 
 // Components
@@ -11,10 +10,10 @@ pub struct Lifetime {
     pub shrink_away: bool,
 }
 
-#[derive(Inspectable, Component, Clone, Default)]
+#[derive(Component, Clone, Default)]
 pub struct Object;
 
-#[derive(Inspectable, Reflect, Component, Clone, Debug)]
+#[derive(Reflect, Component, Clone, Debug)]
 #[reflect(Component)]
 pub struct Health {
     pub max: f64,
@@ -36,7 +35,7 @@ pub struct ExplodeIntoPieces {
     pub shrink_away: bool,
 }
 
-#[derive(Inspectable, Component, Default, Clone)]
+#[derive(Component, Default, Clone)]
 pub struct KnockbackImpulse(pub Vec3);
 
 #[derive(Bundle, Default)]
@@ -59,11 +58,6 @@ impl bevy::app::Plugin for Plugin {
             .add_system(set_external_impulse)
             .add_system(count_down_lifetime)
             .add_system(shrink_away);
-
-        if cfg!(debug_assertions) {
-            app.register_inspectable::<Health>()
-                .register_inspectable::<KnockbackImpulse>();
-        }
     }
 }
 
