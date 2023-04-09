@@ -8,5 +8,5 @@ workspace = "../.."
 endless-sea = { package = "endless-sea", path = "../.." }
 bevy = { version = "0.10" }
 web-sys = { version = "0.3.61", features = ["Document", "Window"] }
-yew = "0.19.3"
-stylist = { version = "0.10.1", features = ["yew_integration"] }
+yew = { version = "0.20.0", features = ["csr"] }
+stylist = { version = "0.11", features = ["yew_integration"] }
