@@ -1,6 +1,4 @@
-use bevy::{input::mouse::MouseMotion, prelude::*};
-use bevy_inspector_egui::Inspectable;
-use bevy_rapier3d::prelude::*;
+use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
 use leafwing_input_manager::{prelude::*, Actionlike};
 
 use crate::character::{self, CanPickUpItems};
@@ -8,11 +6,11 @@ use crate::character::{self, CanPickUpItems};
 // Components
 // ==========
 
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
 pub struct Player;
 
-#[derive(Inspectable, Reflect, Component, Default, Clone)]
+#[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
 pub struct PlayerCamera;
 
@@ -84,16 +82,10 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        static POST_SIMULATION: &str = "post_simulation";
         app.add_plugin(InputManagerPlugin::<Action>::default())
             .add_system(player_input)
             .add_system(player_looking_input)
-            .add_stage_after(
-                PhysicsStages::Writeback,
-                POST_SIMULATION,
-                SystemStage::parallel(),
-            )
-            .add_system_to_stage(POST_SIMULATION, camera_movement);
+            .add_system(camera_movement);
     }
 }
 
@@ -160,46 +152,39 @@ fn player_input(
 }
 
 fn player_looking_input(
-    windows: Res<Windows>,
-    q_camera: Query<(
-        &Camera,
-        &GlobalTransform,
-        With<PlayerCamera>,
-        Without<Player>,
-    )>,
-    mut player_character: Query<(
+    window: Query<&Window, With<PrimaryWindow>>,
+    q_camera: Query<
+        (&Camera, &GlobalTransform),
+        (With<PlayerCamera>, Without<Player>),
+    >,
+    mut player_character: Query<
+        (
+            &GlobalTransform,
+            &mut character::Input,
+            &ActionState<Action>,
+        ),
         With<Player>,
-        &GlobalTransform,
-        &mut character::Input,
-        &ActionState<Action>,
-    )>,
+    >,
     mut motion_evr: EventReader<MouseMotion>,
 ) {
-    if let Some((_, player_transform, mut player_input, action_state)) =
+    if let Some((player_transform, mut player_input, action_state)) =
         player_character.iter_mut().next()
     {
-        if let Some((camera, camera_transform, ..)) = q_camera.iter().next() {
+        if let Some((camera, camera_transform)) = q_camera.iter().next() {
             // directional
             {
                 // get the window that the camera is displaying to (or the
                 // primary window)
-                let wnd =
-                    if let bevy::render::camera::RenderTarget::Window(id) =
-                        camera.target
-                    {
-                        windows.get(id).unwrap()
-                    } else {
-                        windows.get_primary().unwrap()
-                    };
+                let window = window.get_single().unwrap();
 
                 let mouse_moved = motion_evr.iter().next().is_some();
 
                 // check if the cursor is inside the window and get its position
-                let look_direction_mouse = if mouse_moved && let Some(cursor_pos_screen_pixels) = wnd.cursor_position()
+                let look_direction_mouse = if mouse_moved && let Some(cursor_pos_screen_pixels) = window.cursor_position()
                 {
                     // get the size of the window
                     let window_size =
-                        Vec2::new(wnd.width(), wnd.height());
+                        Vec2::new(window.width(), window.height());
 
                     // Convert screen position [0..resolution] to ndc
                     // [-1..1] (normalized device

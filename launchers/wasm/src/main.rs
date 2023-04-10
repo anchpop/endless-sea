@@ -1,6 +1,5 @@
-use bevy::prelude::*;
+//use bevy::prelude::*;
 use endless_sea::LAUNCHER_TITLE;
-use stylist::{css, global_style, yew::styled_component};
 use yew::{events::MouseEvent, prelude::*};
 
 fn set_window_title(title: &str) {
@@ -11,49 +10,34 @@ fn set_window_title(title: &str) {
         .set_title(title);
 }
 
-fn set_global_css() {
-    global_style! {
-        r#"
-        html {
-            min-height: 100%;
-            position: relative;
-        }
-        body {
-            height: 100%;
-            padding: 0;
-            margin: 0;
-        }
-        "#
+pub struct App;
+
+impl Component for App {
+    type Message = ();
+    type Properties = ();
+
+    fn create(_ctx: &Context<Self>) -> Self {
+        set_window_title(LAUNCHER_TITLE);
+
+        Self
     }
-    .expect("Unable to mount global style");
-}
 
-#[styled_component(Root)]
-fn view() -> Html {
-    set_window_title(LAUNCHER_TITLE);
-    set_global_css();
+    fn view(&self, _ctx: &Context<Self>) -> Html {
+        html! {
+            <div id="Bevy-Container">
+                <canvas id="bevy" oncontextmenu={|mouse_event: MouseEvent| mouse_event.prevent_default() }></canvas>
+            </div>
+        }
+    }
 
-    let css = css!(
-        r#"
-        position: absolute;
-        overflow: hidden;
-        width: 100%;
-        height: 100%;
-        "#
-    );
-
-    html! {
-        <div class={ css }>
-            <canvas id="bevy" oncontextmenu={|mouse_event: MouseEvent| mouse_event.prevent_default() }></canvas>
-        </div>
+    fn rendered(&mut self, _ctx: &Context<Self>, first_render: bool) {
+        if first_render {
+            let mut app = endless_sea::app();
+            app.run();
+        }
     }
 }
 
 fn main() {
-    // Mount the DOM
-    yew::start_app::<Root>();
-    // Start the Bevy App
-    let mut app = endless_sea::app();
-    info!("Starting launcher: WASM");
-    app.run();
+    yew::Renderer::<App>::new().render();
 }

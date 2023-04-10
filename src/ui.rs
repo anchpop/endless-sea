@@ -63,7 +63,7 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
                                 color: Color::WHITE,
                             },
                         )
-                        .with_style(Style { ..default() }),
+                        .with_style(default()),
                     );
                     parent.spawn((
                         TextBundle::from_sections([

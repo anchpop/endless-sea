@@ -18,7 +18,7 @@ mod ui;
 mod tests;
 
 use bevy::{prelude::*, render::camera::ScalingMode};
-use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
 use reticle::ReticleBrightness;
@@ -31,12 +31,12 @@ pub fn app() -> App {
 
     // Basic setup
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        window: WindowDescriptor {
+        primary_window: Some(Window {
             title: LAUNCHER_TITLE.to_string(),
             canvas: Some("#bevy".to_string()),
             fit_canvas_to_parent: true,
             ..Default::default()
-        },
+        }),
         ..default()
     }));
 

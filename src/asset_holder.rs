@@ -35,6 +35,6 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system_to_stage(StartupStage::PreStartup, load_assets);
+        app.add_startup_system(load_assets.in_base_set(StartupSet::PreStartup));
     }
 }

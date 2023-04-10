@@ -6,7 +6,6 @@ workspace = "../.."
 
 [dependencies]
 endless-sea = { package = "endless-sea", path = "../.." }
-bevy = { version = "0.9.1" }
-web-sys = { version="0.3.61", features=["Document", "Window"] }
-yew = "0.19.3"
-stylist = { version= "0.10.1", features=["yew_integration"] }
+bevy = { version = "0.10" }
+web-sys = { version = "0.3.61", features = ["Document", "Window"] }
+yew = { version = "0.20.0", features = ["csr"] }
