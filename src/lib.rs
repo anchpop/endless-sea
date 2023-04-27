@@ -73,12 +73,12 @@ fn setup_graphics(mut commands: Commands) {
         Camera3dBundle {
             projection: OrthographicProjection {
                 scale: 3.0,
-                scaling_mode: ScalingMode::FixedVertical(5.0),
+                scaling_mode: ScalingMode::FixedVertical(3.0),
                 ..default()
             }
             .into(),
             transform: Transform::from_translation(
-                Vec3::new(0.0, 9.0, -6.0) * 3.0,
+                Vec3::new(0.0, 9.0, -9.0) * 3.0,
             )
             .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
