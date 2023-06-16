@@ -1,6 +1,9 @@
 use std::{collections::HashSet, time::Duration};
 
 use bevy::{prelude::*, time::Stopwatch};
+use bevy_mod_wanderlust::{
+    ControllerBundle, ControllerInput, ControllerPhysicsBundle,
+};
 use bevy_rapier3d::prelude::*;
 
 use crate::{
@@ -42,12 +45,6 @@ impl Default for MovementProperties {
     }
 }
 
-#[derive(Component, Clone)]
-pub enum JumpState {
-    Charging,
-    JumpPressed,
-}
-
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Debug)]
 pub enum AttackState {
     Primary,
@@ -65,13 +62,8 @@ pub struct Input {
     pub movement_direction: Vec3,
     pub looking_direction: Vec3,
     pub attack: Option<AttackState>,
-    pub jump: Option<JumpState>,
+    pub jump: bool,
     pub switch_hands: bool,
-}
-
-#[derive(Component, Default, Clone)]
-pub struct JumpCharge {
-    charge: Option<Stopwatch>,
 }
 
 #[derive(Component, Default, Clone)]
@@ -108,21 +100,12 @@ impl Default for AnimationState {
 #[derive(Bundle)]
 pub struct Bundle {
     // physics
-    pub rigid_body: RigidBody,
-    pub collider: Collider,
-    pub collider_mass_properties: ColliderMassProperties,
-    pub restitution: Restitution,
-    pub locked_axes: LockedAxes,
-    pub velocity: Velocity,
+    pub character_controller: ControllerBundle,
 
     // character stuff
     pub character: Character,
     pub movement_properties: MovementProperties,
     pub input: Input,
-    pub jump_charge: JumpCharge,
-    pub external_force: ExternalForce,
-    pub external_impulse: ExternalImpulse,
-    pub friction: Friction,
     pub walk_force: WalkForce,
     pub jump_impulse: JumpImpulse,
     pub inventory: Inventory,
@@ -136,26 +119,26 @@ pub struct Bundle {
 impl Default for Bundle {
     fn default() -> Self {
         Self {
-            rigid_body: RigidBody::Dynamic,
-            collider: Collider::capsule(
-                Vec3::new(0.0, 0.0, 0.0),
-                Vec3::new(0.0, 1.0, 0.0),
-                0.5,
-            ),
-            collider_mass_properties: ColliderMassProperties::Mass(1.0),
-            restitution: Restitution::coefficient(0.0),
-            locked_axes: LockedAxes::ROTATION_LOCKED,
-            velocity: Velocity::default(),
+            character_controller: ControllerBundle {
+                physics: ControllerPhysicsBundle {
+                    friction: Friction {
+                        coefficient: 0.0,
+                        combine_rule: CoefficientCombineRule::Max,
+                    },
+                    collider: Collider::capsule(
+                        Vec3::new(0.0, 0.0, 0.0),
+                        Vec3::new(0.0, 1.0, 0.0),
+                        0.5,
+                    ),
+                    locked_axes: LockedAxes::ROTATION_LOCKED,
+                    velocity: Velocity::default(),
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
             character: Character::default(),
             movement_properties: default(),
             input: Input::default(),
-            jump_charge: JumpCharge::default(),
-            external_force: ExternalForce::default(),
-            external_impulse: ExternalImpulse::default(),
-            friction: Friction {
-                coefficient: 0.0,
-                combine_rule: CoefficientCombineRule::Max,
-            },
             walk_force: WalkForce::default(),
             jump_impulse: JumpImpulse::default(),
             inventory: Inventory::default(),
@@ -166,24 +149,39 @@ impl Default for Bundle {
     }
 }
 
+impl Bundle {
+    pub fn from_transform(transform: Transform) -> Self {
+        let default = Self::default();
+        Self {
+            character_controller: ControllerBundle {
+                transform,
+                ..default.character_controller
+            },
+            ..default
+        }
+    }
+}
+
 // Plugin
 // ======
+
+#[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
+pub enum MovementSet {
+    CollectInfo,
+    ComputeForce,
+    ApplyForces,
+}
 
 pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_jump_state)
-            .add_system(force_movement)
-            .add_system(impulse_movement.before(attack))
+        app.add_system(update_grounded.in_set(MovementSet::CollectInfo))
+            .add_system(force_movement.in_set(MovementSet::ComputeForce))
             .add_system(
-                update_grounded
-                    .before(impulse_movement)
-                    .before(force_movement),
+                move_character_controller.in_set(MovementSet::ApplyForces),
             )
             .add_system(attack)
-            .add_system(set_external_force)
-            .add_system(set_external_impulse)
             .add_system(rotate_character)
             .add_system(check_no_character_and_object)
             .add_system(pick_up_items)
@@ -195,29 +193,6 @@ impl bevy::app::Plugin for Plugin {
         if cfg!(debug_assertions) {
             app.register_type::<Character>()
                 .register_type::<MovementProperties>();
-        }
-    }
-}
-
-fn update_jump_state(
-    mut query: Query<(&Input, &mut JumpCharge)>,
-    time: Res<Time>,
-) {
-    for (input, mut jump_charge) in query.iter_mut() {
-        let charge = &mut jump_charge.charge;
-        match input.jump {
-            Some(JumpState::Charging) => match charge {
-                Some(ref mut charge) => {
-                    charge.tick(time.delta());
-                }
-                None => {
-                    *charge = Some(Stopwatch::new());
-                }
-            },
-            Some(JumpState::JumpPressed) => {}
-            None => {
-                *charge = None;
-            }
         }
     }
 }
@@ -384,39 +359,6 @@ fn attack(
     }
 }
 
-fn impulse_movement(
-    mut characters: Query<(
-        &Character,
-        &Input,
-        &JumpCharge,
-        &MovementProperties,
-        &mut JumpImpulse,
-    )>,
-) {
-    for (
-        character,
-        input,
-        jump_charge,
-        movement_properties,
-        mut external_impulse,
-    ) in characters.iter_mut()
-    {
-        if character.on_ground && let (Some(JumpState::JumpPressed), Some(watch)) = (input.jump.clone(), jump_charge.charge.clone())
-        {
-            let max_charge_time = movement_properties.max_charge_time.as_secs_f32();
-            let jump_intensity = watch.elapsed_secs().min(max_charge_time) / max_charge_time;
-            let jump_impulse = movement_properties.min_jump_impulse + jump_intensity * (movement_properties.max_jump_impulse - movement_properties.min_jump_impulse);
-            external_impulse.0 = Vec3::new(
-                0.,
-                jump_impulse,
-                0.,
-            );
-        } else {
-            external_impulse.0 = Vec3::ZERO;
-        }
-    }
-}
-
 fn update_grounded(
     rapier_context: Res<RapierContext>,
     mut player_character: Query<(
@@ -451,35 +393,19 @@ fn update_grounded(
     }
 }
 
-fn set_external_force(
-    mut characters: Query<(
-        &mut ExternalForce,
-        &mut WalkForce,
-        With<Character>,
-        Without<object::Object>,
-    )>,
+fn move_character_controller(
+    mut characters: Query<
+        (&mut ControllerInput, &mut WalkForce, &Input),
+        (With<Character>, Without<object::Object>),
+    >,
 ) {
-    for (mut external_force, mut walk_force, ..) in characters.iter_mut() {
-        external_force.force = walk_force.0;
-        walk_force.0 = Vec3::ZERO;
-    }
-}
-
-fn set_external_impulse(
-    mut characters: Query<(
-        &mut ExternalImpulse,
-        &mut JumpImpulse,
-        &mut object::KnockbackImpulse,
-        With<Character>,
-        Without<object::Object>,
-    )>,
-) {
-    for (mut external_impulse, mut jump_impulse, mut knockback_impulse, ..) in
+    for (mut character_controller, mut walk_force, input) in
         characters.iter_mut()
     {
-        external_impulse.impulse = jump_impulse.0 + knockback_impulse.0;
-        jump_impulse.0 = Vec3::ZERO;
-        knockback_impulse.0 = Vec3::ZERO;
+        let force = walk_force.0;
+        character_controller.movement = force;
+        character_controller.jumping = input.jump;
+        walk_force.0 = Vec3::ZERO;
     }
 }
 

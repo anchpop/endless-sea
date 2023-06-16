@@ -12,21 +12,19 @@ mod test {
     fn character_moves_horizontally() {
         Test {
             setup: |app| {
-                app.add_plugin(character::Plugin);
+                app.add_plugin(character::Plugin)
+                    .add_plugin(bevy_mod_wanderlust::WanderlustPlugin);
 
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn((
-                        SpatialBundle::default(),
-                        character::Bundle {
-                            input: character::Input {
-                                movement_direction: Vec3::X,
-                                ..character::Input::default()
-                            },
-                            ..character::Bundle::default()
+                    .spawn(character::Bundle {
+                        input: character::Input {
+                            movement_direction: Vec3::X,
+                            ..character::Input::default()
                         },
-                    ))
+                        ..character::Bundle::default()
+                    })
                     .id();
                 spawn_floor_beneath_capsule(app, character_id);
                 character_id
@@ -34,7 +32,7 @@ mod test {
             setup_graphics: default_setup_graphics,
             // Rapier does nothing the first frame, so we have to use 2 frames
             // here
-            frames: 2,
+            frames: 5,
             check: |app, character_id| {
                 let character =
                     app.world.get::<Transform>(character_id).unwrap();
@@ -54,7 +52,6 @@ mod test {
                 let character_id = app
                     .world
                     .spawn((
-                        SpatialBundle::default(),
                         character::Bundle {
                             input: character::Input {
                                 movement_direction: Vec3::Y,

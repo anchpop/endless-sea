@@ -19,6 +19,7 @@ mod tests;
 
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_mod_wanderlust::WanderlustPlugin;
 use bevy_polyline::PolylinePlugin;
 use bevy_rapier3d::prelude::*;
 use reticle::ReticleBrightness;
@@ -52,6 +53,7 @@ pub fn app() -> App {
 
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_plugin(PolylinePlugin)
+        .add_plugin(WanderlustPlugin)
         .add_plugin(asset_holder::Plugin)
         .add_plugin(object::Plugin)
         .add_plugin(character::Plugin)
@@ -207,8 +209,7 @@ fn setup_physics(
 
     /* Create the player. */
     commands.spawn((
-        SpatialBundle::from_transform(Transform::from_xyz(0.0, 0.0, 0.0)),
-        character::Bundle::default(),
+        character::Bundle::from_transform(Transform::from_xyz(0.0, 0.0, 0.0)),
         player::Bundle::default(),
         reticle::Bundle {
             reticle: reticle::Reticle {
@@ -222,14 +223,7 @@ fn setup_physics(
 
     /* Create an NPC. */
     commands.spawn((
-        SpatialBundle::from_transform(Transform::from_xyz(5.0, 0.0, 5.0)),
-        character::Bundle {
-            movement_properties: character::MovementProperties {
-                max_speed: 3.0,
-                ..Default::default()
-            },
-            ..character::Bundle::default()
-        },
+        character::Bundle::from_transform(Transform::from_xyz(5.0, 0.0, 5.0)),
         npc::Npc { peaceful: true },
         reticle::Bundle {
             reticle: reticle::Reticle {

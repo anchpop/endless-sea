@@ -161,18 +161,22 @@ impl Island {
         (points, indices)
     }
 
+    #[allow(dead_code)]
     pub fn scale(self, scale: Vec3) -> Self {
         Island::Scale(scale, Box::new(self))
     }
 
+    #[allow(dead_code)]
     pub fn translate(self, translation: Vec3) -> Self {
         Island::Translate(translation, Box::new(self))
     }
 
+    #[allow(dead_code)]
     pub fn terrace(self, terrace: f32) -> Self {
         Island::Terrace(terrace, Box::new(self))
     }
 
+    #[allow(dead_code)]
     pub fn add(self, other: Self) -> Self {
         Island::Add(Box::new(self), Box::new(other))
     }
