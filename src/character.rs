@@ -23,10 +23,6 @@ pub struct MovementProperties {
     pub air_acceleration: f32,
     pub damping_factor: f32,
     pub max_speed: f32,
-
-    pub max_charge_time: Duration,
-    pub min_jump_impulse: f32,
-    pub max_jump_impulse: f32,
 }
 
 impl Default for MovementProperties {
@@ -37,10 +33,6 @@ impl Default for MovementProperties {
             air_acceleration: 10.0,
             damping_factor: 60.0,
             max_speed: 10.0,
-
-            max_charge_time: Duration::from_secs_f32(0.75),
-            min_jump_impulse: 3.0,
-            max_jump_impulse: 6.0,
         }
     }
 }
@@ -68,9 +60,6 @@ pub struct Input {
 
 #[derive(Component, Default, Clone)]
 pub struct WalkForce(pub Vec3);
-
-#[derive(Component, Default, Clone)]
-pub struct JumpImpulse(pub Vec3);
 
 #[derive(Component, Clone, Default, Debug)]
 pub struct Inventory {
@@ -107,7 +96,6 @@ pub struct Bundle {
     pub movement_properties: MovementProperties,
     pub input: Input,
     pub walk_force: WalkForce,
-    pub jump_impulse: JumpImpulse,
     pub inventory: Inventory,
     pub knockback_impulse: object::KnockbackImpulse,
     pub health: object::Health,
@@ -140,7 +128,6 @@ impl Default for Bundle {
             movement_properties: default(),
             input: Input::default(),
             walk_force: WalkForce::default(),
-            jump_impulse: JumpImpulse::default(),
             inventory: Inventory::default(),
             knockback_impulse: object::KnockbackImpulse::default(),
             health: object::Health::default(),
