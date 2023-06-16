@@ -85,7 +85,7 @@ impl bevy::app::Plugin for Plugin {
         app.add_plugin(InputManagerPlugin::<Action>::default())
             .add_system(player_input)
             .add_system(player_looking_input)
-            .add_system(camera_movement);
+            .add_system(camera_movement.in_base_set(CoreSet::PostUpdate));
     }
 }
 
@@ -114,7 +114,6 @@ fn player_input(
         &ActionState<Action>,
     )>,
 ) {
-    use character::JumpState::*;
     if let Some((_, mut character_input, action_state)) =
         player_character.iter_mut().next()
     {
@@ -138,13 +137,7 @@ fn player_input(
         }
 
         // Jump
-        character_input.jump = if action_state.just_released(Action::Jump) {
-            Some(JumpPressed)
-        } else if action_state.pressed(Action::Jump) {
-            Some(Charging)
-        } else {
-            None
-        };
+        character_input.jump = action_state.pressed(Action::Jump);
 
         character_input.switch_hands =
             action_state.just_pressed(Action::SwitchWeapon);

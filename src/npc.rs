@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{character, player};
+use crate::{character, helpers::project_onto_plane, player};
 
 // Bundle
 // ======
@@ -22,10 +22,9 @@ fn npc_input(
         for (_, mut npc_input, npc_transform) in npcs.iter_mut() {
             npc_input.looking_direction =
                 player_transform.translation - npc_transform.translation;
-            if npc_transform
-                .translation
-                .distance(player_transform.translation)
-                > 2.0
+            if project_onto_plane(npc_transform.translation, Vec3::Y).distance(
+                project_onto_plane(player_transform.translation, Vec3::Y),
+            ) > 2.0
             {
                 npc_input.movement_direction = (player_transform.translation
                     - npc_transform.translation)

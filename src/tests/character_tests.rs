@@ -52,16 +52,13 @@ mod test {
                 // Setup test entities
                 let character_id = app
                     .world
-                    .spawn((
-                        SpatialBundle::default(),
-                        character::Bundle {
-                            health: object::Health {
-                                current: 0.0,
-                                ..object::Health::default()
-                            },
-                            ..character::Bundle::default()
+                    .spawn(character::Bundle {
+                        health: object::Health {
+                            current: 0.0,
+                            ..object::Health::default()
                         },
-                    ))
+                        ..character::Bundle::default()
+                    })
                     .id();
                 spawn_floor_beneath_capsule(app, character_id);
                 character_id
@@ -88,7 +85,6 @@ mod test {
                 let character_id = app
                     .world
                     .spawn((
-                        SpatialBundle::default(),
                         character::Bundle {
                             inventory: character::Inventory {
                                 hand: Some(HeldItem::new(item::Item::Sword)),

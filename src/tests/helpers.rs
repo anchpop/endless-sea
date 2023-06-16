@@ -56,15 +56,8 @@ pub fn default_setup_graphics(app: &mut App) {
     });
 }
 
-fn app() -> (App, bool) {
+fn app(on_main_thread: bool) -> App {
     let mut app = App::new();
-    let on_main_thread = if on_main_thread() {
-        println!("Test running on main thread, will display window");
-        true
-    } else {
-        println!("Test not running on main thread, will run headlessly");
-        false
-    };
 
     if on_main_thread {
         app.add_plugins(DefaultPlugins)
@@ -91,36 +84,52 @@ fn app() -> (App, bool) {
     }
     app.add_plugin(WorldInspectorPlugin::new());
 
-    (app, on_main_thread)
+    app
 }
 
 impl<A> Test<A> {
     pub fn run(self) {
-        let (mut app, on_main_thread) = app();
+        let on_main_thread = if on_main_thread() {
+            println!("Test running on main thread, will display window");
+            true
+        } else {
+            println!("Test not running on main thread, will run headlessly");
+            false
+        };
+
         if on_main_thread {
-            (self.setup_graphics)(&mut app);
+            self.main_thread_app().run();
+        } else {
+            self.run_test();
         }
+    }
+
+    pub fn run_test(self) {
+        let mut app = app(false);
 
         let res = (self.setup)(&mut app);
 
-        if on_main_thread {
-            app.run();
-        } else {
-            for _ in 0..self.frames {
-                // Update time manually for consistent time.delta()
-                let mut time = app.world.resource_mut::<Time>();
-                if let Some(last_update) = time.last_update() {
-                    time.update_with_instant(
-                        last_update + Duration::from_secs_f32(1.0 / TEST_FPS),
-                    );
-                } else {
-                    time.update();
-                }
-                // Run systems
-                app.update();
+        for _ in 0..self.frames {
+            // Update time manually for consistent time.delta()
+            let mut time = app.world.resource_mut::<Time>();
+            if let Some(last_update) = time.last_update() {
+                time.update_with_instant(
+                    last_update + Duration::from_secs_f32(1.0 / TEST_FPS),
+                );
+            } else {
+                time.update();
             }
-            (self.check)(&app, res)
+            // Run systems
+            app.update();
         }
+        (self.check)(&app, res)
+    }
+
+    pub fn main_thread_app(self) -> App {
+        let mut app = app(true);
+        let _res = (self.setup)(&mut app);
+        (self.setup_graphics)(&mut app);
+        app
     }
 }
 
