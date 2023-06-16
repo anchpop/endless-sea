@@ -25,7 +25,7 @@ use bevy_rapier3d::prelude::*;
 use reticle::ReticleBrightness;
 use terrain_generation::{Generation, Island};
 
-pub const LAUNCHER_TITLE: &str = "Endless Sea";
+pub(crate) const LAUNCHER_TITLE: &str = "Endless Sea";
 
 pub fn app() -> App {
     let mut app = App::new();

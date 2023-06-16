@@ -1,21 +1,18 @@
 use bevy::prelude::*;
 
 #[derive(Resource)]
-pub struct AssetHolder {
-    pub floor: Handle<Scene>,
+pub(crate) struct AssetHolder {
+    pub(crate) character: Handle<Scene>,
+    pub(crate) character_run: Handle<AnimationClip>,
+    pub(crate) character_idle: Handle<AnimationClip>,
 
-    pub character: Handle<Scene>,
-    pub character_run: Handle<AnimationClip>,
-    pub character_idle: Handle<AnimationClip>,
-
-    pub cube: Handle<Scene>,
-    pub sword: Handle<Scene>,
-    pub gun: Handle<Scene>,
+    pub(crate) cube: Handle<Scene>,
+    pub(crate) sword: Handle<Scene>,
+    pub(crate) gun: Handle<Scene>,
 }
 
-pub fn load_assets(mut commands: Commands, asset_server: ResMut<AssetServer>) {
+pub(crate) fn load_assets(mut commands: Commands, asset_server: ResMut<AssetServer>) {
     let assets = AssetHolder {
-        floor: asset_server.load("floor/floor.glb#Scene0"),
         character: asset_server.load("character/casual_male.glb#Scene0"),
         character_run: asset_server
             .load("character/casual_male.glb#Animation9"),
@@ -31,7 +28,7 @@ pub fn load_assets(mut commands: Commands, asset_server: ResMut<AssetServer>) {
 // Plugin
 // ======
 
-pub struct Plugin;
+pub(crate) struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {

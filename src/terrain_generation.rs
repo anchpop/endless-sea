@@ -5,7 +5,7 @@ use crate::helpers::*;
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
-pub enum Island {
+pub(crate) enum Island {
     /// Creates a flat island.
     Flat,
     /// Creates an "lump" shape that bulges up in the middle and falls down
@@ -24,9 +24,9 @@ pub enum Island {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Generation {
+pub(crate) struct Generation {
     /// The number of generated points per unit
-    pub vertex_density: f32,
+    pub(crate) vertex_density: f32,
 }
 
 impl Default for Generation {
@@ -38,14 +38,14 @@ impl Default for Generation {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Point {
-    pub position: Vec3,
-    pub normal: Vec3,
-    pub color: Color,
+pub(crate) struct Point {
+    pub(crate) position: Vec3,
+    pub(crate) normal: Vec3,
+    pub(crate) color: Color,
 }
 
 impl Island {
-    pub fn height_at_point(&self, x: f32, z: f32) -> f32 {
+    pub(crate) fn height_at_point(&self, x: f32, z: f32) -> f32 {
         use Island::*;
         match self {
             Flat => 0.0,
@@ -107,7 +107,7 @@ impl Island {
         normal / 4.0
     }
 
-    pub fn generate(
+    pub(crate) fn generate(
         self,
         generation_type: &Generation,
         rect: Rect,
@@ -162,22 +162,22 @@ impl Island {
     }
 
     #[allow(dead_code)]
-    pub fn scale(self, scale: Vec3) -> Self {
+    pub(crate) fn scale(self, scale: Vec3) -> Self {
         Island::Scale(scale, Box::new(self))
     }
 
     #[allow(dead_code)]
-    pub fn translate(self, translation: Vec3) -> Self {
+    pub(crate) fn translate(self, translation: Vec3) -> Self {
         Island::Translate(translation, Box::new(self))
     }
 
     #[allow(dead_code)]
-    pub fn terrace(self, terrace: f32) -> Self {
+    pub(crate) fn terrace(self, terrace: f32) -> Self {
         Island::Terrace(terrace, Box::new(self))
     }
 
     #[allow(dead_code)]
-    pub fn add(self, other: Self) -> Self {
+    pub(crate) fn add(self, other: Self) -> Self {
         Island::Add(Box::new(self), Box::new(other))
     }
 }

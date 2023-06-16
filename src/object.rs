@@ -5,19 +5,19 @@ use bevy_rapier3d::prelude::*;
 // ==========
 
 #[derive(Component, Clone, Default)]
-pub struct Lifetime {
-    pub time: Timer,
-    pub shrink_away: bool,
+pub(crate) struct Lifetime {
+    pub(crate) time: Timer,
+    pub(crate) shrink_away: bool,
 }
 
 #[derive(Component, Clone, Default)]
-pub struct Object;
+pub(crate) struct Object;
 
 #[derive(Reflect, Component, Clone, Debug)]
 #[reflect(Component)]
-pub struct Health {
-    pub max: f64,
-    pub current: f64,
+pub(crate) struct Health {
+    pub(crate) max: f64,
+    pub(crate) current: f64,
 }
 
 impl Default for Health {
@@ -30,27 +30,27 @@ impl Default for Health {
 }
 
 #[derive(Component, Default, Clone)]
-pub struct ExplodeIntoPieces {
-    pub pieces: Vec<(Handle<Scene>, Collider)>,
-    pub shrink_away: bool,
+pub(crate) struct ExplodeIntoPieces {
+    pub(crate) pieces: Vec<(Handle<Scene>, Collider)>,
+    pub(crate) shrink_away: bool,
 }
 
 #[derive(Component, Default, Clone)]
-pub struct KnockbackImpulse(pub Vec3);
+pub(crate) struct KnockbackImpulse(pub(crate) Vec3);
 
 #[derive(Bundle, Default)]
-pub struct Bundle {
-    pub health: Health,
-    pub knockback_impulse: KnockbackImpulse,
-    pub external_impulse: ExternalImpulse,
-    pub external_force: ExternalForce,
-    pub object: Object,
+pub(crate) struct Bundle {
+    pub(crate) health: Health,
+    pub(crate) knockback_impulse: KnockbackImpulse,
+    pub(crate) external_impulse: ExternalImpulse,
+    pub(crate) external_force: ExternalForce,
+    pub(crate) object: Object,
 }
 
 // Plugin
 // ======
 
-pub struct Plugin;
+pub(crate) struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
