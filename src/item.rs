@@ -84,7 +84,6 @@ impl From<&HeldItem> for String {
 pub(crate) struct Bundle {
     pub(crate) item: Item,
     pub(crate) collider: Collider,
-    pub(crate) sensor: Sensor,
 }
 
 impl Bundle {
@@ -92,14 +91,12 @@ impl Bundle {
         Self {
             item: Item::Sword,
             collider: Collider::cuboid(0.3, 0.3, 0.3),
-            sensor: Sensor::default(),
         }
     }
     pub(crate) fn gun() -> Self {
         Self {
             item: Item::Gun,
             collider: Collider::cuboid(0.3, 0.3, 0.3),
-            sensor: Sensor::default(),
         }
     }
 }

@@ -259,7 +259,7 @@ fn setup_physics(
         .spawn((
             SpatialBundle::from_transform(Transform::from_xyz(5.0, 0.0, 5.0)),
             item::Bundle {
-                collider: Collider::cuboid(1.2, 0.5, 0.5),
+                collider: Collider::cuboid(1.0, 0.3, 0.3),
                 ..item::Bundle::sword()
             },
             RigidBody::Dynamic,
@@ -271,7 +271,6 @@ fn setup_physics(
                 transform: Transform::from_xyz(-0.6, 0.0, 0.0),
                 ..default()
             });
-            parent.spawn(Collider::cuboid(1.0, 0.3, 0.3));
         });
 
     /* Create a pickup. */
@@ -279,7 +278,7 @@ fn setup_physics(
         .spawn((
             SpatialBundle::from_transform(Transform::from_xyz(8.0, 0.0, 5.0)),
             item::Bundle {
-                collider: Collider::cuboid(1.2, 0.5, 0.5),
+                collider: Collider::cuboid(1.0, 0.3, 0.3),
                 ..item::Bundle::gun()
             },
             RigidBody::Dynamic,
@@ -291,6 +290,5 @@ fn setup_physics(
                 transform: Transform::from_xyz(-0.6, 0.0, 0.0),
                 ..default()
             });
-            parent.spawn(Collider::cuboid(1.0, 0.3, 0.3));
         });
 }
