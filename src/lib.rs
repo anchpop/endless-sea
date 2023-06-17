@@ -42,10 +42,8 @@ pub fn app() -> App {
     }));
 
     if cfg!(debug_assertions) {
-        app.add_plugin(WorldInspectorPlugin::new());
-        // Commenting out because the mesh draws too many lines
-        // and it gets too slow :(
-        // .add_plugin(RapierDebugRenderPlugin::default());
+        app.add_plugin(WorldInspectorPlugin::new())
+            .add_plugin(RapierDebugRenderPlugin::default());
         bevy::log::info!("Debug mode enabled");
     } else {
         bevy::log::info!("Debug mode disabled");
@@ -187,8 +185,7 @@ fn setup_physics(
     let islands = [(
         Lump.scale(Vec3::new(2.0, 0.5, 2.0))
             .add(Simplex(0).scale(Vec3::new(3.0, 1.0, 3.0)))
-            .translate(Vec3::Y * -2.0)
-            .terrace(2.0),
+            .translate(Vec3::Y * -2.0),
         Generation {
             vertex_density: 1.0,
         },
@@ -262,7 +259,7 @@ fn setup_physics(
         .spawn((
             SpatialBundle::from_transform(Transform::from_xyz(5.0, 0.0, 5.0)),
             item::Bundle {
-                collider: Collider::cuboid(1.2, 0.5, 0.5),
+                collider: Collider::cuboid(1.0, 0.3, 0.3),
                 ..item::Bundle::sword()
             },
             RigidBody::Dynamic,
@@ -274,7 +271,6 @@ fn setup_physics(
                 transform: Transform::from_xyz(-0.6, 0.0, 0.0),
                 ..default()
             });
-            parent.spawn(Collider::cuboid(1.0, 0.3, 0.3));
         });
 
     /* Create a pickup. */
@@ -282,7 +278,7 @@ fn setup_physics(
         .spawn((
             SpatialBundle::from_transform(Transform::from_xyz(8.0, 0.0, 5.0)),
             item::Bundle {
-                collider: Collider::cuboid(1.2, 0.5, 0.5),
+                collider: Collider::cuboid(1.0, 0.3, 0.3),
                 ..item::Bundle::gun()
             },
             RigidBody::Dynamic,
@@ -294,6 +290,5 @@ fn setup_physics(
                 transform: Transform::from_xyz(-0.6, 0.0, 0.0),
                 ..default()
             });
-            parent.spawn(Collider::cuboid(1.0, 0.3, 0.3));
         });
 }

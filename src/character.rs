@@ -1,4 +1,4 @@
-use std::{collections::HashSet, time::Duration};
+use std::collections::HashSet;
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_mod_wanderlust::{
@@ -23,10 +23,6 @@ pub struct MovementProperties {
     pub air_acceleration: f32,
     pub damping_factor: f32,
     pub max_speed: f32,
-
-    pub max_charge_time: Duration,
-    pub min_jump_impulse: f32,
-    pub max_jump_impulse: f32,
 }
 
 impl Default for MovementProperties {
@@ -37,10 +33,6 @@ impl Default for MovementProperties {
             air_acceleration: 10.0,
             damping_factor: 60.0,
             max_speed: 10.0,
-
-            max_charge_time: Duration::from_secs_f32(0.75),
-            min_jump_impulse: 3.0,
-            max_jump_impulse: 6.0,
         }
     }
 }
@@ -68,9 +60,6 @@ pub struct Input {
 
 #[derive(Component, Default, Clone)]
 pub struct WalkForce(pub Vec3);
-
-#[derive(Component, Default, Clone)]
-pub struct JumpImpulse(pub Vec3);
 
 #[derive(Component, Clone, Default, Debug)]
 pub struct Inventory {
@@ -107,7 +96,6 @@ pub struct Bundle {
     pub movement_properties: MovementProperties,
     pub input: Input,
     pub walk_force: WalkForce,
-    pub jump_impulse: JumpImpulse,
     pub inventory: Inventory,
     pub knockback_impulse: object::KnockbackImpulse,
     pub health: object::Health,
@@ -126,9 +114,9 @@ impl Default for Bundle {
                         combine_rule: CoefficientCombineRule::Max,
                     },
                     collider: Collider::capsule(
-                        Vec3::new(0.0, 0.0, 0.0),
-                        Vec3::new(0.0, 1.0, 0.0),
-                        0.5,
+                        Vec3::new(0.0, 0.5, 0.0),
+                        Vec3::new(0.0, 1.5, 0.0),
+                        0.4,
                     ),
                     locked_axes: LockedAxes::ROTATION_LOCKED,
                     velocity: Velocity::default(),
@@ -140,7 +128,6 @@ impl Default for Bundle {
             movement_properties: default(),
             input: Input::default(),
             walk_force: WalkForce::default(),
-            jump_impulse: JumpImpulse::default(),
             inventory: Inventory::default(),
             knockback_impulse: object::KnockbackImpulse::default(),
             health: object::Health::default(),
@@ -423,43 +410,46 @@ fn rotate_character(mut characters: Query<(&mut Transform, &Input)>) {
 
 fn pick_up_items(
     mut commands: Commands,
-    mut characters: Query<(Entity, &mut Inventory, With<CanPickUpItems>)>,
+    mut characters: Query<(&Transform, &mut Inventory), With<CanPickUpItems>>,
     item: Query<&item::Item>,
     rapier_context: Res<RapierContext>,
 ) {
-    for (character_entity, mut inventory, _) in characters.iter_mut() {
-        /* Iterate through all the intersection pairs involving a specific
-        collider. */
-        for (item_entity, _, intersecting) in
-            rapier_context.intersections_with(character_entity)
-        {
-            if intersecting {
-                if let Ok(item) = item.get(item_entity) {
-                    match *inventory {
-                        Inventory { hand: None, .. } => {
-                            inventory.hand =
-                                Some(item::HeldItem::new(item.clone()));
-                        }
-                        Inventory {
-                            hand: Some(_),
-                            belt: None,
-                            ..
-                        } => {
-                            inventory.belt =
-                                Some(item::HeldItem::new(item.clone()));
-                        }
-                        Inventory {
-                            hand: Some(_),
-                            belt: Some(_),
-                            backpack: _,
-                        } => inventory
-                            .backpack
-                            .push(item::HeldItem::new(item.clone())),
+    for (transform, mut inventory) in characters.iter_mut() {
+        rapier_context.intersections_with_shape(
+            transform.translation,
+            Quat::IDENTITY,
+            &Collider::ball(1.0),
+            QueryFilter::default(),
+            |entity| {
+                let Ok(item) = item.get(entity) else {
+                    return true;
+                };
+
+                match *inventory {
+                    Inventory { hand: None, .. } => {
+                        inventory.hand =
+                            Some(item::HeldItem::new(item.clone()));
                     }
-                    commands.entity(item_entity).despawn_recursive();
+                    Inventory {
+                        hand: Some(_),
+                        belt: None,
+                        ..
+                    } => {
+                        inventory.belt =
+                            Some(item::HeldItem::new(item.clone()));
+                    }
+                    Inventory {
+                        hand: Some(_),
+                        belt: Some(_),
+                        backpack: _,
+                    } => inventory
+                        .backpack
+                        .push(item::HeldItem::new(item.clone())),
                 }
-            }
-        }
+                commands.entity(entity).despawn_recursive();
+                false
+            },
+        );
     }
 }
 

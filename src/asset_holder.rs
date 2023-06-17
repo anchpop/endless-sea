@@ -2,8 +2,6 @@ use bevy::prelude::*;
 
 #[derive(Resource)]
 pub struct AssetHolder {
-    pub floor: Handle<Scene>,
-
     pub character: Handle<Scene>,
     pub character_run: Handle<AnimationClip>,
     pub character_idle: Handle<AnimationClip>,
@@ -15,7 +13,6 @@ pub struct AssetHolder {
 
 pub fn load_assets(mut commands: Commands, asset_server: ResMut<AssetServer>) {
     let assets = AssetHolder {
-        floor: asset_server.load("floor/floor.glb#Scene0"),
         character: asset_server.load("character/casual_male.glb#Scene0"),
         character_run: asset_server
             .load("character/casual_male.glb#Animation9"),
