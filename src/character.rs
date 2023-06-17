@@ -17,12 +17,12 @@ use crate::{
 
 #[derive(Reflect, Component, Clone)]
 #[reflect(Component)]
-pub(crate) struct MovementProperties {
-    pub(crate) stopped_friction: f32,
-    pub(crate) acceleration: f32,
-    pub(crate) air_acceleration: f32,
-    pub(crate) damping_factor: f32,
-    pub(crate) max_speed: f32,
+pub struct MovementProperties {
+    pub stopped_friction: f32,
+    pub acceleration: f32,
+    pub air_acceleration: f32,
+    pub damping_factor: f32,
+    pub max_speed: f32,
 }
 
 impl Default for MovementProperties {
@@ -38,41 +38,41 @@ impl Default for MovementProperties {
 }
 
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd, Debug)]
-pub(crate) enum AttackState {
+pub enum AttackState {
     Primary,
     Secondary,
 }
 
 #[derive(Component, Reflect, Default, Clone)]
 #[reflect(Component)]
-pub(crate) struct Character {
-    pub(crate) on_ground: bool,
+pub struct Character {
+    pub on_ground: bool,
 }
 
 #[derive(Component, Default, Clone)]
-pub(crate) struct Input {
-    pub(crate) movement_direction: Vec3,
-    pub(crate) looking_direction: Vec3,
-    pub(crate) attack: Option<AttackState>,
-    pub(crate) jump: bool,
-    pub(crate) switch_hands: bool,
+pub struct Input {
+    pub movement_direction: Vec3,
+    pub looking_direction: Vec3,
+    pub attack: Option<AttackState>,
+    pub jump: bool,
+    pub switch_hands: bool,
 }
 
 #[derive(Component, Default, Clone)]
-pub(crate) struct WalkForce(pub(crate) Vec3);
+pub struct WalkForce(pub Vec3);
 
 #[derive(Component, Clone, Default, Debug)]
-pub(crate) struct Inventory {
-    pub(crate) hand: Option<item::HeldItem>,
-    pub(crate) belt: Option<item::HeldItem>,
-    pub(crate) backpack: Vec<item::HeldItem>,
+pub struct Inventory {
+    pub hand: Option<item::HeldItem>,
+    pub belt: Option<item::HeldItem>,
+    pub backpack: Vec<item::HeldItem>,
 }
 
 #[derive(Component, Clone, Default)]
-pub(crate) struct CanPickUpItems {}
+pub struct CanPickUpItems {}
 
 #[derive(Component, Clone, PartialEq, Eq, Hash, Debug)]
-pub(crate) enum AnimationState {
+pub enum AnimationState {
     Idle,
     Walk,
 }
@@ -87,21 +87,21 @@ impl Default for AnimationState {
 // ======
 
 #[derive(Bundle)]
-pub(crate) struct Bundle {
+pub struct Bundle {
     // physics
-    pub(crate) character_controller: ControllerBundle,
+    pub character_controller: ControllerBundle,
 
     // character stuff
-    pub(crate) character: Character,
-    pub(crate) movement_properties: MovementProperties,
-    pub(crate) input: Input,
-    pub(crate) walk_force: WalkForce,
-    pub(crate) inventory: Inventory,
-    pub(crate) knockback_impulse: object::KnockbackImpulse,
-    pub(crate) health: object::Health,
+    pub character: Character,
+    pub movement_properties: MovementProperties,
+    pub input: Input,
+    pub walk_force: WalkForce,
+    pub inventory: Inventory,
+    pub knockback_impulse: object::KnockbackImpulse,
+    pub health: object::Health,
 
     // animation
-    pub(crate) animation_state: AnimationState,
+    pub animation_state: AnimationState,
 }
 
 impl Default for Bundle {
@@ -137,7 +137,7 @@ impl Default for Bundle {
 }
 
 impl Bundle {
-    pub(crate) fn from_transform(transform: Transform) -> Self {
+    pub fn from_transform(transform: Transform) -> Self {
         let default = Self::default();
         Self {
             character_controller: ControllerBundle {
@@ -153,13 +153,13 @@ impl Bundle {
 // ======
 
 #[derive(Debug, Hash, PartialEq, Eq, Clone, SystemSet)]
-pub(crate) enum MovementSet {
+pub enum MovementSet {
     CollectInfo,
     ComputeForce,
     ApplyForces,
 }
 
-pub(crate) struct Plugin;
+pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {

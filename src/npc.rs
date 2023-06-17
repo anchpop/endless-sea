@@ -7,8 +7,8 @@ use crate::{character, helpers::project_onto_plane, player};
 
 #[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
-pub(crate) struct Npc {
-    pub(crate) peaceful: bool,
+pub struct Npc {
+    pub peaceful: bool,
 }
 
 // Components
@@ -37,7 +37,7 @@ fn npc_input(
     }
 }
 
-pub(crate) struct Plugin;
+pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {

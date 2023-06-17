@@ -6,20 +6,20 @@ use bevy_rapier3d::prelude::*;
 
 use crate::asset_holder;
 
-pub(crate) const TEST_FPS: f32 = 144.0;
+pub const TEST_FPS: f32 = 144.0;
 
-pub(crate) fn on_main_thread() -> bool {
+pub fn on_main_thread() -> bool {
     matches!(thread::current().name(), Some("main"))
 }
 
-pub(crate) struct Test<A> {
-    pub(crate) setup: fn(&mut App) -> A,
-    pub(crate) setup_graphics: fn(&mut App),
-    pub(crate) frames: u64,
-    pub(crate) check: fn(&App, A),
+pub struct Test<A> {
+    pub setup: fn(&mut App) -> A,
+    pub setup_graphics: fn(&mut App),
+    pub frames: u64,
+    pub check: fn(&App, A),
 }
 
-pub(crate) fn default_setup_graphics(app: &mut App) {
+pub fn default_setup_graphics(app: &mut App) {
     use crate::{animations, player, ui};
 
     app.add_plugin(asset_holder::Plugin)
@@ -88,7 +88,7 @@ fn app(on_main_thread: bool) -> App {
 }
 
 impl<A> Test<A> {
-    pub(crate) fn run(self) {
+    pub fn run(self) {
         let on_main_thread = if on_main_thread() {
             println!("Test running on main thread, will display window");
             true
@@ -104,7 +104,7 @@ impl<A> Test<A> {
         }
     }
 
-    pub(crate) fn run_test(self) {
+    pub fn run_test(self) {
         let mut app = app(false);
 
         let res = (self.setup)(&mut app);
@@ -125,7 +125,7 @@ impl<A> Test<A> {
         (self.check)(&app, res)
     }
 
-    pub(crate) fn main_thread_app(self) -> App {
+    pub fn main_thread_app(self) -> App {
         let mut app = app(true);
         let _res = (self.setup)(&mut app);
         (self.setup_graphics)(&mut app);
@@ -154,7 +154,7 @@ impl PluginGroup for TestPlugins {
     }
 }
 
-pub(crate) fn spawn_floor_beneath_capsule(app: &mut App, capsule_id: Entity) {
+pub fn spawn_floor_beneath_capsule(app: &mut App, capsule_id: Entity) {
     let transform = *app.world.get::<Transform>(capsule_id).unwrap();
     let collider = app.world.get::<Collider>(capsule_id).unwrap().clone();
     let capsule = collider.as_capsule().unwrap();

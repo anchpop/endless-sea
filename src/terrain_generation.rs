@@ -5,7 +5,7 @@ use crate::helpers::*;
 
 #[allow(dead_code)]
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum Island {
+pub enum Island {
     /// Creates a flat island.
     Flat,
     /// Creates an "lump" shape that bulges up in the middle and falls down
@@ -24,9 +24,9 @@ pub(crate) enum Island {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Generation {
+pub struct Generation {
     /// The number of generated points per unit
-    pub(crate) vertex_density: f32,
+    pub vertex_density: f32,
 }
 
 impl Default for Generation {
@@ -38,14 +38,14 @@ impl Default for Generation {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) struct Point {
-    pub(crate) position: Vec3,
-    pub(crate) normal: Vec3,
-    pub(crate) color: Color,
+pub struct Point {
+    pub position: Vec3,
+    pub normal: Vec3,
+    pub color: Color,
 }
 
 impl Island {
-    pub(crate) fn height_at_point(&self, x: f32, z: f32) -> f32 {
+    pub fn height_at_point(&self, x: f32, z: f32) -> f32 {
         use Island::*;
         match self {
             Flat => 0.0,
@@ -107,7 +107,7 @@ impl Island {
         normal / 4.0
     }
 
-    pub(crate) fn generate(
+    pub fn generate(
         self,
         generation_type: &Generation,
         rect: Rect,
@@ -162,22 +162,22 @@ impl Island {
     }
 
     #[allow(dead_code)]
-    pub(crate) fn scale(self, scale: Vec3) -> Self {
+    pub fn scale(self, scale: Vec3) -> Self {
         Island::Scale(scale, Box::new(self))
     }
 
     #[allow(dead_code)]
-    pub(crate) fn translate(self, translation: Vec3) -> Self {
+    pub fn translate(self, translation: Vec3) -> Self {
         Island::Translate(translation, Box::new(self))
     }
 
     #[allow(dead_code)]
-    pub(crate) fn terrace(self, terrace: f32) -> Self {
+    pub fn terrace(self, terrace: f32) -> Self {
         Island::Terrace(terrace, Box::new(self))
     }
 
     #[allow(dead_code)]
-    pub(crate) fn add(self, other: Self) -> Self {
+    pub fn add(self, other: Self) -> Self {
         Island::Add(Box::new(self), Box::new(other))
     }
 }

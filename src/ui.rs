@@ -7,7 +7,7 @@ use crate::{character::Inventory, player::Player};
 
 #[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
-pub(crate) struct InventoryUI;
+pub struct InventoryUI;
 
 // Bundle
 // ======
@@ -15,7 +15,7 @@ pub(crate) struct InventoryUI;
 // Plugin
 // ======
 
-pub(crate) struct Plugin;
+pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {

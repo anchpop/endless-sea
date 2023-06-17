@@ -7,7 +7,7 @@ use bevy_rapier3d::prelude::*;
 // ==========
 
 #[derive(Component, Clone, Debug)]
-pub(crate) enum Item {
+pub enum Item {
     Sword,
     Gun,
 }
@@ -28,7 +28,7 @@ impl From<&Item> for String {
 }
 
 impl Item {
-    pub(crate) fn cooldown(&self) -> Duration {
+    pub fn cooldown(&self) -> Duration {
         match self {
             Item::Sword => Duration::from_millis(200),
             Item::Gun => Duration::from_millis(1000),
@@ -37,13 +37,13 @@ impl Item {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct HeldItem {
-    pub(crate) item: Item,
-    pub(crate) time_since_last_use: Option<Stopwatch>,
+pub struct HeldItem {
+    pub item: Item,
+    pub time_since_last_use: Option<Stopwatch>,
 }
 
 impl HeldItem {
-    pub(crate) fn new(item: Item) -> Self {
+    pub fn new(item: Item) -> Self {
         Self {
             item,
             time_since_last_use: None,
@@ -81,19 +81,19 @@ impl From<&HeldItem> for String {
 // ======
 
 #[derive(Bundle)]
-pub(crate) struct Bundle {
-    pub(crate) item: Item,
-    pub(crate) collider: Collider,
+pub struct Bundle {
+    pub item: Item,
+    pub collider: Collider,
 }
 
 impl Bundle {
-    pub(crate) fn sword() -> Self {
+    pub fn sword() -> Self {
         Self {
             item: Item::Sword,
             collider: Collider::cuboid(0.3, 0.3, 0.3),
         }
     }
-    pub(crate) fn gun() -> Self {
+    pub fn gun() -> Self {
         Self {
             item: Item::Gun,
             collider: Collider::cuboid(0.3, 0.3, 0.3),
@@ -104,7 +104,7 @@ impl Bundle {
 // Plugin
 // ======
 
-pub(crate) struct Plugin;
+pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, _app: &mut App) {}

@@ -1,11 +1,11 @@
 #[cfg(test)]
-pub(crate) mod helpers;
+pub mod helpers;
 
 #[cfg(test)]
-pub(crate) mod character_tests;
+pub mod character_tests;
 
 #[cfg(test)]
-pub(crate) mod movement_tests;
+pub mod movement_tests;
 
 #[cfg(test)]
-pub(crate) mod terrain_gen_tests;
+pub mod terrain_gen_tests;

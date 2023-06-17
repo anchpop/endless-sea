@@ -8,11 +8,11 @@ use crate::character::{self, CanPickUpItems};
 
 #[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
-pub(crate) struct Player;
+pub struct Player;
 
 #[derive(Reflect, Component, Default, Clone)]
 #[reflect(Component)]
-pub(crate) struct PlayerCamera;
+pub struct PlayerCamera;
 
 #[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
 enum Action {
@@ -28,7 +28,7 @@ enum Action {
 // ======
 
 #[derive(Bundle)]
-pub(crate) struct Bundle {
+pub struct Bundle {
     player: Player,
     action_state: ActionState<Action>,
     input_map: InputMap<Action>,
@@ -78,7 +78,7 @@ impl Default for Bundle {
 // Plugin
 // ======
 
-pub(crate) struct Plugin;
+pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {

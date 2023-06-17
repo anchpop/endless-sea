@@ -9,7 +9,7 @@ use crate::character;
 
 #[allow(dead_code)]
 #[derive(Component, Clone)]
-pub(crate) enum ReticleReceiveType {
+pub enum ReticleReceiveType {
     Player,
     Enemy,
     Friendly,
@@ -17,26 +17,26 @@ pub(crate) enum ReticleReceiveType {
 }
 
 #[derive(Clone, Debug, Default)]
-pub(crate) enum ReticleBrightness {
+pub enum ReticleBrightness {
     Full,
     #[default]
     Faint,
 }
 
 #[derive(Component, Clone, Debug, Default)]
-pub(crate) struct Reticle {
-    pub(crate) brightness: ReticleBrightness,
-    pub(crate) enabled: bool,
+pub struct Reticle {
+    pub brightness: ReticleBrightness,
+    pub enabled: bool,
 }
 
 // Bundle
 // ======
 
 #[derive(Bundle, Default)]
-pub(crate) struct Bundle {
-    pub(crate) polyline_material: Handle<PolylineMaterial>,
-    pub(crate) polyline: Handle<Polyline>,
-    pub(crate) reticle: Reticle,
+pub struct Bundle {
+    pub polyline_material: Handle<PolylineMaterial>,
+    pub polyline: Handle<Polyline>,
+    pub reticle: Reticle,
 }
 
 // Resources
@@ -55,7 +55,7 @@ struct ReticleMaterials {
 // Plugin
 // ======
 
-pub(crate) struct Plugin;
+pub struct Plugin;
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_startup_system(setup_reticle_materials)
