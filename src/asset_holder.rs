@@ -11,7 +11,10 @@ pub(crate) struct AssetHolder {
     pub(crate) gun: Handle<Scene>,
 }
 
-pub(crate) fn load_assets(mut commands: Commands, asset_server: ResMut<AssetServer>) {
+pub(crate) fn load_assets(
+    mut commands: Commands,
+    asset_server: ResMut<AssetServer>,
+) {
     let assets = AssetHolder {
         character: asset_server.load("character/casual_male.glb#Scene0"),
         character_run: asset_server

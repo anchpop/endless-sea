@@ -1,4 +1,4 @@
-use std::{collections::HashSet};
+use std::collections::HashSet;
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_mod_wanderlust::{
@@ -114,9 +114,9 @@ impl Default for Bundle {
                         combine_rule: CoefficientCombineRule::Max,
                     },
                     collider: Collider::capsule(
-                        Vec3::new(0.0, 0.0, 0.0),
-                        Vec3::new(0.0, 1.0, 0.0),
-                        0.5,
+                        Vec3::new(0.0, 0.5, 0.0),
+                        Vec3::new(0.0, 1.5, 0.0),
+                        0.4,
                     ),
                     locked_axes: LockedAxes::ROTATION_LOCKED,
                     velocity: Velocity::default(),
@@ -410,43 +410,46 @@ fn rotate_character(mut characters: Query<(&mut Transform, &Input)>) {
 
 fn pick_up_items(
     mut commands: Commands,
-    mut characters: Query<(Entity, &mut Inventory, With<CanPickUpItems>)>,
+    mut characters: Query<(&Transform, &mut Inventory), With<CanPickUpItems>>,
     item: Query<&item::Item>,
     rapier_context: Res<RapierContext>,
 ) {
-    for (character_entity, mut inventory, _) in characters.iter_mut() {
-        /* Iterate through all the intersection pairs involving a specific
-        collider. */
-        for (item_entity, _, intersecting) in
-            rapier_context.intersections_with(character_entity)
-        {
-            if intersecting {
-                if let Ok(item) = item.get(item_entity) {
-                    match *inventory {
-                        Inventory { hand: None, .. } => {
-                            inventory.hand =
-                                Some(item::HeldItem::new(item.clone()));
-                        }
-                        Inventory {
-                            hand: Some(_),
-                            belt: None,
-                            ..
-                        } => {
-                            inventory.belt =
-                                Some(item::HeldItem::new(item.clone()));
-                        }
-                        Inventory {
-                            hand: Some(_),
-                            belt: Some(_),
-                            backpack: _,
-                        } => inventory
-                            .backpack
-                            .push(item::HeldItem::new(item.clone())),
+    for (transform, mut inventory) in characters.iter_mut() {
+        rapier_context.intersections_with_shape(
+            transform.translation,
+            Quat::IDENTITY,
+            &Collider::ball(1.0),
+            QueryFilter::default(),
+            |entity| {
+                let Ok(item) = item.get(entity) else {
+                    return true;
+                };
+
+                match *inventory {
+                    Inventory { hand: None, .. } => {
+                        inventory.hand =
+                            Some(item::HeldItem::new(item.clone()));
                     }
-                    commands.entity(item_entity).despawn_recursive();
+                    Inventory {
+                        hand: Some(_),
+                        belt: None,
+                        ..
+                    } => {
+                        inventory.belt =
+                            Some(item::HeldItem::new(item.clone()));
+                    }
+                    Inventory {
+                        hand: Some(_),
+                        belt: Some(_),
+                        backpack: _,
+                    } => inventory
+                        .backpack
+                        .push(item::HeldItem::new(item.clone())),
                 }
-            }
-        }
+                commands.entity(entity).despawn_recursive();
+                false
+            },
+        );
     }
 }
 

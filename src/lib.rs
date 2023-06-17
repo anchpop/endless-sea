@@ -42,10 +42,8 @@ pub fn app() -> App {
     }));
 
     if cfg!(debug_assertions) {
-        app.add_plugin(WorldInspectorPlugin::new());
-        // Commenting out because the mesh draws too many lines
-        // and it gets too slow :(
-        // .add_plugin(RapierDebugRenderPlugin::default());
+        app.add_plugin(WorldInspectorPlugin::new())
+            .add_plugin(RapierDebugRenderPlugin::default());
         bevy::log::info!("Debug mode enabled");
     } else {
         bevy::log::info!("Debug mode disabled");
