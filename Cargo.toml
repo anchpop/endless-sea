@@ -25,7 +25,7 @@ lto = true
 
 [dependencies]
 bevy = { version = "0.10" }
-bevy-inspector-egui = "0.18"
+bevy-inspector-egui = "0.19"
 bevy_rapier3d = { version = "0.21", features = ["simd-stable"] }
 image = "0.24"
 winit = "0.28"
