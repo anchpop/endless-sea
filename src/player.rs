@@ -178,9 +178,10 @@ fn player_looking_input(
                     let window_size =
                         Vec2::new(window.width(), window.height());
 
+                    let cursor_pos_screen_pixels = Vec2::new(cursor_pos_screen_pixels.x, window_size.y - cursor_pos_screen_pixels.y);
+
                     // Convert screen position [0..resolution] to ndc
-                    // [-1..1] (normalized device
-                    // coordinates)
+                    // [-1..1] (normalized device coordinates)
                     let cursor_ndc =
                         (cursor_pos_screen_pixels / window_size) * 2.0
                             - Vec2::ONE;
