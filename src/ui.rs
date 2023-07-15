@@ -19,8 +19,8 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_ui)
-            .add_system(update_inventory);
+        app.add_systems(Startup, setup_ui)
+            .add_systems(Update, update_inventory);
     }
 }
 
@@ -28,7 +28,8 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn(NodeBundle {
             style: Style {
-                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
                 justify_content: JustifyContent::FlexEnd,
                 align_items: AlignItems::Center,
                 ..default()
@@ -41,7 +42,8 @@ fn setup_ui(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent
                 .spawn(NodeBundle {
                     style: Style {
-                        size: Size::new(Val::Px(200.0), Val::Percent(30.0)),
+                        width: Val::Px(200.0),
+                        height: Val::Percent(30.0),
                         border: UiRect::all(Val::Px(2.0)),
 
                         flex_direction: FlexDirection::Column,

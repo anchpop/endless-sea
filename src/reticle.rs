@@ -58,8 +58,8 @@ struct ReticleMaterials {
 pub struct Plugin;
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_startup_system(setup_reticle_materials)
-            .add_system(draw_reticle);
+        app.add_systems(Startup, setup_reticle_materials)
+            .add_systems(Update, draw_reticle);
     }
 }
 

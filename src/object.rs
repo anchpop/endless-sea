@@ -54,10 +54,15 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(death)
-            .add_system(set_external_impulse)
-            .add_system(count_down_lifetime)
-            .add_system(shrink_away);
+        app.add_systems(
+            Update,
+            (
+                death,
+                set_external_impulse,
+                count_down_lifetime,
+                shrink_away,
+            ),
+        );
     }
 }
 

@@ -42,27 +42,30 @@ pub fn app() -> App {
     }));
 
     if cfg!(debug_assertions) {
-        app.add_plugin(WorldInspectorPlugin::new())
-            .add_plugin(RapierDebugRenderPlugin::default());
+        app.add_plugins((
+            WorldInspectorPlugin::new(),
+            RapierDebugRenderPlugin::default(),
+        ));
         bevy::log::info!("Debug mode enabled");
     } else {
         bevy::log::info!("Debug mode disabled");
     };
 
-    app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_plugin(PolylinePlugin)
-        .add_plugin(WanderlustPlugin)
-        .add_plugin(asset_holder::Plugin)
-        .add_plugin(object::Plugin)
-        .add_plugin(character::Plugin)
-        .add_plugin(npc::Plugin)
-        .add_plugin(player::Plugin)
-        .add_plugin(reticle::Plugin)
-        .add_plugin(item::Plugin)
-        .add_plugin(ui::Plugin)
-        .add_plugin(animations::Plugin)
-        .add_startup_system(setup_graphics)
-        .add_startup_system(setup_physics);
+    app.add_plugins((
+        RapierPhysicsPlugin::<NoUserData>::default(),
+        PolylinePlugin,
+        WanderlustPlugin,
+        asset_holder::Plugin,
+        object::Plugin,
+        character::Plugin,
+        npc::Plugin,
+        player::Plugin,
+        reticle::Plugin,
+        item::Plugin,
+        ui::Plugin,
+        animations::Plugin,
+    ))
+    .add_systems(Startup, (setup_graphics, setup_physics));
 
     app
 }

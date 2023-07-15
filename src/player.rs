@@ -14,7 +14,7 @@ pub struct Player;
 #[reflect(Component)]
 pub struct PlayerCamera;
 
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
 enum Action {
     Move,
     Jump,
@@ -82,10 +82,9 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(InputManagerPlugin::<Action>::default())
-            .add_system(player_input)
-            .add_system(player_looking_input)
-            .add_system(camera_movement.in_base_set(CoreSet::PostUpdate));
+        app.add_plugins(InputManagerPlugin::<Action>::default())
+            .add_systems(Update, (player_input, player_looking_input))
+            .add_systems(PostUpdate, camera_movement);
     }
 }
 

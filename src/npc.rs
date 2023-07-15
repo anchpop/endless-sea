@@ -41,6 +41,6 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(npc_input);
+        app.add_systems(Update, npc_input);
     }
 }

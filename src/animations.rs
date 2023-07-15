@@ -13,9 +13,7 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(animate)
-            .add_system(add_player_model)
-            .add_system(add_npc_model);
+        app.add_systems(Update, (animate, add_player_model, add_npc_model));
     }
 }
 
