@@ -12,8 +12,10 @@ mod test {
     fn character_moves_horizontally() {
         Test {
             setup: |app| {
-                app.add_plugin(character::Plugin)
-                    .add_plugin(bevy_mod_wanderlust::WanderlustPlugin);
+                app.add_plugins((
+                    character::Plugin,
+                    bevy_mod_wanderlust::WanderlustPlugin,
+                ));
 
                 // Setup test entities
                 let character_id = app
@@ -46,7 +48,7 @@ mod test {
     fn character_doesnt_move_vertically() {
         Test {
             setup: |app| {
-                app.add_plugin(character::Plugin);
+                app.add_plugins(character::Plugin);
 
                 // Setup test entities
                 let character_id = app

@@ -22,10 +22,12 @@ pub struct Test<A> {
 pub fn default_setup_graphics(app: &mut App) {
     use crate::{animations, player, ui};
 
-    app.add_plugin(asset_holder::Plugin)
-        .add_plugin(ui::Plugin)
-        .add_plugin(player::Plugin)
-        .add_plugin(animations::Plugin);
+    app.add_plugins((
+        asset_holder::Plugin,
+        ui::Plugin,
+        player::Plugin,
+        animations::Plugin,
+    ));
 
     app.world.spawn((
         Camera3dBundle {
@@ -60,20 +62,24 @@ fn app(on_main_thread: bool) -> App {
     let mut app = App::new();
 
     if on_main_thread {
-        app.add_plugins(DefaultPlugins)
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-            .add_plugin(RapierDebugRenderPlugin::default());
+        app.add_plugins((
+            DefaultPlugins,
+            RapierPhysicsPlugin::<NoUserData>::default(),
+            RapierDebugRenderPlugin::default(),
+        ));
     } else {
         let time = Time::default();
         app.insert_resource(time)
-            .add_plugins(TestPlugins)
-            .add_plugin(bevy::render::RenderPlugin {
-                wgpu_settings: bevy::render::settings::WgpuSettings {
-                    backends: None,
-                    ..default()
+            .add_plugins((
+                TestPlugins,
+                bevy::render::RenderPlugin {
+                    wgpu_settings: bevy::render::settings::WgpuSettings {
+                        backends: None,
+                        ..default()
+                    },
                 },
-            })
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+                RapierPhysicsPlugin::<NoUserData>::default(),
+            ))
             .insert_resource(RapierConfiguration {
                 timestep_mode: TimestepMode::Fixed {
                     dt: 1.0 / TEST_FPS,
@@ -82,7 +88,7 @@ fn app(on_main_thread: bool) -> App {
                 ..default()
             });
     }
-    app.add_plugin(WorldInspectorPlugin::new());
+    app.add_plugins(WorldInspectorPlugin::new());
 
     app
 }

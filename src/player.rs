@@ -14,7 +14,7 @@ pub struct Player;
 #[reflect(Component)]
 pub struct PlayerCamera;
 
-#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug)]
+#[derive(Actionlike, PartialEq, Eq, Clone, Copy, Hash, Debug, Reflect)]
 enum Action {
     Move,
     Jump,
@@ -82,10 +82,9 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(InputManagerPlugin::<Action>::default())
-            .add_system(player_input)
-            .add_system(player_looking_input)
-            .add_system(camera_movement.in_base_set(CoreSet::PostUpdate));
+        app.add_plugins(InputManagerPlugin::<Action>::default())
+            .add_systems(Update, (player_input, player_looking_input))
+            .add_systems(PostUpdate, camera_movement);
     }
 }
 
@@ -179,9 +178,10 @@ fn player_looking_input(
                     let window_size =
                         Vec2::new(window.width(), window.height());
 
+                    let cursor_pos_screen_pixels = Vec2::new(cursor_pos_screen_pixels.x, window_size.y - cursor_pos_screen_pixels.y);
+
                     // Convert screen position [0..resolution] to ndc
-                    // [-1..1] (normalized device
-                    // coordinates)
+                    // [-1..1] (normalized device coordinates)
                     let cursor_ndc =
                         (cursor_pos_screen_pixels / window_size) * 2.0
                             - Vec2::ONE;

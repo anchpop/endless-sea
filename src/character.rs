@@ -163,19 +163,22 @@ pub struct Plugin;
 
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
-        app.add_system(update_grounded.in_set(MovementSet::CollectInfo))
-            .add_system(force_movement.in_set(MovementSet::ComputeForce))
-            .add_system(
+        app.add_systems(
+            Update,
+            (
+                update_grounded.in_set(MovementSet::CollectInfo),
+                force_movement.in_set(MovementSet::ComputeForce),
                 move_character_controller.in_set(MovementSet::ApplyForces),
-            )
-            .add_system(attack)
-            .add_system(rotate_character)
-            .add_system(check_no_character_and_object)
-            .add_system(pick_up_items)
-            .add_system(control_reticle_based_on_inventory)
-            .add_system(switch_hands)
-            .add_system(increment_cooldown_timers)
-            .add_system(update_character_animation_state);
+                attack,
+                rotate_character,
+                check_no_character_and_object,
+                pick_up_items,
+                control_reticle_based_on_inventory,
+                switch_hands,
+                increment_cooldown_timers,
+                update_character_animation_state,
+            ),
+        );
 
         if cfg!(debug_assertions) {
             app.register_type::<Character>()
