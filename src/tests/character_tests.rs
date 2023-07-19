@@ -47,7 +47,7 @@ mod test {
     fn character_dies() {
         Test {
             setup: |app| {
-                app.add_plugin(object::Plugin).add_plugin(character::Plugin);
+                app.add_plugins((object::Plugin, character::Plugin));
 
                 // Setup test entities
                 let character_id = app
@@ -79,7 +79,7 @@ mod test {
     fn sword_attack() {
         Test {
             setup: |app| {
-                app.add_plugin(character::Plugin).add_plugin(object::Plugin);
+                app.add_plugins((character::Plugin, object::Plugin));
 
                 // Setup test entities
                 let character_id = app
