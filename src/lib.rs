@@ -186,9 +186,7 @@ fn setup_physics(
 ) {
     use Island::*;
     let islands = [(
-        Lump.scale(Vec3::new(2.0, 0.5, 2.0))
-            .add(Simplex(0).scale(Vec3::new(3.0, 1.0, 3.0)))
-            .translate(Vec3::Y * -2.0),
+        Flat.translate(Vec3::Y * -2.0),
         Generation {
             vertex_density: 1.0,
         },
