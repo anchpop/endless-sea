@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_mod_wanderlust::{
     ControllerBundle, ControllerInput, ControllerPhysicsBundle,
+    ControllerSettings,
 };
 use bevy_rapier3d::prelude::*;
 
@@ -108,6 +109,10 @@ impl Default for Bundle {
     fn default() -> Self {
         Self {
             character_controller: ControllerBundle {
+                settings: ControllerSettings {
+                    force_scale: Vec3::new(1.0, 0.0, 1.0),
+                    ..ControllerSettings::character()
+                },
                 physics: ControllerPhysicsBundle {
                     friction: Friction {
                         coefficient: 0.0,
@@ -119,7 +124,6 @@ impl Default for Bundle {
                         0.4,
                     ),
                     locked_axes: LockedAxes::ROTATION_LOCKED,
-                    velocity: Velocity::default(),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -389,12 +393,10 @@ fn move_character_controller(
         (With<Character>, Without<object::Object>),
     >,
 ) {
-    for (mut character_controller, mut walk_force, input) in
-        characters.iter_mut()
-    {
+    for (mut controller_input, mut walk_force, input) in characters.iter_mut() {
         let force = walk_force.0;
-        character_controller.movement = force;
-        character_controller.jumping = input.jump;
+        controller_input.movement = force;
+        controller_input.jumping = input.jump;
         walk_force.0 = Vec3::ZERO;
     }
 }

@@ -2,20 +2,20 @@
 #![feature(iter_intersperse)]
 #![feature(let_chains)]
 
-mod animations;
-mod asset_holder;
-mod character;
-mod helpers;
-mod item;
-mod npc;
-mod object;
-mod player;
-mod reticle;
-mod terrain_generation;
-mod ui;
+pub mod animations;
+pub mod asset_holder;
+pub mod character;
+pub mod helpers;
+pub mod item;
+pub mod npc;
+pub mod object;
+pub mod player;
+pub mod reticle;
+pub mod terrain_generation;
+pub mod ui;
 
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -186,9 +186,7 @@ fn setup_physics(
 ) {
     use Island::*;
     let islands = [(
-        Lump.scale(Vec3::new(2.0, 0.5, 2.0))
-            .add(Simplex(0).scale(Vec3::new(3.0, 1.0, 3.0)))
-            .translate(Vec3::Y * -2.0),
+        Flat.translate(Vec3::Y * -2.0),
         Generation {
             vertex_density: 1.0,
         },

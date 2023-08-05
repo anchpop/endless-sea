@@ -3,8 +3,7 @@ use std::{thread, time::Duration};
 use bevy::{app::PluginGroupBuilder, prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier3d::prelude::*;
-
-use crate::asset_holder;
+use endless_sea::asset_holder;
 
 pub const TEST_FPS: f32 = 144.0;
 
@@ -20,7 +19,7 @@ pub struct Test<A> {
 }
 
 pub fn default_setup_graphics(app: &mut App) {
-    use crate::{animations, player, ui};
+    use endless_sea::{animations, player, ui};
 
     app.add_plugins((
         asset_holder::Plugin,
@@ -99,7 +98,6 @@ impl<A> Test<A> {
             println!("Test running on main thread, will display window");
             true
         } else {
-            println!("Test not running on main thread, will run headlessly");
             false
         };
 

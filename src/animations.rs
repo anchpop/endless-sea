@@ -37,7 +37,7 @@ fn animate(
                     AnimationState::Idle => assets.character_idle.clone(),
                     AnimationState::Walk => assets.character_run.clone(),
                 };
-                animation_player.play(animation).repeat();
+                animation_player.start(animation).repeat();
             }
         }
     }

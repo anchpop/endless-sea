@@ -1,4 +1,8 @@
-use bevy::{input::mouse::MouseMotion, prelude::*, window::PrimaryWindow};
+use bevy::{
+    input::mouse::MouseMotion, prelude::*, transform::TransformSystem,
+    window::PrimaryWindow,
+};
+use bevy_rapier3d::prelude::PhysicsSet;
 use leafwing_input_manager::{prelude::*, Actionlike};
 
 use crate::character::{self, CanPickUpItems};
@@ -84,11 +88,16 @@ impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(InputManagerPlugin::<Action>::default())
             .add_systems(Update, (player_input, player_looking_input))
-            .add_systems(PostUpdate, camera_movement);
+            .add_systems(
+                PostUpdate,
+                camera_follow_player
+                    .after(PhysicsSet::Writeback)
+                    .before(TransformSystem::TransformPropagate),
+            );
     }
 }
 
-fn camera_movement(
+fn camera_follow_player(
     player_character: Query<(With<Player>, &Transform)>,
     mut main_camera: Query<(
         With<PlayerCamera>,
