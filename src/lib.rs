@@ -2,20 +2,20 @@
 #![feature(iter_intersperse)]
 #![feature(let_chains)]
 
-mod animations;
-mod asset_holder;
-mod character;
-mod helpers;
-mod item;
-mod npc;
-mod object;
-mod player;
-mod reticle;
-mod terrain_generation;
-mod ui;
+pub mod animations;
+pub mod asset_holder;
+pub mod character;
+pub mod helpers;
+pub mod item;
+pub mod npc;
+pub mod object;
+pub mod player;
+pub mod reticle;
+pub mod terrain_generation;
+pub mod ui;
 
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 use bevy::{prelude::*, render::camera::ScalingMode};
 use bevy_inspector_egui::quick::WorldInspectorPlugin;

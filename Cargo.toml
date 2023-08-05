@@ -37,3 +37,9 @@ bevy_mod_wanderlust = "0.4.0"
 [dev-dependencies]
 pretty_assertions = "1.4.0"
 more-asserts = "0.3.1"
+libtest-mimic = "0.6.1"
+
+[[test]]
+name = "mytest"
+path = "src/game_tests/mod.rs"
+harness = false
