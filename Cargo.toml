@@ -32,7 +32,7 @@ winit = "0.28"
 leafwing-input-manager = "0.10.0"
 bevy_polyline = "0.7"
 opensimplex_noise_rs = "0.3.0"
-bevy_mod_wanderlust = "0.4.0"
+bevy_mod_wanderlust = { git = "https://github.com/PROMETHIA-27/bevy_mod_wanderlust.git", rev = "d6bdeb606f687d1791c980ed11e2e4472f0f23ad" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"

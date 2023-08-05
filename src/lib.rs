@@ -54,7 +54,7 @@ pub fn app() -> App {
     app.add_plugins((
         RapierPhysicsPlugin::<NoUserData>::default(),
         PolylinePlugin,
-        WanderlustPlugin,
+        WanderlustPlugin::default(),
         asset_holder::Plugin,
         object::Plugin,
         character::Plugin,
@@ -186,7 +186,9 @@ fn setup_physics(
 ) {
     use Island::*;
     let islands = [(
-        Flat.translate(Vec3::Y * -2.0),
+        ((Lump * Vec3::new(2.0, 0.5, 2.0))
+            + (Simplex(0) * Vec3::new(3.0, 1.0, 3.0)))
+        .translate(Vec3::Y * -2.0),
         Generation {
             vertex_density: 1.0,
         },

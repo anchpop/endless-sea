@@ -2,8 +2,8 @@ use std::collections::HashSet;
 
 use bevy::{prelude::*, time::Stopwatch};
 use bevy_mod_wanderlust::{
-    ControllerBundle, ControllerInput, ControllerPhysicsBundle,
-    ControllerSettings,
+    Controller, ControllerBundle, ControllerInput, ControllerPhysicsBundle,
+    RapierPhysicsBundle,
 };
 use bevy_rapier3d::prelude::*;
 
@@ -109,11 +109,7 @@ impl Default for Bundle {
     fn default() -> Self {
         Self {
             character_controller: ControllerBundle {
-                settings: ControllerSettings {
-                    force_scale: Vec3::new(1.0, 0.0, 1.0),
-                    ..ControllerSettings::character()
-                },
-                physics: ControllerPhysicsBundle {
+                rapier_physics: RapierPhysicsBundle {
                     friction: Friction {
                         coefficient: 0.0,
                         combine_rule: CoefficientCombineRule::Max,
