@@ -87,13 +87,12 @@ pub struct Plugin;
 impl bevy::app::Plugin for Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(InputManagerPlugin::<Action>::default())
+            .add_systems(Update, (player_input, player_looking_input))
             .add_systems(
-                Update,
-                (
-                    player_input,
-                    player_looking_input,
-                    camera_follow_player.after(PhysicsSet::Writeback),
-                ),
+                PostUpdate,
+                camera_follow_player
+                    .after(PhysicsSet::Writeback)
+                    .before(TransformSystem::TransformPropagate),
             );
     }
 }
