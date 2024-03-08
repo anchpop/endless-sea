@@ -39,7 +39,7 @@ jobs:
           recursive: false
           dest: ./${{ env.RELEASE_NAME }}-${{ needs.setup.outputs.version }}-windows.zip
       - name: Upload
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: false
           prerelease: false
@@ -66,7 +66,7 @@ jobs:
           recursive: false
           dest: ./${{ env.RELEASE_NAME }}-${{ needs.setup.outputs.version }}-darwin.zip
       - name: Upload
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: false
           prerelease: false
@@ -96,7 +96,7 @@ jobs:
           recursive: false
           dest: ./${{ env.RELEASE_NAME }}-${{ needs.setup.outputs.version }}-ubuntu.zip
       - name: Upload
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           draft: false
           prerelease: false
