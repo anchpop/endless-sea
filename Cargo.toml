@@ -28,7 +28,7 @@ bevy = { version = "0.11" }
 bevy-inspector-egui = "0.20.0"
 bevy_rapier3d = { version = "0.22", features = ["simd-stable"] }
 image = "0.24"
-winit = "0.28"
+winit = "0.30.0"
 leafwing-input-manager = "0.10.0"
 bevy_polyline = "0.7"
 opensimplex_noise_rs = "0.3.0"
