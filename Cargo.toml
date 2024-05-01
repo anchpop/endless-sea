@@ -30,7 +30,7 @@ bevy_rapier3d = { version = "0.22", features = ["simd-stable"] }
 image = "0.24"
 winit = "0.28"
 leafwing-input-manager = "0.10.0"
-bevy_polyline = "0.7"
+bevy_polyline = "0.8.1"
 opensimplex_noise_rs = "0.3.0"
 bevy_mod_wanderlust = "0.4.0"
 
