@@ -27,7 +27,7 @@ lto = true
 bevy = { version = "0.11" }
 bevy-inspector-egui = "0.20.0"
 bevy_rapier3d = { version = "0.22", features = ["simd-stable"] }
-image = "0.24"
+image = "0.25.1"
 winit = "0.28"
 leafwing-input-manager = "0.10.0"
 bevy_polyline = "0.7"
