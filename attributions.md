@@ -1,1 +1,0 @@
-[gun model](https://sketchfab.com/3d-models/low-poly-gun-05a0609b39364b7bbc8f54f122b05c8c)
